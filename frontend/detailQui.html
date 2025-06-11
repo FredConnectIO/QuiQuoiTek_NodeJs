@@ -9,22 +9,25 @@
     <link href="fred.css" rel="stylesheet">
     <script>
 
-        async function fetchAsync (url) {
-        let response = await fetch(url);
-        let data = await response.json();
-        alert(url);
-        return data;
+        async function fetchAsync(url) {
+        let myPromise = new Promise(function(resolve) {
+            let req = new XMLHttpRequest();
+            req.open('GET', url);
+            req.onload = function() {
+            if (req.status == 200) {
+                resolve(req.response);
+            } else {
+                resolve("url non résolue");
+            }
+            };
+            req.send();
+        });
+        //document.getElementById("#demo").innerHTML = await myPromise;
+        let data = await myPromise;
+        alert(data);
+        console.log(data);
+        console.log(JSON.parse(data).rows[0]);
         }
-
-
-        const readQui = async id => {
-            await fetch('http://localhost:3000/qui', {
-                        method: 'GET',
-                    })
-
-        }
-
-
 
 
 
@@ -52,6 +55,7 @@
 <body>
     <div class="container">
         <h1 id="h1haut">Detail Qui</h1>
+        <p id="demo"></p>
         <form id="qui-form">
             <div class="form-group">
                 <input type="text" name="nom" class="form-control" placeholder="nom" autocomplete="off">
