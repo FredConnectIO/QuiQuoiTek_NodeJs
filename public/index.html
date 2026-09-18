@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>QuiQuoiTek</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1>Qui Quoi Th&egrave;que</h1>
+  <div>
+    <a href="quiListe.html" class="button" target="quiListe">Qui</a>
+    <a href="quoiListe.html" class="button" target="quoiListe">Quoi</a>
+    <a href="roleListe.html" class="button" target="roleListe">Role</a>
+    <a href="roleListeQuiDeEnsemble.html" class="button" target="roleListeQuiDeEnsemble">Role qui d'ensemble</a>
+    <a href="posteListe.html" class="button" target="posteListe">Poste</a>
+    <a href="themeListe.html" class="button" target="themeListe">Theme</a>
+    <a href="parametreListe.html" class="button" target="parametreListe">Parametre</a>
+    <a href="relThemeListe.html" class="button" target="relThemeListeListe">RelTheme</a>
+    <button type="button" id="btExportAllTables" class="button">Exporter toutes les tables</button>
+  </div>
+
+  <div>
+    <label for="slide-duration" class="form-label">Dur&egrave;e d'affichage d'une photo (en millisecondes)</label>
+    <input id="slide-duration" class="form-control" type="number" min="100" step="100" placeholder="Ex: 2000" autocomplete="off" />
+  </div>
+
+  <script>
+    (function () {
+      const durationInput = document.getElementById('slide-duration');
+      const DURATION_STORAGE_KEY = 'diaporamaSlideDuration';
+
+      const parsePositiveInteger = (value) => {
+        const numberValue = Number.parseInt(String(value ?? '').trim(), 10);
+        return Number.isFinite(numberValue) && numberValue > 0 ? numberValue : null;
+      };
+
+      if (!durationInput) {
+        return;
+      }
+
+      const persistDuration = () => {
+        const durationValue = parsePositiveInteger(durationInput.value);
+        if (durationValue) {
+          window.localStorage.setItem(DURATION_STORAGE_KEY, durationValue);
+        } else {
+          window.localStorage.removeItem(DURATION_STORAGE_KEY);
+        }
+      };
+
+      const savedDuration = parsePositiveInteger(window.localStorage.getItem(DURATION_STORAGE_KEY));
+      if (savedDuration) {
+        durationInput.value = savedDuration;
+      }
+
+      durationInput.addEventListener('change', persistDuration);
+      durationInput.addEventListener('blur', persistDuration);
+      durationInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          persistDuration();
+        }
+      });
+    })();
+
+    (function () {
+      const exportButton = document.getElementById('btExportAllTables');
+      if (!exportButton) {
+        return;
+      }
+
+      const defaultLabel = exportButton.textContent.trim() || 'Exporter toutes les tables';
+      let isRunning = false;
+
+      const setLoadingState = (loading) => {
+        isRunning = loading;
+        exportButton.disabled = loading;
+        exportButton.classList.toggle('disabled', loading);
+        exportButton.textContent = loading ? 'Export en cours...' : defaultLabel;
+      };
+
+      const buildExportSummary = (payload) => {
+        if (!payload || !Array.isArray(payload.tables)) {
+          return 'Export terminé.';
+        }
+        const count = payload.tables.length;
+        const tableList = payload.tables.map((item) => item.table).join(', ');
+        const dirInfo = payload.outputDir ? `\nDossier: ${payload.outputDir}` : '';
+        return `Export terminé (${count} table${count > 1 ? 's' : ''}).${tableList ? `\nTables: ${tableList}` : ''}${dirInfo}`;
+      };
+
+      exportButton.addEventListener('click', async () => {
+        if (isRunning) {
+          return;
+        }
+        const confirmed = window.confirm('Exporter toutes les tables en CSV ?');
+        if (!confirmed) {
+          return;
+        }
+        setLoadingState(true);
+        try {
+          const response = await fetch('/tools/export-all-tables', { method: 'POST' });
+          if (!response.ok) {
+            throw new Error('Export endpoint returned an error.');
+          }
+          const payload = await response.json();
+          alert(buildExportSummary(payload));
+        } catch (error) {
+          console.error('Impossible de lancer exportAllTables', error);
+          alert('Export des tables impossible. Vérifier le serveur.');
+        } finally {
+          setLoadingState(false);
+        }
+      });
+    })();
+  </script>
+
+  <div>
+      <h2>Arborescence (scripts)</h2>
+      <div style="margin-bottom:0.5rem;">
+        <label for="arbo-input-dir">Répertoire racine :</label>
+        <input id="arbo-input-dir" type="text" value="C:\\PARTAGE" style="width:320px;" />
+        <label for="arbo-output-file">Nom fichier sortie :</label>
+        <input id="arbo-output-file" type="text" placeholder="arbo.html" style="width:180px;" />
+      </div>
+      <button type="button" class="button" onclick="openArbo('/tools/arborescence/list-tree-dir')">list-tree-dir</button>
+      <button type="button" class="button" onclick="openArbo('/tools/arborescence/list-tree-dir-2niv')">list-tree-dir-2niv</button>
+      <button type="button" class="button" onclick="openArbo('/tools/arborescence/list-tree-dir-3niv')">list-tree-dir-3niv</button>
+      <button type="button" class="button" onclick="openArbo('/tools/arborescence/list-tree-file')">list-tree-file</button>
+      <script>
+        function openArbo(baseUrl) {
+          const dir = document.getElementById('arbo-input-dir')?.value || '';
+          const output = document.getElementById('arbo-output-file')?.value || '';
+          const params = new URLSearchParams();
+          if (dir) params.set('dir', dir);
+          if (output) params.set('output', output);
+          const url = `${baseUrl}?${params.toString()}`;
+          window.open(url, '_blank');
+        }
+      </script>
+    </div>
+</body>
+</html>

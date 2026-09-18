@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lecture / écriture fichier</title>
+</head>
+
+<body>
+
+    <input type="text" id="texte" size="50">
+
+    <button onclick="enregistrer()">Enregistrer</button>
+    <button onclick="lire()">Lire</button>
+
+    <script>
+
+        async function enregistrer() {
+
+            const texte = document.getElementById("texte").value;
+
+            const response = await fetch("/enregistrer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    texte: texte
+                })
+            });
+
+            if (response.ok) {
+                alert("Texte enregistré");
+            } else {
+                alert("Erreur lors de l'enregistrement");
+            }
+        }
+
+
+        async function lire() {
+
+            const response = await fetch("/lire");
+
+            if (response.ok) {
+                const texte = await response.text();
+
+                document.getElementById("texte").value = texte;
+            }
+        }
+
+    </script>
+
+</body>
+</html>

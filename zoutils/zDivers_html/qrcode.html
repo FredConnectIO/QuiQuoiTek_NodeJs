@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zOutil - QR Code</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 1.8rem;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #d7dde8;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-weight: 700;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      box-sizing: border-box;
+      resize: vertical;
+      padding: 0.75rem;
+      border: 1px solid #aab4c3;
+      border-radius: 6px;
+      font: 1rem Arial, sans-serif;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1rem 0;
+      align-items: end;
+    }
+
+    .field {
+      min-width: 150px;
+    }
+
+    input,
+    select {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 0.45rem 0.55rem;
+      border: 1px solid #aab4c3;
+      border-radius: 6px;
+      background: #fff;
+      font: 1rem Arial, sans-serif;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    button,
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: #e9eef6;
+      color: #111827;
+      cursor: pointer;
+      text-decoration: none;
+      font: 1rem Arial, sans-serif;
+    }
+
+    button:hover,
+    .download-link:hover {
+      background: #dce5f2;
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px dashed #aab4c3;
+      border-radius: 8px;
+      background: #fafcff;
+    }
+
+    canvas {
+      width: min(100%, 320px);
+      height: auto;
+      image-rendering: pixelated;
+      background: #fff;
+    }
+
+    .message {
+      min-height: 1.3rem;
+      color: #475569;
+      text-align: center;
+    }
+
+    .error {
+      color: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>zOutil/qrcode</h1>
+
+    <section class="panel">
+      <label for="qrText">Chaine de caracteres</label>
+      <textarea id="qrText" placeholder="Saisir le texte ou l'URL a encoder"></textarea>
+
+      <div class="options">
+        <div class="field">
+          <label for="qrSize">Taille image</label>
+          <input id="qrSize" type="number" min="160" max="1200" step="20" value="320" />
+        </div>
+        <div class="field">
+          <label for="qrMargin">Marge</label>
+          <input id="qrMargin" type="number" min="0" max="16" step="1" value="4" />
+        </div>
+        <div class="field">
+          <label for="qrCorrection">Correction</label>
+          <select id="qrCorrection">
+            <option value="L">L - faible</option>
+            <option value="M" selected>M - moyenne</option>
+            <option value="Q">Q - haute</option>
+            <option value="H">H - maximale</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="generateButton" type="button">Generer</button>
+        <button id="clearButton" type="button">Effacer</button>
+        <a id="downloadLink" class="download-link" download="qrcode.png" href="#">Telecharger PNG</a>
+      </div>
+
+      <div class="preview">
+        <canvas id="qrCanvas" width="320" height="320" aria-label="Image QR code generee"></canvas>
+        <div id="message" class="message">Saisissez une chaine pour generer le QR code.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script>
+    const textInput = document.getElementById('qrText');
+    const sizeInput = document.getElementById('qrSize');
+    const marginInput = document.getElementById('qrMargin');
+    const correctionInput = document.getElementById('qrCorrection');
+    const generateButton = document.getElementById('generateButton');
+    const clearButton = document.getElementById('clearButton');
+    const downloadLink = document.getElementById('downloadLink');
+    const canvas = document.getElementById('qrCanvas');
+    const message = document.getElementById('message');
+    const context = canvas.getContext('2d');
+
+    const clampNumber = (value, min, max, fallback) => {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isNaN(parsed)) {
+        return fallback;
+      }
+      return Math.min(max, Math.max(min, parsed));
+    };
+
+    const setMessage = (text, isError) => {
+      message.textContent = text;
+      message.classList.toggle('error', Boolean(isError));
+    };
+
+    const clearCanvas = () => {
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      downloadLink.removeAttribute('href');
+    };
+
+    const drawQrCode = () => {
+      const text = textInput.value.trim();
+      const size = clampNumber(sizeInput.value, 160, 1200, 320);
+      const marginModules = clampNumber(marginInput.value, 0, 16, 4);
+      sizeInput.value = size;
+      marginInput.value = marginModules;
+
+      canvas.width = size;
+      canvas.height = size;
+      clearCanvas();
+
+      if (!text) {
+        setMessage('Saisissez une chaine pour generer le QR code.', false);
+        return;
+      }
+
+      if (typeof qrcode !== 'function') {
+        setMessage('La librairie de generation QR code est indisponible.', true);
+        return;
+      }
+
+      try {
+        const qr = qrcode(0, correctionInput.value);
+        qr.addData(text);
+        qr.make();
+
+        const moduleCount = qr.getModuleCount();
+        const moduleSize = size / (moduleCount + marginModules * 2);
+        const qrSize = moduleSize * moduleCount;
+        const offset = (size - qrSize) / 2;
+
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, size, size);
+        context.fillStyle = '#000000';
+
+        for (let row = 0; row < moduleCount; row += 1) {
+          for (let col = 0; col < moduleCount; col += 1) {
+            if (qr.isDark(row, col)) {
+              context.fillRect(
+                Math.round(offset + col * moduleSize),
+                Math.round(offset + row * moduleSize),
+                Math.ceil(moduleSize),
+                Math.ceil(moduleSize)
+              );
+            }
+          }
+        }
+
+        downloadLink.href = canvas.toDataURL('image/png');
+        setMessage('QR code genere.', false);
+      } catch (error) {
+        console.error(error);
+        setMessage('Generation impossible : le texte est peut-etre trop long.', true);
+      }
+    };
+
+    generateButton.addEventListener('click', drawQrCode);
+    textInput.addEventListener('input', drawQrCode);
+    sizeInput.addEventListener('change', drawQrCode);
+    marginInput.addEventListener('change', drawQrCode);
+    correctionInput.addEventListener('change', drawQrCode);
+
+    clearButton.addEventListener('click', () => {
+      textInput.value = '';
+      clearCanvas();
+      setMessage('Saisissez une chaine pour generer le QR code.', false);
+      textInput.focus();
+    });
+
+    clearCanvas();
+  </script>
+</body>
+</html>

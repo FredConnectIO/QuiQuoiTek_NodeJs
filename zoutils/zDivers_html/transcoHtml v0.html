@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zOutil - Transco HTML</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1rem; }
+    .container { max-width: 1100px; margin: auto; }
+    h1 { margin-bottom: 0.25rem; }
+    textarea { width: 100%; min-height: 220px; font-family: monospace; margin-top: 0.5rem; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .col { flex: 1 1 48%; min-width: 300px; }
+    .actions { margin: 0.75rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button { padding: 0.55rem 0.9rem; border: 1px solid #333; background: #f0f0f0; cursor: pointer; }
+    .help { font-size: 0.9rem; color: #444; }
+    .output-render { border: 1px solid #ddd; padding: 0.75rem; min-height: 150px; background: #fff; }
+  </style>
+</head>
+<body>
+	<script>
+	</script>
+  <div class="container">
+    <h1>zOutil/transcoHtml</h1>
+    <p class="help">Convertit un texte structuré simple en HTML et inversement. Modifiez une zone, puis cliquez sur le bouton de conversion.</p>
+
+    <div class="actions">
+      <button id="btnToHtml">Structuré → HTML</button>
+      <button id="btnToStruct">HTML → Structuré</button>
+	  <button onclick="copyHtmlCode()">Copier le code HTML</button>
+      <button id="btnClear">Effacer</button>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label for="structured">Texte structuré</label>
+        <textarea id="structured" placeholder="# Titre 1\n## Titre 2\nTexte...\n- point 1\n- point 2\n\n> bloc citation"></textarea>
+      </div>
+      <div class="col">
+        <label for="html">Code HTML</label>
+        <textarea id="html" placeholder="<h1>Titre</h1><p>Texte...</p>"></textarea>
+      </div>
+    </div>
+
+    <h2>Aperçu rendu</h2>
+    <div id="rendered" class="output-render"></div>
+  </div>
+
+  <script>
+    const structuredInput = document.getElementById('structured');
+    const htmlInput = document.getElementById('html');
+    const rendered = document.getElementById('rendered');
+
+    const escapeHtml = (value) =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const formatInline = (text) => {
+      if (!text) return '';
+      return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/\[(.+?)\]\(([^\s)]+)\)/g, '<a href="$2">$1</a>');
+    };
+
+    const wrapFullHtml = (innerHtml) => {
+      return `<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8" />\n   <title>zOutil/transcoHtml</title>\n  <style>\n   p { margin: 0; line-height: 1.8; font-family: Arial; font-size: 22px; text-indent: 0.5cm; }\n    h1, h2, h3, h4, h5, h6 { margin: 0.5em 0 0.25em 0; }\n    ul, ol, blockquote { margin: 0.25em 0; }\n  </style>\n</head>\n<body>\n${innerHtml}\n</body>\n</html>`;
+    };
+
+    const structuredToHtml = (input) => {
+      const lines = input.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      let output = '';
+      let inList = false;
+      let inBlockquote = false;
+      lines.forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) {
+          if (inList) { output += '</ul>\n'; inList = false; }
+          if (inBlockquote) { output += '</blockquote>\n'; inBlockquote = false; }
+          return;
+        }
+
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) {
+          if (inList) { output += '</ul>\n'; inList = false; }
+          if (inBlockquote) { output += '</blockquote>\n'; inBlockquote = false; }
+          const level = heading[1].length;
+          output += `<h${level}>${formatInline(escapeHtml(heading[2]))}</h${level}>\n`;
+          return;
+        }
+
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          if (!inList) { output += '<ul>\n'; inList = true; }
+          const content = line.substring(2).trim();
+          output += `<li>${formatInline(escapeHtml(content))}</li>\n`;
+          return;
+        }
+
+        if (line.startsWith('> ')) {
+          if (inList) { output += '</ul>\n'; inList = false; }
+          if (!inBlockquote) { output += '<blockquote>\n'; inBlockquote = true; }
+          output += `<p>${formatInline(escapeHtml(line.substring(2).trim()))}</p>\n`;
+          return;
+        }
+
+        if (inList) { output += '</ul>\n'; inList = false; }
+        if (inBlockquote) { output += '</blockquote>\n'; inBlockquote = false; }
+        output += `<p>${formatInline(escapeHtml(line))}</p>\n`;
+      });
+
+      if (inList) { output += '</ul>\n'; }
+      if (inBlockquote) { output += '</blockquote>\n'; }
+      return wrapFullHtml(output.trim());
+    };
+
+    const htmlToStructured = (input) => {
+      try {
+        const doc = new DOMParser().parseFromString(input, 'text/html');
+        const lines = [];
+
+        const walk = (node) => {
+          if (!node) return;
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.replace(/\s+/g, ' ').trim();
+            if (text) lines.push(text);
+            return;
+          }
+
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+          switch (node.tagName.toLowerCase()) {
+            case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': {
+              const level = Number(node.tagName[1]);
+              const text = node.textContent.trim();
+              lines.push('#'.repeat(level) + ' ' + text);
+              lines.push('');
+              break;
+            }
+            case 'p':
+              lines.push(node.textContent.trim());
+              lines.push('');
+              break;
+            case 'ul':
+              node.querySelectorAll(':scope > li').forEach((li) => {
+                lines.push('- ' + li.textContent.trim());
+              });
+              lines.push('');
+              break;
+            case 'ol':
+              let num = 1;
+              node.querySelectorAll(':scope > li').forEach((li) => {
+                lines.push(`${num++}. ${li.textContent.trim()}`);
+              });
+              lines.push('');
+              break;
+            case 'blockquote':
+              node.querySelectorAll('p, div, span, br, text').forEach((child) => {}); // Do nothing
+              lines.push('> ' + node.textContent.trim());
+              lines.push('');
+              break;
+            case 'pre':
+              lines.push('```');
+              lines.push(node.textContent.trim());
+              lines.push('```');
+              lines.push('');
+              break;
+            default:
+              Array.from(node.childNodes).forEach(walk);
+              break;
+          }
+        };
+
+        Array.from(doc.body.childNodes).forEach(walk);
+        // Remove trailing blank lines
+        while (lines.length && lines[lines.length - 1] === '') {
+          lines.pop();
+        }
+        return lines.join('\n');
+      } catch (e) {
+        console.error('Erreur htmlToStructured', e);
+        return '';
+      }
+    };
+
+    const refreshRender = () => {
+      const sourceHtml = htmlInput.value || '';
+      if (!sourceHtml.trim()) {
+        rendered.innerHTML = '<em>Pas de contenu HTML</em>';
+        return;
+      }
+      try {
+        const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+        rendered.innerHTML = doc.body ? doc.body.innerHTML : sourceHtml;
+      } catch (e) {
+        rendered.innerHTML = sourceHtml;
+      }
+    };
+
+    document.getElementById('btnToHtml').addEventListener('click', () => {
+      const html = structuredToHtml(structuredInput.value);
+      htmlInput.value = html;
+      refreshRender();
+    });
+
+    document.getElementById('btnToStruct').addEventListener('click', () => {
+      const structured = htmlToStructured(htmlInput.value);
+      structuredInput.value = structured;
+      refreshRender();
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      structuredInput.value = '';
+      htmlInput.value = '';
+      refreshRender();
+    });
+
+    structuredInput.addEventListener('input', () => {
+      // Keep preview in sync with structured input conversion as user types.
+      try {
+        const previewHtml = structuredToHtml(structuredInput.value);
+        htmlInput.value = previewHtml;
+        refreshRender();
+      } catch {
+        // ignore errors on typing
+      }
+    });
+
+    htmlInput.addEventListener('input', () => {
+      refreshRender();
+    });
+
+    refreshRender();
+
+
+	function copyHtmlCode() {
+		if (htmlInput) {
+			htmlInput.select();
+			document.execCommand('copy');
+			alert('Code HTML copié dans le presse-papiers !');
+		} else {
+			alert('Aucun code HTML trouvé à copier.');
+		}
+	}
+
+
+  </script>
+</body>
+</html>

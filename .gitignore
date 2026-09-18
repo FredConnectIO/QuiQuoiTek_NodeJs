@@ -1,0 +1,10 @@
+/node_modules
+/db/csv
+/db/log
+/db/import/csv
+/db/import/log
+/db/export/csv
+/db/import/zSave(import from 4D)
+/db/export/csv**
+/.vs
+package-lock.json

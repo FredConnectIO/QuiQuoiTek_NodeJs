@@ -1,0 +1,191 @@
+dans le tools.js, fonction open-file-local, 
+si le dossier de filePath n'existe pas, rechercher le dossier du niveau supérieur
+si ce dossier n'existe pas non plus, rechercher le répertoire du niveau superieur
+
+
+dans quiDetail:
+ajouter les input, et bouton 'ouvrir', liés à qui.lienDisk et qui.lienWeb, 
+en reprenant le code correspondant créé pour quoi.lienDisk et quoi.lienWeb dans quoiDetail 
+
+dans quiDetail:
+au lieu d'afficher "Photo 002 (5 photos)", afficher "(photo: 2/5)"
+
+dans quiListe, la largeur des input pays_filter et style_start_filter doit passer à 5 caracteres, mais on doit pouvoir saisir plus
+
+dans parametreDetail:
+1. ajouter l'info (x/y)" où x='position dans la liste' et y='nombre d'élément de la liste)
+2. le déplacement "suivant/précédent" ne respecte pas la liste de "parametreListe"
+
+dans quoiDetail :
+1. ajouter la saisie de "quoi.lienDisk" 
+2. ajouter un bouton qui ouvre un onglet dont l'adresse = (valeur de "parametre.niv1" pour ("parametre.nom" = 'lienDiskQuoi' + quoi.domaine + '_prefixe') + valeur de "quoi.lienDisk" ) 
+
+dans "quiliste" creer un bouton "anniversaire" qui ouvre un onglet contenant le tableau des anniversaire des qui de la liste en cours. 
+ce tableau contient les colonnes suivantes
+- mois + jour
+- nom+prenom 
+- année
+- age du qui pour l'année en cours
+- genre
+- domaine
+- pays
+gérer le tri sur les entetes de colonne.
+
+dans toute l'application, développer une gestion de reltheme.id_role à l'image de la gestion de reltheme.id_role 
+
+
+dans relThemDetail, quiLink.href doit être chargé à "quiDetail.html?"+id_qui
+dans relThemDetail, quoiLink.href doit être chargé à "quoiDetail.html?"+id_quoi
+
+
+dans themeListe transformer l'instruction 'const tdText = quiList+" --- "+quoiList;'
+- ne pas insérer quiList si quiList=0
+- ne pas insérer quoiList si quoiList=0
+- ne pas insérer " --- " si quiList=(0 ou vide) ou si quoiList=(0 ou vide)
+
+
+dans relThemDetail,  <div class="container" id="reltheme-quoi-section"> , ajouter un lien vers quidetail
+dans relThemDetail,  <div class="container" id="reltheme-quoi-section"> , ajouter un lien vers quoidetail
+
+
+
+dans relThemDetail, créer une <div class="container" id="reltheme-quoi-section"> par copie de <div class="container" id="reltheme-qui-section">.
+Cette section <div class="container" id="reltheme-quoi-section"> sera visible uniquement si relTheme.id_quoi est renseignée
+Et la section <div class="container" id="reltheme-qui-section"> sera visible uniquement si relTheme.id_qui est renseignée
+En conséquence, abandonner les appels à 'relThemeDetailKO': toujours passer par 'relThemeDetail'
+
+
+
+dans relThemeListe: fusionner les colonnes "Qui (nom + prénom)" et "Quoi"  en une colonne "Entité":  
+- "Entité" contient quoi.nom si appel "relThemeListe.html?id_quoi="
+- "Entité" contient qui.prenom + qui.nom si appel "relThemeListe.html?id_qui="
+
+créer les mêmes fonctionnalités pour relTheme.id_quoi que celles existantes pour reltheme.id_qui:
+
+1. dans quoidetail: créer bouton "RelTheme (Quoi)
+2. dans relThemeListe: gérer le titre si "relThemeListe.html?id_quoi="
+3. dans relThemeListe: ajouter une colonne "type" dont les lignes prennent la valeur "quoi" si le reltheme concerne un "quoi". ou elles prennent la valeur "qui" si le reltheme concerne un "qui"
+4. dans relThemeListe: créer un bouton "ajouter un thème à "+ quoi.nom. ce bouton appellera  "themeListe.html?mode=select-theme-for-quoi&id_quoi=" + id_quoi de l'appel "relThemeListe.html?id_quoi="
+5. dans themeListe : gérer un appel "themeListe.html?mode=select-theme-for-quoi&id_quoi="
+6. dans themeDetail : gérer le titre si appel "themeDetail.html?6&mode=select-theme-for-quoi&id_quoi=" où "6" est un theme.id
+7. dans themeDetail : créer un bouton "ajouter ce theme à "+quoi.nom affiché en cas d'appel "themeDetail.html?6&mode=select-theme-for-quoi&id_quoi=" où "6" est un theme.id
+
+
+dans "relThemeListe.html?id_theme=", afficher un bouton "ajouter un qui à "+theme.nom.
+cinématique pour ce bouton:
+1. afficher "quiListe?mode=select-qui-for-theme" avec titre "ajouter un qui à "+theme.nom 
+2. à la sélection d'un qui, ouvrir "quiDetail?mode=select-qui-for-theme" dans un nouvel onglet
+3. dans "quiDetail?mode=select-qui-for-theme", afficher le bouton "ajouter ce qui au theme"
+4. si click sur ce bouton, créer reltheme, actualiser la fenetre "relThemeListe.html?id_theme=", puis  window.close();
+
+
+
+dans relThemeListe, lors du btAddThemeForQui, ouvrir themeListe dans un nouvel onglet
+
+
+dans "relThemeListe.html" modifier le fonctionnement de "btAddThemeForQui" :
+si click sur "btAddThemeForQui" alors 
+- aller  "themeliste.html" avec mode=select-theme-for-qui" et "id_qui="+id du qui
+- avec ces parametres, "themeliste.html" se charge avec le titre = "ajouter un theme à " +qui.prenom + qui.nom : 
+- si selection d'un theme dans "themeliste.html" alors appeller "themeDetail.html" avec mode=select-theme-for-qui" et "id_qui="+id du qui, 
+- si "themeDetail.html" est appelé avec ces argument, alors la page affiche le nouveau bouton "btSelectThemeForQui" dont le label sera "ajouter ce theme à "+qui.prenom+qui.nom
+- si click sur ce "btSelectThemeForQui" dans "themeDetail.html", alors créer le reltheme avec reltheme.id_theme chargé avec theme.id et relthem.id_qui chargé avec le paramètre "id_qui" de la page 
+
+
+dans parametreListe créer un filtre sur 'nom contient'
+
+
+x1.si quiliste appelé "id_theme="+nombre et "mode=select-qui-for-theme" alors
+x1.1. filtrer les qui liés cet "id_theme"
+x1.2. si click sur un nom de qui, alors ouvrir quidetail en affichant un nouveau bouton 
+xsi relThemeListe et appelé avec l'argument "id_theme", alors afficher un bouton "ajouter un qui à " + theme.nom
+xAction sur ce nouveau bouton: ouvrir quiliste avec le 
+
+
+1. si relThemeListe et appelé avec l'argument "id_theme" il doit afficher tous les "reltheme" liés à ce id_theme"
+2. dans relThemeDetailKO, abandonner le bouton "les Quis du theme" et créer un bouton "Relations du theme". 
+Ce bouton ouvre relThemeListe dans un nouvel onglet avec comme parametre "id_theme="+theme.id du theme affiché
+
+dans relThemeDetail appelée par relThemeListe, 
+les boutons "précédent" et "suivant" ne prennent pas en compte la liste des "relTheme" de relThemeListe
+
+dans relThemeListe, le bonton "ajouter" ne doit être affiché que si la page est appelée avec un argument "id_qui" ou "id_quoi"
+si appelée avec "id_qui", alors modifier le nom du bouton: il devient "ajouter un theme à " + qui.prenom + qui.nom
+si appelée avec "id_quoi", alors modifier le nom du bouton: il devient "ajouter un theme à " + quoi.nom
+
+dans relThemeListe, ne plus afficher la colonne 'Identifiant', 
+et créer lien avec 'relThemeDetail' avec la colonne 'Nom'
+
+relThemeListe.html doit être appelé avec un argument identifié "id_qui" ou "id_quoi"
+exemple: actuellement, xx appelle la page avec le code suivant:
+const relThemeHref = qui.id ? 'relThemeListe.html?' + qui.id : '#';
+après modification, le code doit être le suivant:
+const relThemeHref = qui.id ? 'relThemeListe.html?id_qui=' + qui.id : '#';
+
+dans themeListe, ajouter les colonnes 'liste des qui' et 'liste des quoi'
+'liste des qui' conntient, pour chaque ligne, la concaténation de tous les 'qui.prenom' + 'qui.nom' concernés, séparés par " ; "
+'liste des quoi' conntient, pour chaque ligne, la concaténation de tous les 'quoi.nom' concernés, séparés par " ; "
+
+dans quidetail, charger <td id="listeRoles"> 
+avec la liste des quoi.nom (séparés par " ; ") liés à ce 'qui' via la table 'role'
+
+créer 'relThemeDetailQuoi' qui correspondra au 'relThemeDetail' 
+mais pour les 'relTheme' dont 'id_quoi' est renseigné
+
+dans detailQui, après <span id="imageVariantNumero"></span>, 
+afficher le nombre de photos existantes pour ce "qui"
+
+dans "quidetail" si l'action "btSelectQuiForNewRole" est un succès, 
+alors créer une alerte avec le texte suivant: 
+qui.prénom + qui.nom + "ajouté à " + quoi.nom du role ajouté
+
+dans 'roledetail', ajouter un texte affiché dans <td id="listeRoles"> 
+qui contient la liste des qui.nom + qui.prenom (séparés par " ; ") 
+correspondants aux "role" liés au "quoi" affiché
+
+dans quoiDetail, transformer les <input> 'quogenre' et 'quopays' en <select>.
+Puis appliquer le même principe de chargement des valeurs de ces <select> 
+que pour les <select> 'genre' et 'pays' de quoiliste
+
+
+dans parametreliste, pour btTriNom, 
+appliquer le meme principe de tri (croissant/décroissant, avec images associées) 
+que pour le bouton btTriNom de quiliste
+
+dans 'quoiliste.html', quand la valeur de <select id="genre_filter"> est modifiée, réaliser les opérations suivantes :
+1. chercher la ligne de la table 'parametre' dont 'parametre.nom' = ('paysQuoi'+ la valeur de "domaine_filter" + la valeur de "genre_filter") . 
+2. Convertir le champ 'parametre.niv1' de la ligne 'parametre' trouvée (séparé par ;) en tableau d'options pour <select id="pays_filter">
+
+dans quoiliste, quand la valeur de <select id="domaine_filter"> est modifiée, 
+recalculer <select id="genre_filter">: chercher parametre.nom = 'genreQuoi'+ la valeur de CINE "domaine_filter" 
+et convertir le champ parametre.niv1 (séparé par ;) en tableau d'options
+
+
+creer "roleListeQuiDeEnsemble.html"
+Créer ce html par copie de "roleListe.html"
+Remplacer colonne 'remarque' par 'Nom Ensemble'
+La liste des 'role' sera la liste des 'ensemble' auxquels est liés 'qui' via 'poste'
+
+
+[2025-11-29 19:00:37] 
+dans 'quiListe.html', ajouter des boutons + et - pour ajuster year_start_filter et year_end_filter et relancer la liste 
+lors de la relance de 'refreshquis', respecter le tri en cours 
+dans 'quiDetail.html', reduire la taille de l'image proportionnellement si la fenetre est reduite 
+l'image est encore trop reduite (agrandir encore) 
+noter dans le fichier 'doc\\demandes_codex.txt' toutes les demandes faites aujourd'hui. commencer chaque demande par '- ' séparer chaque demande par un 'retour chariot'
+
+[2025-11-28 14:26:16] 
+ajouter le texte de mes demandes codex dans le fichier 'doc\\demandes_codex.txt' 
+placer mes demandes les plus récentes au début du fichier 
+ placer date+heure de la demande (format'[2025-11-18 22:33:16]') avant le texte de la demande
+
+[2025-11-18 22:33:16] 
+sauver mes demandes codex dans le fichier doc\\demandes_codex.txt 
+ pour themeDetail, si il existe des reltheme lies a ce theme refuser supprimer 
+ pour quoidetail, si il existe des role lies a ce quoi, alors refuser la suppression 
+ pour quoidetail, si il existe des reltheme lies a ce quoi, alors refuser la suppression 
+ pour quidetail, si il existe des role lies a ce qui, alors refuser la suppression 
+ pour quidetail, si il existe des reltheme lies a ce qui, qui.id=id_qui_ensemble ou qui.id=id_qui, alors refuser la suppression 
+ pour quidetail, si il existe des poste lies a ce qui, alors refuser la suppression 
+ pour tous les boutons supprimer demander confirmation avant de supprimer
+

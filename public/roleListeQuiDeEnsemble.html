@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Th&egrave;que - Ensembles du Qui</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1>Qui Quoi Th&egrave;que - Ensembles du Qui</h1>
+
+  <div>
+    
+    <a href="#" id="btAjouterQui" class="button">Ajouter un qui</a>
+    <a href="#" id="btAjouterQuoi" class="button">Ajouter un quoi</a>
+    <a href="#" id="btDiaporama" class="button">Diaporama</a>
+    <button type="button" id="btActualiser" class="button">Actualiser</button>
+    <button type="button" id="btAgeMinus" class="buttonSmall" aria-label="Diminuer les filtres &acirc;ge">-</button>
+    <button type="button" id="btAgePlus" class="buttonSmall" aria-label="Augmenter les filtres &acirc;ge">+</button>
+    <label for="age_increment">incr&eacute;ment:</label>
+    <input type="number" id="age_increment" min="1" value="1" class="filter-input largeur_etroite" aria-label="Incr&eacute;ment &acirc;ge">
+    <span id="role_ensemble_count" class="list-count" aria-live="polite"></span>
+  </div>
+
+  <div id="role_filters" class="filter-group">
+    <label for="filter_nom_qui">Nom qui:</label>
+    <input id="filter_nom_qui" type="text" class="filter-input largeur_moyenne" placeholder="ex. mar">
+
+    <label for="filter_nom_quoi">Nom quoi:</label>
+    <input id="filter_nom_quoi" type="text" class="filter-input largeur_moyenne" placeholder="ex. liv">
+
+    <label for="filter_nom_role">Nom role:</label>
+    <input id="filter_nom_role" type="text" class="filter-input largeur_moyenne" placeholder="ex. com">
+
+    <label for="filter_domaine_quoi">Domaine quoi:</label>
+    <select id="filter_domaine_quoi" class="filter-input">
+      <option value="">-- tous --</option>
+    </select>
+
+    <label for="filter_genre_qui">Genre qui:</label>
+    <select id="filter_genre_qui" class="filter-input">
+      <option value="">-- tous --</option>
+    </select>
+
+    <label for="filter_date_min">Date quoi min:</label>
+    <input id="filter_date_min" type="number" class="filter-input largeur_etroite" placeholder="1900">
+
+    <label for="filter_date_max">Date quoi max:</label>
+    <input id="filter_date_max" type="number" class="filter-input largeur_etroite" placeholder="2000">
+
+    <label for="filter_age_min">Age qui min:</label>
+    <input id="filter_age_min" type="number" class="filter-input largeur_etroite" placeholder="20">
+
+    <label for="filter_age_max">Age qui max:</label>
+    <input id="filter_age_max" type="number" class="filter-input largeur_etroite" placeholder="40">
+  </div>
+
+  <table id="role_table" class="table">
+    <thead>
+      <tr>
+        <th>
+          <button id="btTriNomQui" class="buttonSmall">Nom qui</button>
+          <img id="imgSensTriNomQui" height="25" />
+        </th>
+        <th>
+          <button id="btTriPoste" class="buttonSmall">Poste</button>
+          <img id="imgSensTriPoste" height="25" />
+        </th>
+        <th>
+          <button id="btTriNomEnsemble" class="buttonSmall">Nom Ensemble</button>
+          <img id="imgSensTriNomEnsemble" height="25" />
+        </th>
+        <th>
+          <button id="btTriNomQuoi" class="buttonSmall">Nom quoi</button>
+          <img id="imgSensTriNomQuoi" height="25" />
+        </th>
+        <th>
+          <button id="btTriNom" class="buttonSmall">Nom role</button>
+          <img id="imgSensTriNom" height="25" />
+        </th>
+        <th>
+          <button id="btTriAnneeQuoi" class="buttonSmall">Ann&eacute;e quoi</button>
+          <img id="imgSensTriAnneeQuoi" height="25" />
+        </th>
+        <th>
+          <button id="btTriAgeQui" class="buttonSmall">Age qui</button>
+          <img id="imgSensTriAgeQui" height="25" />
+        </th>
+      </tr>
+    </thead>
+    <tbody id="role_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const createTd = (value) => {
+      const td = document.createElement('td');
+      td.textContent = value ?? '';
+      return td;
+    };
+
+    const buildFullname = (nom, prenom, fallback = '') => {
+      const parts = [];
+      const safeNom = typeof nom === 'string' ? nom.trim() : '';
+      const safePrenom = typeof prenom === 'string' ? prenom.trim() : '';
+      if (safePrenom) {
+        parts.push(safePrenom);
+      }
+      if (safeNom) {
+        parts.push(safeNom);
+      }
+      if (parts.length) {
+        return parts.join(' ').trim();
+      }
+      if (fallback && typeof fallback === 'string') {
+        return fallback;
+      }
+      return '';
+    };
+
+    const createPosteLinkCell = (lib, id) => {
+      const td = document.createElement('td');
+      const label = (lib && String(lib).trim()) ? lib : 'nr';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const a = document.createElement('a');
+      a.textContent = label;
+      a.href = 'posteDetail.html?' + id;
+      a.target = 'posteDetail' + id;
+      td.append(a);
+      return td;
+    };
+
+    const createRoleLinkCell = (lib, id) => {
+      const td = document.createElement('td');
+      const label = (lib && String(lib).trim()) ? lib : 'nr';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const a = document.createElement('a');
+      a.textContent = label;
+      a.href = 'roleDetail.html?' + id;
+      a.target = 'roleDetail' + id;
+      td.append(a);
+      return td;
+    };
+
+    const createGroupCell = (lib, id) => {
+      const td = document.createElement('td');
+      const label = (lib && String(lib).trim()) ? lib : 'nr';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const a = document.createElement('a');
+      a.textContent = label;
+      a.href = 'quiDetail.html?' + id;
+      a.target = 'quiDetail' + id;
+      td.append(a);
+      return td;
+    };
+
+    const createQuoiCell = (lib, id) => {
+      const td = document.createElement('td');
+      const label = (lib && String(lib).trim()) ? lib : 'nr';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const a = document.createElement('a');
+      a.textContent = label;
+      a.href = 'quoiDetail.html?' + id;
+      a.target = 'quoiDetail' + id;
+      td.append(a);
+      return td;
+    };
+
+    const createQuiCell = (lib, id) => {
+      const td = document.createElement('td');
+      const label = (lib && String(lib).trim()) ? lib : 'nr';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const a = document.createElement('a');
+      a.textContent = label;
+      a.href = 'quiDetail.html?' + id;
+      a.target = 'quiDetail' + id;
+      td.append(a);
+      return td;
+    };
+
+    const hasValidQuoiYear = (value) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+      const numeric = Number(value);
+      return Number.isFinite(numeric) && numeric !== 0;
+    };
+
+    const hasValidQuiBirthYear = (value) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+      const numeric = Number(value);
+      return Number.isFinite(numeric) && numeric !== 0;
+    };
+
+    const formatYear = (value) => {
+      if (!hasValidQuoiYear(value)) {
+        return '';
+      }
+      return String(value).trim();
+    };
+
+    const formatAge = (value, quoiYear, birthYear) => {
+      if (!hasValidQuoiYear(quoiYear) || !hasValidQuiBirthYear(birthYear)) {
+        return '';
+      }
+      if (value === null || value === undefined) {
+        return '';
+      }
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        return '';
+      }
+      return `${numeric} ans`;
+    };
+
+    const computeMemberAgeAtQuoi = (birthYear, quoiYear) => {
+      const birth = Number(birthYear);
+      const quoi = Number(quoiYear);
+      if (!Number.isFinite(birth) || birth === 0 || !Number.isFinite(quoi) || quoi === 0) {
+        return null;
+      }
+      return quoi - birth;
+    };
+
+    const DEFAULT_SORT_ORDER = 'asc';
+
+    const resolveOrigin = () => {
+      const origin = window.location.origin;
+      if (!origin || origin === 'null') {
+        return '*';
+      }
+      return origin;
+    };
+
+    const allowedOrigin = resolveOrigin();
+    const ROLE_DIAPORAMA_STORAGE_KEY = 'roleListDiaporama';
+    const QUI_SELECTION_MODE_QUOI = 'select-qui-for-quoi';
+    const QUOI_SELECTION_MODE_QUI = 'select-quoi-for-qui';
+    const btDiaporama = document.getElementById('btDiaporama');
+    const btAjouterQui = document.getElementById('btAjouterQui');
+    const btAjouterQuoi = document.getElementById('btAjouterQuoi');
+    const pageTitleElement = document.querySelector('h1');
+    const DEFAULT_PAGE_TITLE = pageTitleElement ? pageTitleElement.textContent : '';
+    const DEFAULT_ADD_QUI_LABEL = btAjouterQui ? btAjouterQui.textContent : '';
+    const DEFAULT_ADD_QUOI_LABEL = btAjouterQuoi ? btAjouterQuoi.textContent : '';
+    const imgSensTriNomQui = document.getElementById('imgSensTriNomQui');
+    const imgSensTriPoste = document.getElementById('imgSensTriPoste');
+    const imgSensTriNomEnsemble = document.getElementById('imgSensTriNomEnsemble');
+    const imgSensTriNomQuoi = document.getElementById('imgSensTriNomQuoi');
+    const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const imgSensTriAnneeQuoi = document.getElementById('imgSensTriAnneeQuoi');
+    const imgSensTriAgeQui = document.getElementById('imgSensTriAgeQui');
+    const SORT_ICONS = {
+      none: 'img/fleche_vide.svg',
+      asc: 'img/fleche_haut.svg',
+      desc: 'img/fleche_bas.svg',
+    };
+    let sortStateNomQui = 'none';
+    let sortStatePoste = 'none';
+    let sortStateNomEnsemble = 'none';
+    let sortStateNomQuoi = 'none';
+    let sortStateNomRole = 'none';
+    let sortStateAnneeQuoi = 'none';
+    let sortStateAgeQui = 'none';
+    let forcedQuoiDetails = null;
+    let forcedQuoiLabel = '';
+    let forcedQuoiDetailsPromise = null;
+    const normalizeIdValue = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      const text = String(value).trim();
+      if (!text) {
+        return '';
+      }
+      const trimmed = text.replace(/^0+/, '');
+      return trimmed || '0';
+    };
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldDisplayAddQuiButton = false;
+    if (btAjouterQui) {
+      btAjouterQui.style.display = 'none';
+    }
+    const shouldDisplayAddQuoiButton = false;
+    if (btAjouterQuoi) {
+      btAjouterQuoi.style.display = 'none';
+    }
+    const requestedIdQuoi = urlParams.get('id_quoi');
+    let forcedIdQuoi = requestedIdQuoi ? normalizeIdValue(requestedIdQuoi) : null;
+    if (forcedIdQuoi && !forcedIdQuoi.trim()) {
+      forcedIdQuoi = null;
+    }
+    const requestedIdQui = urlParams.get('id_qui');
+    let forcedIdQui = requestedIdQui ? normalizeIdValue(requestedIdQui) : null;
+    if (forcedIdQui && !forcedIdQui.trim()) {
+      forcedIdQui = null;
+    }
+    let forcedQuiDetails = null;
+    let forcedQuiLabel = '';
+    let forcedQuiDetailsPromise = null;
+    const getQuoiDisplayLabel = () => {
+      if (forcedQuoiLabel) {
+        return forcedQuoiLabel;
+      }
+      if (forcedIdQuoi) {
+        return `quoi ${forcedIdQuoi}`;
+      }
+      return '';
+    };
+    const getQuiDisplayLabel = () => {
+      if (forcedQuiLabel) {
+        return forcedQuiLabel;
+      }
+      if (forcedIdQui) {
+        return `qui ${forcedIdQui}`;
+      }
+      return '';
+    };
+    const updateRoleContextLabels = () => {
+      if (pageTitleElement) {
+        if (forcedIdQui) {
+          const label = getQuiDisplayLabel();
+          pageTitleElement.textContent = label
+            ? `${label} dans ses ensembles`
+            : DEFAULT_PAGE_TITLE;
+        } else {
+          pageTitleElement.textContent = DEFAULT_PAGE_TITLE;
+        }
+        document.title = pageTitleElement.textContent;
+      }
+      if (btAjouterQuoi) {
+        btAjouterQuoi.textContent = DEFAULT_ADD_QUOI_LABEL;
+      }
+      if (btAjouterQui) {
+        btAjouterQui.textContent = DEFAULT_ADD_QUI_LABEL;
+      }
+    };
+    updateRoleContextLabels();
+    const fetchForcedQuoiDetails = async () => {
+      if (!forcedIdQuoi) {
+        forcedQuoiDetails = null;
+        forcedQuoiLabel = '';
+        return null;
+      }
+      if (forcedQuoiDetails) {
+        return forcedQuoiDetails;
+      }
+      if (forcedQuoiDetailsPromise) {
+        return forcedQuoiDetailsPromise;
+      }
+      forcedQuoiDetailsPromise = fetch(`/quois/${encodeURIComponent(forcedIdQuoi)}`)
+        .then((response) => (response.ok ? response.json() : null))
+        .then((quoi) => {
+          forcedQuoiDetails = quoi;
+          forcedQuoiLabel = quoi && quoi.nom ? String(quoi.nom).trim() : '';
+          updateRoleContextLabels();
+          return forcedQuoiDetails;
+        })
+        .catch((error) => {
+          console.warn('Impossible de charger le quoi associ\u00e9', error);
+          updateRoleContextLabels();
+          return null;
+        })
+        .finally(() => {
+          forcedQuoiDetailsPromise = null;
+        });
+      return forcedQuoiDetailsPromise;
+    };
+    const fetchForcedQuiDetails = async () => {
+      if (!forcedIdQui) {
+        forcedQuiDetails = null;
+        forcedQuiLabel = '';
+        return null;
+      }
+      if (forcedQuiDetails) {
+        return forcedQuiDetails;
+      }
+      if (forcedQuiDetailsPromise) {
+        return forcedQuiDetailsPromise;
+      }
+      forcedQuiDetailsPromise = fetch(`/quis/${encodeURIComponent(forcedIdQui)}`)
+        .then((response) => (response.ok ? response.json() : null))
+        .then((qui) => {
+          forcedQuiDetails = qui;
+          const nom = qui && qui.nom ? String(qui.nom).trim() : '';
+          const prenom = qui && qui.prenom ? String(qui.prenom).trim() : '';
+          forcedQuiLabel = [nom, prenom].filter((value) => value).join(' ').trim();
+          updateRoleContextLabels();
+          return forcedQuiDetails;
+        })
+        .catch((error) => {
+          console.warn('Impossible de charger le qui associ\u00e9', error);
+          updateRoleContextLabels();
+          return null;
+        })
+        .finally(() => {
+          forcedQuiDetailsPromise = null;
+        });
+      return forcedQuiDetailsPromise;
+    };
+    const openQuiSelectionForQuoi = async () => {
+      if (!forcedIdQuoi) {
+        alert('Identifiant du quoi manquant pour ajouter un qui.');
+        return;
+      }
+      try {
+        await fetchForcedQuoiDetails();
+      } catch (error) {
+        console.warn('Chargement du quoi impossible pour la s\u00e9lection', error);
+      }
+      const quoiLabel = forcedQuoiLabel || `quoi ${forcedIdQuoi}`;
+      const selectionLabel = `ajout d'un qui \u00e0 ${quoiLabel}`;
+      const url = new URL('quiListe.html', window.location.href);
+      url.searchParams.set('mode', QUI_SELECTION_MODE_QUOI);
+      url.searchParams.set('quoiId', forcedIdQuoi);
+      if (forcedQuoiLabel) {
+        url.searchParams.set('quoiNom', forcedQuoiLabel);
+      }
+      url.searchParams.set('selectionLabel', selectionLabel);
+      url.searchParams.set('source', 'roleListe');
+      window.open(url.toString(), '_blank');
+    };
+    if (forcedIdQuoi) {
+      fetchForcedQuoiDetails();
+    }
+    const openQuoiSelectionForQui = async () => {
+      if (!forcedIdQui) {
+        alert('Identifiant du qui manquant pour ajouter un quoi.');
+        return;
+      }
+      try {
+        await fetchForcedQuiDetails();
+      } catch (error) {
+        console.warn('Chargement du qui impossible pour la s\u00e9lection', error);
+      }
+      const quiLabel = forcedQuiLabel || `qui ${forcedIdQui}`;
+      const selectionLabel = `ajout d'un quoi \u00e0 ${quiLabel}`;
+      const url = new URL('quoiListe.html', window.location.href);
+      url.searchParams.set('mode', QUOI_SELECTION_MODE_QUI);
+      url.searchParams.set('quiId', forcedIdQui);
+      if (forcedQuiLabel) {
+        url.searchParams.set('quiNom', forcedQuiLabel);
+      }
+      url.searchParams.set('selectionLabel', selectionLabel);
+      url.searchParams.set('source', 'roleListe');
+      window.open(url.toString(), '_blank');
+    };
+    if (forcedIdQui) {
+      fetchForcedQuiDetails();
+    }
+    const sortAlias = {
+      nom: 'nom',
+      role: 'nom',
+      nomrole: 'nom',
+      nomqui: 'nomQui',
+      qui: 'nomQui',
+      nomquoi: 'nomQuoi',
+      quoi: 'nomQuoi',
+      nomensemble: 'nomEnsemble',
+      ensemble: 'nomEnsemble',
+      annee: 'anneeQuoi',
+      anneequoi: 'anneeQuoi',
+      age: 'ageQui',
+      agequi: 'ageQui',
+      datenaiss: 'naissanceQui',
+      naissance: 'naissanceQui',
+      naissancequi: 'naissanceQui',
+    };
+    const updateNomQuiSortIndicator = (state) => {
+      sortStateNomQui = state;
+      if (imgSensTriNomQui) {
+        imgSensTriNomQui.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updatePosteSortIndicator = (state) => {
+      sortStatePoste = state;
+      if (imgSensTriPoste) {
+        imgSensTriPoste.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updateNomEnsembleSortIndicator = (state) => {
+      sortStateNomEnsemble = state;
+      if (imgSensTriNomEnsemble) {
+        imgSensTriNomEnsemble.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updateNomQuoiSortIndicator = (state) => {
+      sortStateNomQuoi = state;
+      if (imgSensTriNomQuoi) {
+        imgSensTriNomQuoi.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updateNomRoleSortIndicator = (state) => {
+      sortStateNomRole = state;
+      if (imgSensTriNom) {
+        imgSensTriNom.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updateAnneeQuoiSortIndicator = (state) => {
+      sortStateAnneeQuoi = state;
+      if (imgSensTriAnneeQuoi) {
+        imgSensTriAnneeQuoi.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const updateAgeQuiSortIndicator = (state) => {
+      sortStateAgeQui = state;
+      if (imgSensTriAgeQui) {
+        imgSensTriAgeQui.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+    const resetNomQuiSortIndicator = () => updateNomQuiSortIndicator('none');
+    const resetPosteSortIndicator = () => updatePosteSortIndicator('none');
+    const resetNomEnsembleSortIndicator = () => updateNomEnsembleSortIndicator('none');
+    const resetNomQuoiSortIndicator = () => updateNomQuoiSortIndicator('none');
+    const resetNomRoleSortIndicator = () => updateNomRoleSortIndicator('none');
+    const resetAnneeQuoiSortIndicator = () => updateAnneeQuoiSortIndicator('none');
+    const resetAgeQuiSortIndicator = () => updateAgeQuiSortIndicator('none');
+    const resetAllSortIndicators = () => {
+      resetNomQuiSortIndicator();
+      resetPosteSortIndicator();
+      resetNomEnsembleSortIndicator();
+      resetNomQuoiSortIndicator();
+      resetNomRoleSortIndicator();
+      resetAnneeQuoiSortIndicator();
+      resetAgeQuiSortIndicator();
+    };
+    resetAllSortIndicators();
+    const requestedSortParam = (urlParams.get('sort') || '').toLowerCase();
+    let initialSortKey = sortAlias[requestedSortParam] || null;
+    if (!initialSortKey) {
+      if (forcedIdQui) {
+        initialSortKey = 'nomQuoi';
+      } else if (forcedIdQuoi) {
+        initialSortKey = 'nomQui';
+      }
+    }
+    let initialSortApplied = !initialSortKey;
+
+    const normalizeString = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      return String(value).trim().toLowerCase();
+    };
+
+    const toComparableNumber = (value) => {
+      if (value === null || value === undefined || value === '') {
+        return Number.NaN;
+      }
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : Number.NaN;
+    };
+
+    let allRoles = [];
+    let currentRoles = [];
+    const roleEnsembleCountLabel = document.getElementById("role_ensemble_count");
+
+    const updateRoleEnsembleCount = (count) => {
+      if (!roleEnsembleCountLabel) {
+        return;
+      }
+      roleEnsembleCountLabel.textContent = `( ${count} )`;
+    };
+
+    const orderSubscribers = new Set();
+
+    const filterElements = {
+      nomQui: document.getElementById('filter_nom_qui'),
+      nomQuoi: document.getElementById('filter_nom_quoi'),
+      nomRole: document.getElementById('filter_nom_role'),
+      domaineQuoi: document.getElementById('filter_domaine_quoi'),
+      genreQui: document.getElementById('filter_genre_qui'),
+      dateMin: document.getElementById('filter_date_min'),
+      dateMax: document.getElementById('filter_date_max'),
+      ageMin: document.getElementById('filter_age_min'),
+      ageMax: document.getElementById('filter_age_max'),
+    };
+
+    const getNumberInputValue = (input) => {
+      if (!input) {
+        return null;
+      }
+      const value = typeof input.value === 'string' ? input.value.trim() : '';
+      if (!value) {
+        return null;
+      }
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const getTextFilterValue = (input) => {
+      if (!input || typeof input.value !== 'string') {
+        return '';
+      }
+      return normalizeString(input.value);
+    };
+
+    const getSelectFilterValue = (select) => {
+      if (!select) {
+        return '';
+      }
+      return normalizeString(select.value);
+    };
+
+    const getFilterValues = () => ({
+      nomQui: getTextFilterValue(filterElements.nomQui),
+      nomQuoi: getTextFilterValue(filterElements.nomQuoi),
+      nomRole: getTextFilterValue(filterElements.nomRole),
+      domaineQuoi: getSelectFilterValue(filterElements.domaineQuoi),
+      genreQui: getSelectFilterValue(filterElements.genreQui),
+      dateMin: getNumberInputValue(filterElements.dateMin),
+      dateMax: getNumberInputValue(filterElements.dateMax),
+      ageMin: getNumberInputValue(filterElements.ageMin),
+      ageMax: getNumberInputValue(filterElements.ageMax),
+      idQuoi: forcedIdQuoi,
+      idQui: forcedIdQui,
+    });
+
+    const buildRowsFromPostesAndRoles = (postes, roles, memberMap) => {
+      if (!Array.isArray(postes) || !Array.isArray(roles)) {
+        return [];
+      }
+      const rolesByGroup = new Map();
+      roles.forEach((role) => {
+        const groupId = normalizeIdValue(role.id_qui);
+        if (!groupId) {
+          return;
+        }
+        if (!rolesByGroup.has(groupId)) {
+          rolesByGroup.set(groupId, []);
+        }
+        rolesByGroup.get(groupId).push(role);
+      });
+
+      const result = [];
+      postes.forEach((poste) => {
+        if (!poste) {
+          return;
+        }
+        const memberId = normalizeIdValue(poste.id_qui_element);
+        const groupId = normalizeIdValue(poste.id_qui_ensemble);
+        if (!groupId) {
+          return;
+        }
+        const matchingRoles = rolesByGroup.get(groupId);
+        if (!matchingRoles || !matchingRoles.length) {
+          return;
+        }
+
+        const memberLabel = poste.qui_fullname
+          ? String(poste.qui_fullname).trim()
+          : buildFullname(poste.qui_nom, poste.qui_prenom, memberId);
+        const groupLabel = poste.quiensemble_fullname
+          ? String(poste.quiensemble_fullname).trim()
+          : buildFullname(poste.quiensemble_nom, poste.quiensemble_prenom, groupId);
+        const posteDescr = poste && poste.descr ? String(poste.descr).trim() : '';
+        const member = memberId && memberMap ? memberMap.get(memberId) : null;
+        const memberBirthYear = member && member.datenaiss_aaaa !== undefined ? member.datenaiss_aaaa : null;
+
+        matchingRoles.forEach((role) => {
+          const normalizedRoleId = normalizeIdValue(role.id) || role.id;
+          const ageAtQuoi = computeMemberAgeAtQuoi(memberBirthYear, role.quoi_date_aaaa);
+          result.push({
+            ...role,
+            id: normalizedRoleId,
+            poste_id: poste.id,
+            poste_descr: posteDescr,
+            id_qui: memberId,
+            qui_nomprenom: memberLabel || memberId || '',
+            qui_genre: poste.qui_genre || '',
+            nom_ensemble: groupLabel || groupId || '',
+            remarque: role.remarque,
+            nom_quoi: role.nom_quoi,
+            id_quoi: normalizeIdValue(role.id_quoi),
+            qui_datenaiss_aaaa: memberBirthYear,
+            age_quick_estimate: ageAtQuoi,
+          });
+        });
+      });
+      return result;
+    };
+
+    const getRoleYear = (role) => {
+      const year = toComparableNumber(role.quoi_date_aaaa);
+      return Number.isFinite(year) ? year : null;
+    };
+
+    const getRoleAge = (role) => {
+      if (!hasValidQuoiYear(role.quoi_date_aaaa) || !hasValidQuiBirthYear(role.qui_datenaiss_aaaa)) {
+        return null;
+      }
+      const age = toComparableNumber(role.age_quick_estimate);
+      return Number.isFinite(age) ? age : null;
+    };
+
+    const roleMatchesFilters = (role, filters) => {
+      if (filters.idQuoi) {
+        const roleQuoiId = normalizeIdValue(role.id_quoi);
+        if (roleQuoiId !== filters.idQuoi) {
+          return false;
+        }
+      }
+      if (filters.idQui) {
+        const roleQuiId = normalizeIdValue(role.id_qui);
+        if (roleQuiId !== filters.idQui) {
+          return false;
+        }
+      }
+      if (filters.nomQui && !normalizeString(role.qui_nomprenom).startsWith(filters.nomQui)) {
+        return false;
+      }
+      if (filters.nomQuoi && !normalizeString(role.nom_quoi).startsWith(filters.nomQuoi)) {
+        return false;
+      }
+      if (filters.nomRole && !normalizeString(role.nom).startsWith(filters.nomRole)) {
+        return false;
+      }
+      if (filters.domaineQuoi && normalizeString(role.quoi_domaine) !== filters.domaineQuoi) {
+        return false;
+      }
+      if (filters.genreQui && normalizeString(role.qui_genre) !== filters.genreQui) {
+        return false;
+      }
+
+      const year = getRoleYear(role);
+      if (filters.dateMin !== null && (year === null || year < filters.dateMin)) {
+        return false;
+      }
+      if (filters.dateMax !== null && (year === null || year > filters.dateMax)) {
+        return false;
+      }
+
+      const age = getRoleAge(role);
+      if (filters.ageMin !== null && (age === null || age < filters.ageMin)) {
+        return false;
+      }
+      if (filters.ageMax !== null && (age === null || age > filters.ageMax)) {
+        return false;
+      }
+      return true;
+    };
+
+    const getCurrentOrderIds = () => currentRoles.map((role) => role.id);
+
+    const notifyOrderSubscribers = () => {
+      if (orderSubscribers.size === 0) {
+        return;
+      }
+      const message = {
+        type: 'ROLE_ORDER_RESPONSE',
+        order: getCurrentOrderIds(),
+      };
+      [...orderSubscribers].forEach((subscriber) => {
+        if (!subscriber || subscriber.closed) {
+          orderSubscribers.delete(subscriber);
+          return;
+        }
+        try {
+          subscriber.postMessage(message, allowedOrigin);
+        } catch (error) {
+          orderSubscribers.delete(subscriber);
+        }
+      });
+    };
+
+    const populateFilterSelect = (element, values) => {
+      if (!element) {
+        return;
+      }
+      const previousValue = element.value;
+      element.innerHTML = '';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '-- tous --';
+      element.append(defaultOption);
+      values.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        element.append(option);
+      });
+      if (previousValue) {
+        const normalizedPrevious = normalizeString(previousValue);
+        const match = values.find(
+          (value) => normalizeString(value) === normalizedPrevious
+        );
+        if (match) {
+          element.value = match;
+          return;
+        }
+      }
+      element.value = '';
+    };
+
+    const getAgeIncrement = () => {
+      const input = document.getElementById('age_increment');
+      const value = input ? Number.parseInt(input.value.trim(), 10) : 1;
+      return Number.isNaN(value) || value < 1 ? 1 : value;
+    };
+
+    const adjustAgeFilters = (direction) => {
+      const delta = direction * getAgeIncrement();
+      const minInput = document.getElementById('filter_age_min');
+      const maxInput = document.getElementById('filter_age_max');
+      const applyDelta = (input) => {
+        if (!input || typeof input.value !== 'string') {
+          return;
+        }
+        const current = Number.parseInt(input.value.trim(), 10);
+        if (Number.isNaN(current)) {
+          return;
+        }
+        input.value = current + delta;
+      };
+      applyDelta(minInput);
+      applyDelta(maxInput);
+      applyFiltersAndRender();
+    };
+
+    const renderRoles = (roles) => {
+      const tbody = document.getElementById('role_table_tbody');
+      tbody.innerHTML = '';
+      roles.forEach((role) => {
+        const tr = document.createElement('tr');
+        tr.append(createQuiCell(role.qui_nomprenom || '', role.id_qui));
+        tr.append(createPosteLinkCell(role.poste_descr, role.poste_id));
+        tr.append(createGroupCell(role.nom_ensemble || role.remarque, role.id_quoi));
+        tr.append(createQuoiCell(role.nom_quoi || '', role.id_quoi));
+        tr.append(createRoleLinkCell(role.nom, role.id));
+        tr.append(createTd(formatYear(role.quoi_date_aaaa)));
+        tr.append(createTd(formatAge(role.age_quick_estimate, role.quoi_date_aaaa, role.qui_datenaiss_aaaa)));
+        tbody.append(tr);
+      updateRoleEnsembleCount(roles.length);
+      });
+      notifyOrderSubscribers();
+    };
+
+    const applyFiltersAndRender = () => {
+      const filters = getFilterValues();
+      const filtered = allRoles.filter((role) => roleMatchesFilters(role, filters));
+      currentRoles = filtered.slice();
+      if (!initialSortApplied && initialSortKey) {
+        applyInitialSort(initialSortKey);
+        initialSortApplied = true;
+      } else {
+        applyActiveSort();
+      }
+      renderRoles(currentRoles);
+    };
+
+    async function fetchRoles() {
+      const [postesRes, rolesRes, quisRes] = await Promise.all([
+        fetch('/postes'),
+        fetch('/roles'),
+        fetch('/quis'),
+      ]);
+      if (!postesRes.ok || !rolesRes.ok || !quisRes.ok) {
+        alert('Lecture des postes, roles ou quis impossible');
+        return [];
+      }
+      const [postes, roles, quis] = await Promise.all([postesRes.json(), rolesRes.json(), quisRes.json()]);
+      const memberMap = new Map();
+      if (Array.isArray(quis)) {
+        quis.forEach((qui) => {
+          const key = normalizeIdValue(qui.id);
+          if (key) {
+            memberMap.set(key, qui);
+          }
+        });
+      }
+      return buildRowsFromPostesAndRoles(postes, roles, memberMap);
+    }
+
+    async function refreshRoles() {
+      allRoles = await fetchRoles();
+      const domaineValues = Array.from(
+        new Set(
+          allRoles
+            .map((role) => (role.quoi_domaine === null || role.quoi_domaine === undefined ? '' : String(role.quoi_domaine).trim()))
+            .filter((value) => value)
+        )
+      ).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+      populateFilterSelect(filterElements.domaineQuoi, domaineValues);
+
+      const genreValues = Array.from(
+        new Set(
+          allRoles
+            .map((role) => (role.qui_genre === null || role.qui_genre === undefined ? '' : String(role.qui_genre).trim()))
+            .filter((value) => value)
+        )
+      ).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+      populateFilterSelect(filterElements.genreQui, genreValues);
+
+      applyFiltersAndRender();
+    }
+
+    const compareStrings = (a, b, order) => {
+      const textA = normalizeString(a);
+      const textB = normalizeString(b);
+      const hasA = textA.length > 0;
+      const hasB = textB.length > 0;
+      if (!hasA && !hasB) {
+        return 0;
+      }
+      if (!hasA) {
+        return 1;
+      }
+      if (!hasB) {
+        return -1;
+      }
+      const result = textA.localeCompare(textB);
+      return order === 'desc' ? -result : result;
+    };
+
+    const compareNumbers = (a, b, order) => {
+      const numA = toComparableNumber(a);
+      const numB = toComparableNumber(b);
+      const validA = Number.isFinite(numA);
+      const validB = Number.isFinite(numB);
+      if (!validA && !validB) {
+        return 0;
+      }
+      if (!validA) {
+        return 1;
+      }
+      if (!validB) {
+        return -1;
+      }
+      const diff = numA - numB;
+      if (diff === 0) {
+        return 0;
+      }
+      return order === 'desc' ? (diff > 0 ? -1 : 1) : (diff > 0 ? 1 : -1);
+    };
+
+    const sortCurrentRoles = (extractor, order, { type = 'string' } = {}) => {
+      const compare = type === 'number' ? compareNumbers : compareStrings;
+      currentRoles.sort((a, b) => compare(extractor(a), extractor(b), order));
+    };
+
+    const resetOtherSortIndicators = (active) => {
+      if (active !== 'nomQui') {
+        resetNomQuiSortIndicator();
+      }
+      if (active !== 'poste') {
+        resetPosteSortIndicator();
+      }
+      if (active !== 'nomEnsemble') {
+        resetNomEnsembleSortIndicator();
+      }
+      if (active !== 'nomQuoi') {
+        resetNomQuoiSortIndicator();
+      }
+      if (active !== 'nomRole') {
+        resetNomRoleSortIndicator();
+      }
+      if (active !== 'anneeQuoi') {
+        resetAnneeQuoiSortIndicator();
+      }
+      if (active !== 'ageQui') {
+        resetAgeQuiSortIndicator();
+      }
+    };
+
+    const applyActiveSort = () => {
+      if (sortStateNomQui !== 'none') {
+        sortCurrentRoles((role) => role.qui_nomprenom, sortStateNomQui);
+        return;
+      }
+      if (sortStatePoste !== 'none') {
+        sortCurrentRoles((role) => role.poste_descr, sortStatePoste);
+        return;
+      }
+      if (sortStateNomEnsemble !== 'none') {
+        sortCurrentRoles((role) => role.nom_ensemble || role.nom_quoi || role.remarque, sortStateNomEnsemble);
+        return;
+      }
+      if (sortStateNomQuoi !== 'none') {
+        sortCurrentRoles((role) => role.nom_quoi, sortStateNomQuoi);
+        return;
+      }
+      if (sortStateNomRole !== 'none') {
+        sortCurrentRoles((role) => role.nom, sortStateNomRole);
+        return;
+      }
+      if (sortStateAnneeQuoi !== 'none') {
+        sortCurrentRoles((role) => role.quoi_date_aaaa, sortStateAnneeQuoi, { type: 'number' });
+        return;
+      }
+      if (sortStateAgeQui !== 'none') {
+        sortCurrentRoles((role) => getRoleAge(role), sortStateAgeQui, { type: 'number' });
+      }
+    };
+
+    const applyInitialSort = (key) => {
+      const initialOrder = DEFAULT_SORT_ORDER;
+      if (key === 'nomQui') {
+        resetOtherSortIndicators('nomQui');
+        updateNomQuiSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.qui_nomprenom, initialOrder);
+        return;
+      }
+      if (key === 'poste') {
+        resetOtherSortIndicators('poste');
+        updatePosteSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.poste_descr, initialOrder);
+        return;
+      }
+      if (key === 'nomEnsemble') {
+        resetOtherSortIndicators('nomEnsemble');
+        updateNomEnsembleSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.nom_ensemble || role.nom_quoi || role.remarque, initialOrder);
+        return;
+      }
+      if (key === 'nomQuoi') {
+        resetOtherSortIndicators('nomQuoi');
+        updateNomQuoiSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.nom_quoi, initialOrder);
+        return;
+      }
+      if (key === 'nom') {
+        resetOtherSortIndicators('nomRole');
+        updateNomRoleSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.nom, initialOrder);
+        return;
+      }
+      if (key === 'anneeQuoi') {
+        resetOtherSortIndicators('anneeQuoi');
+        updateAnneeQuoiSortIndicator(initialOrder);
+        sortCurrentRoles((role) => role.quoi_date_aaaa, initialOrder, { type: 'number' });
+        return;
+      }
+      if (key === 'ageQui') {
+        resetOtherSortIndicators('ageQui');
+        updateAgeQuiSortIndicator(initialOrder);
+        sortCurrentRoles((role) => getRoleAge(role), initialOrder, { type: 'number' });
+        return;
+      }
+      if (key === 'naissanceQui') {
+        sortCurrentRoles((role) => role.qui_datenaiss_aaaa, initialOrder, { type: 'number' });
+        return;
+      }
+      applyActiveSort();
+    };
+
+    const sortByNomQui = () => {
+      resetOtherSortIndicators('nomQui');
+      const nextState = sortStateNomQui === 'asc' ? 'desc' : 'asc';
+      updateNomQuiSortIndicator(nextState);
+      sortCurrentRoles((role) => role.qui_nomprenom, nextState);
+      renderRoles(currentRoles);
+    };
+
+    const sortByPoste = () => {
+      resetOtherSortIndicators('poste');
+      const nextState = sortStatePoste === 'asc' ? 'desc' : 'asc';
+      updatePosteSortIndicator(nextState);
+      sortCurrentRoles((role) => role.poste_descr, nextState);
+      renderRoles(currentRoles);
+    };
+
+    const sortByNomEnsemble = () => {
+      resetOtherSortIndicators('nomEnsemble');
+      const nextState = sortStateNomEnsemble === 'asc' ? 'desc' : 'asc';
+      updateNomEnsembleSortIndicator(nextState);
+      sortCurrentRoles((role) => role.nom_ensemble || role.nom_quoi || role.remarque, nextState);
+      renderRoles(currentRoles);
+    };
+
+    const sortByNomQuoi = () => {
+      resetOtherSortIndicators('nomQuoi');
+      const nextState = sortStateNomQuoi === 'asc' ? 'desc' : 'asc';
+      updateNomQuoiSortIndicator(nextState);
+      sortCurrentRoles((role) => role.nom_quoi, nextState);
+      renderRoles(currentRoles);
+    };
+
+    const sortByNomRole = () => {
+      resetOtherSortIndicators('nomRole');
+      const nextState = sortStateNomRole === 'asc' ? 'desc' : 'asc';
+      updateNomRoleSortIndicator(nextState);
+      sortCurrentRoles((role) => role.nom, nextState);
+      renderRoles(currentRoles);
+    };
+
+    const sortByAnneeQuoi = () => {
+      resetOtherSortIndicators('anneeQuoi');
+      const nextState = sortStateAnneeQuoi === 'asc' ? 'desc' : 'asc';
+      updateAnneeQuoiSortIndicator(nextState);
+      sortCurrentRoles((role) => role.quoi_date_aaaa, nextState, { type: 'number' });
+      renderRoles(currentRoles);
+    };
+
+    const sortByAgeQui = () => {
+      resetOtherSortIndicators('ageQui');
+      const nextState = sortStateAgeQui === 'asc' ? 'desc' : 'asc';
+      updateAgeQuiSortIndicator(nextState);
+      sortCurrentRoles((role) => getRoleAge(role), nextState, { type: 'number' });
+      renderRoles(currentRoles);
+    };
+
+    const buildRoleDiaporamaEntries = (roles) => {
+      const seenRole = new Set();
+      const entries = [];
+      roles.forEach((role) => {
+        if (!role || role.id === undefined || role.id === null) {
+          return;
+        }
+        const roleId = String(role.id).trim();
+        if (!roleId || seenRole.has(roleId)) {
+          return;
+        }
+        seenRole.add(roleId);
+        const quiLabel = role.qui_nomprenom ? String(role.qui_nomprenom).trim() : '';
+        const quoiLabel = role.nom_quoi ? String(role.nom_quoi).trim() : '';
+        const roleLabel = role.nom ? String(role.nom).trim() : '';
+        const rawAge = role.age_quick_estimate;
+        const ageNumber = hasValidQuoiYear(role.quoi_date_aaaa) && hasValidQuiBirthYear(role.qui_datenaiss_aaaa)
+          ? (typeof rawAge === 'number' ? rawAge : parseFloat(rawAge))
+          : null;
+        const safeAge = Number.isFinite(ageNumber) ? Math.round(ageNumber) : null;
+        const ageLabel = safeAge !== null ? `${safeAge} ans` : '';
+        const displayLabelParts = [quoiLabel || roleLabel, quiLabel, ageLabel].filter((value) => value);
+        const displayLabel = displayLabelParts.length ? displayLabelParts.join(' - ') : `Role ${roleId}`;
+        entries.push({
+          idRole: roleId,
+          label: displayLabel,
+        });
+      });
+      return entries;
+    };
+
+    const openRoleDiaporama = () => {
+      if (!currentRoles.length) {
+        alert('Aucun role disponible pour le diaporama.');
+        return;
+      }
+      const entries = buildRoleDiaporamaEntries(currentRoles);
+      if (!entries.length) {
+        alert('Impossible de constituer le diaporama (aucun qui valide).');
+        return;
+      }
+      try {
+        const payload = {
+          entries,
+          generatedAt: Date.now(),
+        };
+        window.localStorage.setItem(ROLE_DIAPORAMA_STORAGE_KEY, JSON.stringify(payload));
+        window.open('zoom.html?mode=role', '_blank');
+      } catch (error) {
+        console.error('Ouverture du diaporama impossible', error);
+        alert('Diaporama indisponible.');
+      }
+    };
+
+    const handleFiltersChange = () => {
+      applyFiltersAndRender();
+    };
+
+    async function createRole() {
+      const res = await fetch('/postes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descr: 'nouveau poste' })
+      });
+      if (!res.ok) {
+        alert('Creation impossible');
+        return;
+      }
+      const poste = await res.json();
+      if (poste && poste.id) {
+        window.location.href = 'posteDetail.html?' + poste.id;
+      } else {
+        refreshRoles();
+      }
+    }
+
+    if (btAjouterQui && shouldDisplayAddQuiButton) {
+      btAjouterQui.addEventListener('click', (event) => {
+        event.preventDefault();
+        openQuiSelectionForQuoi();
+      });
+    }
+    if (btAjouterQuoi && shouldDisplayAddQuoiButton) {
+      btAjouterQuoi.addEventListener('click', (event) => {
+        event.preventDefault();
+        openQuoiSelectionForQui();
+      });
+    }
+    document.getElementById('btTriNom').addEventListener('click', sortByNomRole);
+    document.getElementById('btTriNomQui').addEventListener('click', sortByNomQui);
+    document.getElementById('btTriPoste').addEventListener('click', sortByPoste);
+    document.getElementById('btTriNomEnsemble').addEventListener('click', sortByNomEnsemble);
+    document.getElementById('btTriNomQuoi').addEventListener('click', sortByNomQuoi);
+    document.getElementById('btTriAnneeQuoi').addEventListener('click', sortByAnneeQuoi);
+    document.getElementById('btTriAgeQui').addEventListener('click', sortByAgeQui);
+
+    Object.values(filterElements).forEach((element) => {
+      if (!element) {
+        return;
+      }
+      element.addEventListener('input', handleFiltersChange);
+      element.addEventListener('change', handleFiltersChange);
+    });
+    if (btDiaporama) {
+      btDiaporama.addEventListener('click', (event) => {
+        event.preventDefault();
+        openRoleDiaporama();
+      });
+    }
+    const btAgePlus = document.getElementById('btAgePlus');
+    if (btAgePlus) {
+      btAgePlus.addEventListener('click', () => adjustAgeFilters(1));
+    }
+    const btAgeMinus = document.getElementById('btAgeMinus');
+    if (btAgeMinus) {
+      btAgeMinus.addEventListener('click', () => adjustAgeFilters(-1));
+    }
+    const btActualiser = document.getElementById('btActualiser');
+    if (btActualiser) {
+      btActualiser.addEventListener('click', () => {
+        refreshRoles();
+      });
+    }
+
+    const handleOrderSubscriptionRequest = (source) => {
+      if (!source || typeof source.postMessage !== 'function') {
+        return;
+      }
+      orderSubscribers.add(source);
+      try {
+        source.postMessage({ type: 'ROLE_ORDER_RESPONSE', order: getCurrentOrderIds() }, allowedOrigin);
+      } catch (error) {
+        orderSubscribers.delete(source);
+      }
+    };
+
+    const handleOrderUnsubscribe = (source) => {
+      if (!source) {
+        return;
+      }
+      orderSubscribers.delete(source);
+    };
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      const data = event.data;
+      if (!data || typeof data !== 'object') {
+        return;
+      }
+      if (data.type === 'ROLE_REFRESH') {
+        refreshRoles();
+        return;
+      }
+      if (data.type === 'ROLE_ORDER_REQUEST') {
+        handleOrderSubscriptionRequest(event.source);
+        return;
+      }
+      if (data.type === 'ROLE_ORDER_UNSUBSCRIBE') {
+        handleOrderUnsubscribe(event.source);
+      }
+    });
+
+    refreshRoles();
+  </script>
+</body>
+</html>

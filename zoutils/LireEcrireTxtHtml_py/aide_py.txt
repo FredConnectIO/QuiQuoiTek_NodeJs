@@ -1,0 +1,152 @@
+Parfait. Pour un nouveau projet Flask/Python, tu peux faire ça très simplement avec un seul fichier Python et une page HTML.
+
+Structure du projet :
+
+```text
+mon_projet/
+├── app.py
+├── text.txt
+└── templates/
+    └── index.html
+```
+
+`app.py` :
+
+```python
+from flask import Flask, render_template, request, jsonify
+from pathlib import Path
+
+app = Flask(__name__)
+
+FICHIER = Path("text.txt")
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/enregistrer", methods=["POST"])
+def enregistrer():
+    data = request.get_json()
+
+    texte = data.get("texte", "")
+
+    FICHIER.write_text(texte, encoding="utf-8")
+
+    return jsonify({"status": "ok"})
+
+
+@app.route("/lire", methods=["GET"])
+def lire():
+    if not FICHIER.exists():
+        return ""
+
+    return FICHIER.read_text(encoding="utf-8")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+Puis `templates/index.html` :
+
+```html
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lecture / écriture fichier</title>
+</head>
+
+<body>
+
+    <input type="text" id="texte" size="50">
+
+    <button onclick="enregistrer()">Enregistrer</button>
+    <button onclick="lire()">Lire</button>
+
+    <script>
+
+        async function enregistrer() {
+
+            const texte = document.getElementById("texte").value;
+
+            const response = await fetch("/enregistrer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    texte: texte
+                })
+            });
+
+            if (response.ok) {
+                alert("Texte enregistré");
+            } else {
+                alert("Erreur lors de l'enregistrement");
+            }
+        }
+
+
+        async function lire() {
+
+            const response = await fetch("/lire");
+
+            if (response.ok) {
+                const texte = await response.text();
+
+                document.getElementById("texte").value = texte;
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+```
+
+Installe Flask :
+
+```bash
+pip install flask
+```
+
+Puis lance le serveur :
+
+```bash
+python app.py
+```
+
+Et ouvre :
+
+```text
+http://127.0.0.1:5000
+```
+
+Le fonctionnement est alors :
+
+```text
+Input
+  │
+  ├── Enregistrer ──> POST /enregistrer ──> text.txt
+  │
+  └── Lire ─────────> GET /lire ──────────> Input
+```
+
+Petite amélioration que je recommande : utiliser un chemin absolu basé sur le dossier du projet, sinon `text.txt` dépend du dossier depuis lequel tu lances Python. Tu peux remplacer :
+
+```python
+FICHIER = Path("text.txt")
+```
+
+par :
+
+```python
+BASE_DIR = Path(__file__).resolve().parent
+FICHIER = BASE_DIR / "text.txt"
+```
+
+C'est plus fiable pour un projet Flask.

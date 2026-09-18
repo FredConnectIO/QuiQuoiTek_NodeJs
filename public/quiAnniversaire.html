@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Th&egrave;que - Anniversaires</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1>Qui Quoi Th&egrave;que - Anniversaires</h1>
+
+  <div class="container">
+    <label for="mois_min_filter">Mois mini</label>
+    <input id="mois_min_filter" type="number" min="1" max="12" step="1" size="2">
+    <label for="mois_max_filter">Mois maxi</label>
+    <input id="mois_max_filter" type="number" min="1" max="12" step="1" size="2">
+  </div>
+
+  <table id="anniversaire_table" class="table">
+    <thead>
+      <tr>
+        <th>
+          <button id="btTriMoisJour" class="buttonSmall">Mois / jour</button>
+          <img id="imgSensTriMoisJour" height="18" />
+        </th>
+        <th>
+          <button id="btTriNomPrenom" class="buttonSmall">Nom + pr&eacute;nom</button>
+          <img id="imgSensTriNomPrenom" height="18" />
+        </th>
+        <th>
+          <button id="btTriAnnee" class="buttonSmall">Ann&eacute;e</button>
+          <img id="imgSensTriAnnee" height="18" />
+        </th>
+        <th>
+          <button id="btTriAge" class="buttonSmall">Age</button>
+          <img id="imgSensTriAge" height="18" />
+        </th>
+        <th>
+          <button id="btTriGenre" class="buttonSmall">Genre</button>
+          <img id="imgSensTriGenre" height="18" />
+        </th>
+        <th>
+          <button id="btTriDomaine" class="buttonSmall">Domaine</button>
+          <img id="imgSensTriDomaine" height="18" />
+        </th>
+        <th>
+          <button id="btTriPays" class="buttonSmall">Pays</button>
+          <img id="imgSensTriPays" height="18" />
+        </th>
+      </tr>
+    </thead>
+    <tbody id="anniversaire_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const QUI_ANNIVERSAIRE_STORAGE_KEY = 'quiAnniversaireSelection';
+    const QUI_LIST_NAV_PREFIX = 'quiListNavigation:';
+    const SORT_ICONS = {
+      none: 'img/fleche_vide.svg',
+      asc: 'img/fleche_haut.svg',
+      desc: 'img/fleche_bas.svg',
+    };
+    const imgSensTriMoisJour = document.getElementById('imgSensTriMoisJour');
+    const imgSensTriNomPrenom = document.getElementById('imgSensTriNomPrenom');
+    const imgSensTriAnnee = document.getElementById('imgSensTriAnnee');
+    const imgSensTriAge = document.getElementById('imgSensTriAge');
+    const imgSensTriGenre = document.getElementById('imgSensTriGenre');
+    const imgSensTriDomaine = document.getElementById('imgSensTriDomaine');
+    const imgSensTriPays = document.getElementById('imgSensTriPays');
+    const moisMinFilter = document.getElementById('mois_min_filter');
+    const moisMaxFilter = document.getElementById('mois_max_filter');
+    let moisJourSortState = 'none';
+    let nomPrenomSortState = 'none';
+    let anneeSortState = 'none';
+    let ageSortState = 'none';
+    let genreSortState = 'none';
+    let domaineSortState = 'none';
+    let paysSortState = 'none';
+    let allAnniversaireItems = [];
+    let anniversaireItems = [];
+
+    const updateIndicator = (element, state) => {
+      if (element) {
+        element.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+
+    const updateMoisJourIndicator = (state) => {
+      moisJourSortState = state;
+      updateIndicator(imgSensTriMoisJour, state);
+    };
+
+    const updateNomPrenomIndicator = (state) => {
+      nomPrenomSortState = state;
+      updateIndicator(imgSensTriNomPrenom, state);
+    };
+
+    const updateAnneeIndicator = (state) => {
+      anneeSortState = state;
+      updateIndicator(imgSensTriAnnee, state);
+    };
+
+    const updateAgeIndicator = (state) => {
+      ageSortState = state;
+      updateIndicator(imgSensTriAge, state);
+    };
+
+    const updateGenreIndicator = (state) => {
+      genreSortState = state;
+      updateIndicator(imgSensTriGenre, state);
+    };
+
+    const updateDomaineIndicator = (state) => {
+      domaineSortState = state;
+      updateIndicator(imgSensTriDomaine, state);
+    };
+
+    const updatePaysIndicator = (state) => {
+      paysSortState = state;
+      updateIndicator(imgSensTriPays, state);
+    };
+
+    const resetIndicatorsExcept = (activeKey) => {
+      if (activeKey !== 'moisJour') {
+        updateMoisJourIndicator('none');
+      }
+      if (activeKey !== 'nomPrenom') {
+        updateNomPrenomIndicator('none');
+      }
+      if (activeKey !== 'annee') {
+        updateAnneeIndicator('none');
+      }
+      if (activeKey !== 'age') {
+        updateAgeIndicator('none');
+      }
+      if (activeKey !== 'genre') {
+        updateGenreIndicator('none');
+      }
+      if (activeKey !== 'domaine') {
+        updateDomaineIndicator('none');
+      }
+      if (activeKey !== 'pays') {
+        updatePaysIndicator('none');
+      }
+    };
+
+    const safeCompare = (left, right) => {
+      const a = String(left || '');
+      const b = String(right || '');
+      return a.localeCompare(b);
+    };
+
+    const toIntOrNull = (value) => {
+      if (value === null || value === undefined || value === '') {
+        return null;
+      }
+      const parsed = Number.parseInt(value, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const buildNomPrenom = (item) => {
+      const nom = String(item.nom || '').trim();
+      const prenom = String(item.prenom || '').trim();
+      return [nom, prenom].filter(Boolean).join(' ').trim();
+    };
+
+    const buildQuiLabel = (item) => {
+      const label = buildNomPrenom(item);
+      if (label) {
+        return label;
+      }
+      const id = item && item.id !== undefined && item.id !== null ? String(item.id) : '';
+      return id ? `Qui ${id}` : '';
+    };
+
+    const buildNavigationPayload = (items) => {
+      if (!Array.isArray(items) || items.length === 0) {
+        return null;
+      }
+      const entries = [];
+      items.forEach((item) => {
+        const id = item && item.id !== undefined && item.id !== null ? String(item.id) : '';
+        if (id) {
+          entries.push({
+            id,
+            label: buildQuiLabel(item),
+          });
+        }
+      });
+      if (!entries.length) {
+        return null;
+      }
+      return {
+        ids: entries.map((entry) => entry.id),
+        labels: entries.map((entry) => entry.label),
+        timestamp: Date.now(),
+      };
+    };
+
+    const persistQuiNavigationForTarget = (targetName) => {
+      if (!targetName) {
+        return;
+      }
+      try {
+        const payload = buildNavigationPayload(anniversaireItems);
+        if (!payload) {
+          return;
+        }
+        window.localStorage.setItem(`${QUI_LIST_NAV_PREFIX}${targetName}`, JSON.stringify(payload));
+      } catch (error) {
+        console.warn('Impossible de sauvegarder la navigation des anniversaires', error);
+      }
+    };
+
+    const formatMonthDay = (item) => {
+      const month = toIntOrNull(item.datenaiss_mm);
+      const day = toIntOrNull(item.datenaiss_jj);
+      if (month === null && day === null) {
+        return '';
+      }
+      const monthText = month === null ? '--' : String(month).padStart(2, '0');
+      const dayText = day === null ? '--' : String(day).padStart(2, '0');
+      return `${monthText}/${dayText}`;
+    };
+
+    const getMonthDaySortable = (item) => {
+      const month = toIntOrNull(item.datenaiss_mm);
+      const day = toIntOrNull(item.datenaiss_jj);
+      if (month === null || day === null) {
+        return null;
+      }
+      return {
+        month,
+        day,
+      };
+    };
+
+    const getAnneeValue = (item) => toIntOrNull(item.datenaiss_aaaa);
+
+    const getAgeValue = (item) => {
+      const year = getAnneeValue(item);
+      if (year === null) {
+        return null;
+      }
+      const currentYear = new Date().getFullYear();
+      return currentYear - year;
+    };
+
+    const createTd = (value) => {
+      const td = document.createElement('td');
+      td.textContent = value ?? '';
+      return td;
+    };
+
+    const createNomPrenomCell = (item) => {
+      const td = document.createElement('td');
+      const label = buildNomPrenom(item);
+      const id = item && item.id !== undefined && item.id !== null ? String(item.id) : '';
+      if (!id) {
+        td.textContent = label;
+        return td;
+      }
+      const link = document.createElement('a');
+      link.textContent = label;
+      link.href = `quiDetail.html?${encodeURIComponent(id)}`;
+      link.target = `quiDetail${id}`;
+      link.addEventListener('click', () => {
+        persistQuiNavigationForTarget(link.target);
+      });
+      td.append(link);
+      return td;
+    };
+
+    const renderAnniversaires = (items) => {
+      const tbody = document.getElementById('anniversaire_table_tbody');
+      tbody.innerHTML = '';
+      items.forEach((item) => {
+        const tr = document.createElement('tr');
+        tr.append(createTd(formatMonthDay(item)));
+        tr.append(createNomPrenomCell(item));
+        tr.append(createTd(getAnneeValue(item) ?? ''));
+        tr.append(createTd(getAgeValue(item) ?? ''));
+        tr.append(createTd(item.genre ?? ''));
+        tr.append(createTd(item.domaine ?? ''));
+        tr.append(createTd(item.pays ?? ''));
+        tbody.append(tr);
+      });
+    };
+
+    const applyOrder = (comp, state) => (state === 'desc' ? -comp : comp);
+
+    const getMonthFilterValue = (input) => {
+      const value = toIntOrNull(input ? input.value : '');
+      if (value === null || value < 1 || value > 12) {
+        return null;
+      }
+      return value;
+    };
+
+    const sortAnniversaireItems = (items) => {
+      if (moisJourSortState !== 'none') {
+        items.sort((a, b) => {
+          const left = getMonthDaySortable(a);
+          const right = getMonthDaySortable(b);
+          if (!left && !right) {
+            return 0;
+          }
+          if (!left) {
+            return moisJourSortState === 'desc' ? -1 : 1;
+          }
+          if (!right) {
+            return moisJourSortState === 'desc' ? 1 : -1;
+          }
+          if (left.month !== right.month) {
+            return applyOrder(left.month - right.month, moisJourSortState);
+          }
+          return applyOrder(left.day - right.day, moisJourSortState);
+        });
+        return;
+      }
+      if (nomPrenomSortState !== 'none') {
+        items.sort((a, b) => applyOrder(safeCompare(buildNomPrenom(a), buildNomPrenom(b)), nomPrenomSortState));
+        return;
+      }
+      if (anneeSortState !== 'none') {
+        items.sort((a, b) => {
+          const left = getAnneeValue(a);
+          const right = getAnneeValue(b);
+          if (left === null && right === null) {
+            return 0;
+          }
+          if (left === null) {
+            return anneeSortState === 'desc' ? -1 : 1;
+          }
+          if (right === null) {
+            return anneeSortState === 'desc' ? 1 : -1;
+          }
+          return applyOrder(left - right, anneeSortState);
+        });
+        return;
+      }
+      if (ageSortState !== 'none') {
+        items.sort((a, b) => {
+          const left = getAgeValue(a);
+          const right = getAgeValue(b);
+          if (left === null && right === null) {
+            return 0;
+          }
+          if (left === null) {
+            return ageSortState === 'desc' ? -1 : 1;
+          }
+          if (right === null) {
+            return ageSortState === 'desc' ? 1 : -1;
+          }
+          return applyOrder(left - right, ageSortState);
+        });
+        return;
+      }
+      if (genreSortState !== 'none') {
+        items.sort((a, b) => {
+          const genreComparison = safeCompare(a.genre, b.genre);
+          if (genreComparison !== 0) {
+            return applyOrder(genreComparison, genreSortState);
+          }
+          const paysComparison = safeCompare(a.pays, b.pays);
+          return applyOrder(paysComparison, genreSortState);
+        });
+        return;
+      }
+      if (domaineSortState !== 'none') {
+        items.sort((a, b) => applyOrder(safeCompare(a.domaine, b.domaine), domaineSortState));
+        return;
+      }
+      if (paysSortState !== 'none') {
+        items.sort((a, b) => applyOrder(safeCompare(a.pays, b.pays), paysSortState));
+      }
+    };
+
+    const refreshFilteredAnniversaires = () => {
+      const monthMin = getMonthFilterValue(moisMinFilter);
+      const monthMax = getMonthFilterValue(moisMaxFilter);
+      anniversaireItems = allAnniversaireItems.filter((item) => {
+        const month = toIntOrNull(item.datenaiss_mm);
+        if (monthMin !== null && month < monthMin) {
+          return false;
+        }
+        if (monthMax !== null && month > monthMax) {
+          return false;
+        }
+        return true;
+      });
+      sortAnniversaireItems(anniversaireItems);
+      renderAnniversaires(anniversaireItems);
+    };
+
+    const sortByMoisJour = () => {
+      const nextState = moisJourSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('moisJour');
+      updateMoisJourIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByNomPrenom = () => {
+      const nextState = nomPrenomSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('nomPrenom');
+      updateNomPrenomIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByAnnee = () => {
+      const nextState = anneeSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('annee');
+      updateAnneeIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByAge = () => {
+      const nextState = ageSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('age');
+      updateAgeIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByGenre = () => {
+      const nextState = genreSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('genre');
+      updateGenreIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByDomaine = () => {
+      const nextState = domaineSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('domaine');
+      updateDomaineIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const sortByPays = () => {
+      const nextState = paysSortState === 'asc' ? 'desc' : 'asc';
+      resetIndicatorsExcept('pays');
+      updatePaysIndicator(nextState);
+      refreshFilteredAnniversaires();
+    };
+
+    const loadAnniversaireItems = () => {
+      try {
+        const payload = window.localStorage.getItem(QUI_ANNIVERSAIRE_STORAGE_KEY);
+        if (!payload) {
+          return [];
+        }
+        const parsed = JSON.parse(payload);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn('Impossible de lire la liste des anniversaires', error);
+        return [];
+      }
+    };
+
+    allAnniversaireItems = loadAnniversaireItems().filter((item) => {
+      const year = toIntOrNull(item.datenaiss_aaaa);
+      const month = toIntOrNull(item.datenaiss_mm);
+      const day = toIntOrNull(item.datenaiss_jj);
+      const genre = String(item.genre || '').trim().toUpperCase();
+      return year && year > 0
+        && month && month > 0
+        && day && day > 0
+        && (genre === 'F' || genre === 'M');
+    });
+    resetIndicatorsExcept('');
+    refreshFilteredAnniversaires();
+
+    moisMinFilter.addEventListener('input', refreshFilteredAnniversaires);
+    moisMaxFilter.addEventListener('input', refreshFilteredAnniversaires);
+    document.getElementById('btTriMoisJour').addEventListener('click', sortByMoisJour);
+    document.getElementById('btTriNomPrenom').addEventListener('click', sortByNomPrenom);
+    document.getElementById('btTriAnnee').addEventListener('click', sortByAnnee);
+    document.getElementById('btTriAge').addEventListener('click', sortByAge);
+    document.getElementById('btTriGenre').addEventListener('click', sortByGenre);
+    document.getElementById('btTriDomaine').addEventListener('click', sortByDomaine);
+    document.getElementById('btTriPays').addEventListener('click', sortByPays);
+  </script>
+</body>
+</html>

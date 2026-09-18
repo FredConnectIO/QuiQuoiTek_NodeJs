@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qui Quoi Thèque - Paramètre</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Détail Paramètre</h1>
+  </div>
+
+  <div class="container">
+    <form id="parametre-form">
+      <div class="form-group">
+        <input id="parametresid" type="hidden" name="id" />
+        <input id="parametrenom" type="text" class="form-control" name="nom" placeholder="nom" />
+        <input id="parametreniv1" type="text" class="form-control largeur_grande" name="niv1" placeholder="niv1" />
+      </div>
+    </form>
+  </div>
+
+  <a id="btPrecedent" href="" class="button">Précédent</a>
+  <a id="btSuivant" href="" class="button">Suivant</a>
+  <a id="btSave" href="#" class="button">Sauver</a>
+  <a id="btDelete" href="#" class="button">Supprimer</a>
+
+    <span id="record_meta" class="record-meta"></span>
+
+  <script>
+    const getRequestedId = () => {
+      const query = window.location.search;
+      if (!query || query.length <= 1) {
+        return null;
+      }
+      return query.substring(1);
+    };
+    const LAST_FOCUS_STORAGE_KEY = 'parametreDetail.lastButtonId';
+    const LIST_STORAGE_KEY = 'parametreListe.ids';
+    const recordMetaElement = document.getElementById('record_meta');
+
+    const rememberLastFocusedButton = (element) => {
+      if (!element || !element.id) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(LAST_FOCUS_STORAGE_KEY, element.id);
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const restoreLastFocusedButton = () => {
+      let targetId = null;
+      try {
+        targetId = window.localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+      } catch (error) {
+        // ignore storage failures
+      }
+      if (!targetId) {
+        return;
+      }
+      const element = document.getElementById(targetId);
+      if (!element || typeof element.focus !== 'function') {
+        return;
+      }
+      try {
+        element.focus({ preventScroll: true });
+      } catch (focusError) {
+        element.focus();
+      }
+    };
+
+    const registerButtonFocusTracking = () => {
+      document.querySelectorAll('.button').forEach((element) => {
+        element.addEventListener('click', () => rememberLastFocusedButton(element));
+      });
+    };
+
+    const updateRecordMeta = (id, modifts, position, total) => {
+      if (!recordMetaElement) {
+        return;
+      }
+      const parts = [];
+      const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+      if (normalizedId) {
+        parts.push(`id: ${normalizedId}`);
+      }
+      const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+      if (normalizedModifts) {
+        parts.push(`modifts: ${normalizedModifts}`);
+      }
+      if (Number.isFinite(position) && Number.isFinite(total) && total > 0) {
+        parts.push(`(${position}/${total})`);
+      }
+      recordMetaElement.textContent = parts.join(' | ');
+    };
+
+    const getListContext = () => {
+      try {
+        const raw = window.localStorage.getItem(LIST_STORAGE_KEY);
+        if (!raw) {
+          return [];
+        }
+        const ids = JSON.parse(raw);
+        if (!Array.isArray(ids)) {
+          return [];
+        }
+        return ids.map((value) => String(value));
+      } catch (error) {
+        return [];
+      }
+    };
+
+    const computeListNavigation = (id, listIds) => {
+      if (!id || !Array.isArray(listIds) || listIds.length === 0) {
+        return null;
+      }
+      const normalizedId = String(id);
+      const index = listIds.indexOf(normalizedId);
+      if (index === -1) {
+        return null;
+      }
+      const total = listIds.length;
+      const position = index + 1;
+      if (total <= 1) {
+        return { position, total };
+      }
+      const idSuivant = listIds[(index + 1) % total];
+      const idPrecedent = listIds[(index - 1 + total) % total];
+      return { position, total, idSuivant, idPrecedent };
+    };
+
+    const setNavLink = (buttonId, targetId) => {
+      const button = document.getElementById(buttonId);
+      if (!button) {
+        return;
+      }
+      if (targetId) {
+        button.href = 'parametreDetail.html?' + targetId;
+        button.removeAttribute('aria-disabled');
+      } else {
+        button.removeAttribute('href');
+        button.setAttribute('aria-disabled', 'true');
+      }
+    };
+
+    async function refreshParametre(id) {
+      if (!id) {
+        return;
+      }
+      try {
+        const response = await fetch('/parametres/' + id);
+        if (!response.ok) {
+          alert('Paramètre introuvable');
+          return;
+        }
+        const parametre = await response.json();
+        document.getElementById('parametresid').value = parametre.id ?? '';
+        document.getElementById('parametrenom').value = parametre.nom ?? '';
+        document.getElementById('parametreniv1').value = parametre.niv1 ?? '';
+        document.getElementById('pageTitle').textContent = parametre.nom ? 'Détail Paramètre - ' + parametre.nom : 'Détail Paramètre';
+        document.title = parametre.nom ? 'Paramètre ' + parametre.nom : 'Paramètre';
+        const listNav = computeListNavigation(parametre.id, getListContext());
+        if (listNav) {
+          setNavLink('btSuivant', listNav.idSuivant);
+          setNavLink('btPrecedent', listNav.idPrecedent);
+          updateRecordMeta(parametre.id, parametre.modifts, listNav.position, listNav.total);
+        } else {
+          setNavLink('btSuivant', parametre.idSuivant);
+          setNavLink('btPrecedent', parametre.idPrecedent);
+          updateRecordMeta(parametre.id, parametre.modifts);
+        }
+      } catch (error) {
+        console.error('Impossible de rafra&#238;chir le paramètre', error);
+      }
+    }
+
+    async function saveParametre() {
+      const id = document.getElementById('parametresid').value;
+      const payload = {
+        nom: document.getElementById('parametrenom').value,
+        niv1: document.getElementById('parametreniv1').value,
+      };
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? '/parametres/' + id : '/parametres';
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          alert('Erreur de sauvegarde');
+          return;
+        }
+        let savedId = id;
+        try {
+          const savedParametre = await response.json();
+          savedId = savedParametre?.id ?? savedId;
+        } catch (error) {
+          console.warn('Réponse de sauvegarde inattendue', error);
+        }
+        if (savedId && !id) {
+          window.location.replace('parametreDetail.html?' + savedId);
+        } else if (savedId) {
+          refreshParametre(savedId);
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'PARAMETRE_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fen&#234;tre parente', notificationError);
+          }
+        }
+        alert('Sauvegarde réussie.');
+      } catch (error) {
+        console.error('Impossible de sauvegarder le paramètre', error);
+        alert('Une erreur est survenue lors de la sauvegarde.');
+      }
+    }
+
+    async function deleteParametre() {
+      const id = document.getElementById('parametresid').value;
+      if (!id) {
+        alert('Aucun paramètre &#224; supprimer.');
+        return;
+      }
+      try {
+        const response = await fetch('/parametres/' + id, { method: 'DELETE' });
+        if (!response.ok) {
+          alert('Erreur de suppression');
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'PARAMETRE_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fen&#234;tre parente', notificationError);
+          }
+        }
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) {
+            alert('Paramètre supprimé. Vous pouvez fermer l\'onglet.');
+          }
+        }, 200);
+      } catch (error) {
+        console.error('Impossible de supprimer le paramètre', error);
+        alert('Une erreur est survenue lors de la suppression.');
+      }
+    }
+
+    registerButtonFocusTracking();
+    restoreLastFocusedButton();
+
+    document.getElementById('btSave').addEventListener('click', (event) => {
+      event.preventDefault();
+      saveParametre();
+    });
+
+    document.getElementById('btDelete').addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!window.confirm('Confirmer la suppression ?')) {
+        return;
+      }
+      deleteParametre();
+    });
+
+    window.addEventListener('load', () => {
+      const id = getRequestedId();
+      if (id) {
+        refreshParametre(id);
+      }
+    });
+  </script>
+</body>
+</html>

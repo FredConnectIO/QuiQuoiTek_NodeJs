@@ -1,0 +1,34 @@
+L’authentification HTTPS de GitHub refuse désormais les mots de passe. Je vais vérifier le remote et l’état du dépôt, puis préparer la méthode la plus simple pour pousser sans exposer de jeton dans les commandes.
+
+Ran terminal command: git remote -v
+
+Ran terminal command: git status --short --branch
+
+Le remote est correct et la branche locale est bien `master`; le blocage est uniquement l’authentification GitHub. Je vérifie maintenant si GitHub CLI ou une clé SSH est déjà disponible, afin d’éviter une saisie répétée de jeton.
+
+Ran terminal command: gh --version
+
+Ran terminal command: Get-ChildItem "$HOME\.ssh" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name
+
+Ran terminal command: git config --get credential.helper
+
+Aucune clé SSH ni GitHub CLI n’est détectée, et aucun gestionnaire d’identifiants n’est configuré. La solution immédiate est donc un Personal Access Token GitHub: il se saisit à la place du mot de passe, sans jamais l’inscrire dans l’URL ou l’historique shell.
+
+GitHub n’accepte plus les mots de passe pour Git. Utilise un **Personal Access Token (PAT)** :
+
+1. Crée un token sur https://github.com/settings/tokens  
+   Accorde-lui au minimum `repo`.
+2. Relance :
+
+```powershell
+git push -f origin master
+```
+
+À l’invite :
+
+```text
+Username: FredConnectIO
+Password: <colle le token GitHub, pas ton mot de passe>
+```
+
+Ne mets pas le token directement dans la commande ou l’URL. Le remote est déjà correctement configuré.

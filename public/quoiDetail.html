@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Theque - Detail Quoi</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Detail Quoi</h1>
+  </div>
+
+  <div class="container">
+    <form id="quoi-form">
+      <table>
+        <tr>
+          <td>
+            <div id="imgDiv" >
+                <img id="image" height="580"/>
+                <div >Photo <span id="imageVariantNumero">001</span> cliquez sur l'image pour la changer - <span id="imageCount">0 photo</span></div>
+            </div>
+            <input type="file" id="imgInput" accept="image/*" style="display:none;">
+          </td>
+          <td>
+            <table id="tablePropQuoi">
+              <tr>
+                <td>Nom</td>
+                <td>
+                  <input id="quoinom" type="text" class="form-control form-control-wide" placeholder="nom"  />
+                </td>
+              </tr>
+              <tr>
+                <td>Domaine Genre Pays</td>
+                <td>
+                  <!-- Domaine choix alimenté par parametre.nom = "domaineQuoi" (niv1, séparé par ;) -->
+                  <select id="quodomaine" class="form-control" placeholder="domaine">
+                    <option value=""></option>
+                  </select>
+                  <select id="quogenre" class="form-control" placeholder="genre">
+                    <option value=""></option>
+                  </select>
+                  <select id="quopays" class="form-control" placeholder="pays">
+                    <option value=""></option>
+                  </select>
+
+                </td>
+              </tr>
+              <tr>
+                <td>stock qualif Dernvisu</td>
+                <td>
+                  <select id="quostock" class="form-control" placeholder="stock">
+                    <option value=""></option>
+                  </select>
+                  <input id="quoqualif" type="text" class="form-control" placeholder="qualif"  />
+                  <input id="quodatedernierevisu" type="date" class="form-control" placeholder="datedernierevisu"  />
+                </td>
+              </tr>
+              <tr>
+                <td>Remarque</td>
+                <td>
+                  <textarea id="quoRemarque" class="form-control form-control-wide remarque-control" placeholder="remarque" rows="4"></textarea>
+                </td>
+              </tr>
+              <tr>
+                <td>Lien disque</td>
+                <td>
+                  <input id="quolienDisk" type="text" class="form-control form-control-wide" placeholder="lienDisk" />
+                    <button type="button" id="btOpenLienDisk" class="buttonSmall">Ouvrir sur le serveur</button>
+                    <span id="quolienDiskPath" style="margin-left:0.5rem;color:#444;font-size:0.9rem;"> </span>
+                </td>
+              </tr>
+              <tr>
+                <td>Lien Web</td>
+                <td>
+                  <input id="quolienWeb" type="text" class="form-control form-control-wide" placeholder="lienWeb" />
+                  <button type="button" id="btOpenLienWeb" class="buttonSmall">Ouvrir</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Data AAAA MM JJ</td>
+                <td>
+                  <input id="quodateaaaa" type="text" class="form-control" placeholder="date_aaaa"  />
+                  <input id="quodatemm" type="text" class="form-control" placeholder="date_mm"  />
+                  <input id="quodatejj" type="text" class="form-control" placeholder="date_jj"  />
+                </td>
+              </tr>
+              <tr>
+                <td>Roles</td>
+                <td id="listeRoles">
+                </td>
+              </tr>              
+              <tr>
+                <td>Themes</td>
+                <td id="listeThemes">
+                </td>
+              </tr>               </table>
+              <input id="quoiid" type="hidden" name="id" />
+          </td>
+        </tr>
+
+      </table>
+    </form>
+  </div>
+
+  <a id="btPrecedent" href="" class="button">(P)recedent</a>
+  <a id="btSuivant" href="" class="button">Sui(v)ant</a>
+  <a id="btImagePrecedente" href="#" class="button">Image precedente (y)</a>
+  <a id="btImageSuivante" href="#" class="button">Image suivante (z)</a>
+  <a id="btRoleListeQuoi" href="#" class="button">Role (Quoi)</a>
+  <a id="btRelThemeQuoi" href="#" class="button">RelTheme (Quoi)</a>
+  <button type="button" id="btSelectQuoiForQui" class="button" style="display:none;"></button>
+  <a id="btSave" href="#" class="button">(S)auver</a>
+  <a id="btDelete" href="#" class="button">Supprimer</a>
+  <a id="btRecherchePhotoWeb" href="#" class="button">(Q)want photo web</a>
+
+    <span id="record_meta" class="record-meta"></span>
+
+  <script>
+    const formatDate = (value) => {
+      if (!value) {
+        return '';
+      }
+      return value.length >= 10 ? value.substring(0, 10) : value;
+    };
+
+    const formatDateAaaa = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      const textValue = String(value).trim();
+      if (!textValue) {
+        return '';
+      }
+      const isNegative = textValue.startsWith('-');
+      const digits = textValue.replace(/[^0-9]/g, '');
+      if (!digits) {
+        return isNegative ? '-' : '';
+      }
+      const groups = [];
+      let remaining = digits;
+      while (remaining.length > 3) {
+        groups.unshift(remaining.slice(-3));
+        remaining = remaining.slice(0, -3);
+      }
+      if (remaining) {
+        groups.unshift(remaining);
+      }
+      return `${isNegative ? '-' : ''}${groups.join(' ')}`;
+    };
+
+    const sanitizeDateAaaaInput = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      const textValue = String(value).trim();
+      if (!textValue) {
+        return '';
+      }
+      const isNegative = textValue.startsWith('-');
+      const digits = textValue.replace(/[^0-9]/g, '');
+      if (!digits) {
+        return '';
+      }
+      const normalizedDigits = digits.replace(/^0+(?=\d)/, '');
+      return `${isNegative ? '-' : ''}${normalizedDigits || '0'}`;
+    };
+
+    const imageElement = document.getElementById('image');
+    const imagDivision = document.getElementById('imgDiv');
+    const fileInput = document.getElementById('imgInput');
+    const imageVariantLabel = document.getElementById('imageVariantNumero');
+    const btImagePrecedente = document.getElementById('btImagePrecedente');
+    const btImageSuivante = document.getElementById('btImageSuivante');
+    const btRoleListeQuoi = document.getElementById('btRoleListeQuoi');
+    const btRelThemeQuoi = document.getElementById('btRelThemeQuoi');
+    const imageCountLabel = document.getElementById('imageCount');
+    const roleListElement = document.getElementById('listeRoles');
+    const themeListElement = document.getElementById('listeThemes');
+    let imageCountRequestToken = 0;
+    let previewObjectUrl = null;
+    let pendingImageFile = null;
+    const IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+    const DEFAULT_IMAGE_VARIANT = IMAGE_VARIANTS[0];
+    let currentImageVariant = DEFAULT_IMAGE_VARIANT;
+    let pendingImageVariant = DEFAULT_IMAGE_VARIANT;
+    const btRecherchePhotoWeb = document.getElementById('btRecherchePhotoWeb');
+    const btSave = document.getElementById('btSave');
+    const btDelete = document.getElementById('btDelete');
+    const selectionButton = document.getElementById('btSelectQuoiForQui');
+    const recordMetaElement = document.getElementById('record_meta');
+    // Select domaine (quodomaine) alimenté dynamiquement via parametre.domaineQuoi
+    const quodomaineSelect = document.getElementById('quodomaine');
+    const quogenreSelect = document.getElementById('quogenre');
+    const quopaysSelect = document.getElementById('quopays');
+    const quostockSelect = document.getElementById('quostock');
+    const lienDiskInput = document.getElementById('quolienDisk');
+    const lienWebInput = document.getElementById('quolienWeb');
+    const btOpenLienDisk = document.getElementById('btOpenLienDisk');
+    const btOpenLienWeb = document.getElementById('btOpenLienWeb');
+    const LAST_FOCUS_STORAGE_KEY = 'quoiDetail.lastButtonId';
+    const navigationLinks = {
+      previous: document.getElementById('btPrecedent'),
+      next: document.getElementById('btSuivant'),
+    };
+    const QUOI_SELECTION_MODE_QUI = 'select-quoi-for-qui';
+    let selectionModeContext = null;
+    const AUTO_SAVE_INPUT_IDS = [
+      'quoinom',
+      'quodomaine',
+      'quogenre',
+      'quopays',
+      'quostock',
+      'quoqualif',
+      'quodatedernierevisu',
+      'quoRemarque',
+      'quolienDisk',
+      'quodateaaaa',
+      'quodatemm',
+      'quodatejj',
+    ];
+    const AUTO_SAVE_DEBOUNCE_MS = 600;
+    let autoSaveTimeoutId = null;
+    let autoSaveInProgress = false;
+    let parametresCache = [];
+    let domaineQuoiOptions = [];
+    let pendingQuodomaineValue = '';
+    let pendingQuogenreValue = '';
+    let pendingQuopaysValue = '';
+    let pendingQuostockValue = '';
+
+    // Convertit le champ niv1 (séparé par ;) en tableau d'options
+    const parseParametreValues = (rawValue) => {
+      if (!rawValue) {
+        return [];
+      }
+      return String(rawValue)
+        .split(';')
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
+    };
+
+    // Applique la valeur sélectionnée, en ajoutant l'option si absente
+    const setQuodomaineValue = (value) => {
+      pendingQuodomaineValue = value ?? '';
+      if (!quodomaineSelect || !quodomaineSelect.options.length) {
+        return;
+      }
+      let targetValue = pendingQuodomaineValue;
+      if (targetValue) {
+        const hasOption = Array.from(quodomaineSelect.options).some(
+          (option) => option.value === targetValue
+        );
+        if (!hasOption) {
+          const option = document.createElement('option');
+          option.value = targetValue;
+          option.textContent = targetValue;
+          quodomaineSelect.append(option);
+        }
+      } else {
+        targetValue = '';
+      }
+      quodomaineSelect.value = targetValue;
+      pendingQuodomaineValue = '';
+    };
+
+    // Reconstruit les options du select domaine
+    const applyQuodomaineOptions = () => {
+      if (!quodomaineSelect) {
+        return;
+      }
+      const targetValue = pendingQuodomaineValue || quodomaineSelect.value || '';
+      quodomaineSelect.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '';
+      quodomaineSelect.append(emptyOption);
+      domaineQuoiOptions.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        quodomaineSelect.append(option);
+      });
+      setQuodomaineValue(targetValue);
+    };
+
+    const normalizeKey = (value) => String(value ?? '').trim().toLowerCase();
+    const normalizeParametreKey = (value) => normalizeKey(value).replace(/[^a-z0-9]/g, '_');
+
+    const setQuogenreValue = (value) => {
+      pendingQuogenreValue = value ?? '';
+      if (!quogenreSelect || !quogenreSelect.options.length) {
+        return;
+      }
+      let targetValue = pendingQuogenreValue;
+      if (targetValue) {
+        const hasOption = Array.from(quogenreSelect.options).some(
+          (option) => option.value === targetValue
+        );
+        if (!hasOption) {
+          const option = document.createElement('option');
+          option.value = targetValue;
+          option.textContent = targetValue;
+          quogenreSelect.append(option);
+        }
+      } else {
+        targetValue = '';
+      }
+      quogenreSelect.value = targetValue;
+      pendingQuogenreValue = '';
+    };
+
+    const setQuopaysValue = (value) => {
+      pendingQuopaysValue = value ?? '';
+      if (!quopaysSelect || !quopaysSelect.options.length) {
+        return;
+      }
+      let targetValue = pendingQuopaysValue;
+      if (targetValue) {
+        const hasOption = Array.from(quopaysSelect.options).some(
+          (option) => option.value === targetValue
+        );
+        if (!hasOption) {
+          const option = document.createElement('option');
+          option.value = targetValue;
+          option.textContent = targetValue;
+          quopaysSelect.append(option);
+        }
+      } else {
+        targetValue = '';
+      }
+      quopaysSelect.value = targetValue;
+      pendingQuopaysValue = '';
+    };
+
+    // Applique la valeur sélectionnée pour le stock, en ajoutant l'option si absente
+    const setQuostockValue = (value) => {
+      pendingQuostockValue = value ?? '';
+      if (!quostockSelect || !quostockSelect.options.length) {
+        return;
+      }
+      let targetValue = pendingQuostockValue;
+      if (targetValue) {
+        const hasOption = Array.from(quostockSelect.options).some(
+          (option) => option.value === targetValue
+        );
+        if (!hasOption) {
+          const option = document.createElement('option');
+          option.value = targetValue;
+          option.textContent = targetValue;
+          quostockSelect.append(option);
+        }
+      } else {
+        targetValue = '';
+      }
+      quostockSelect.value = targetValue;
+      pendingQuostockValue = '';
+    };
+
+    // Reconstruit les options du select stock � partir du domaine
+    const applyQuostockOptions = (domaineValue) => {
+      if (!quostockSelect) {
+        return;
+      }
+      const targetValue = pendingQuostockValue || quostockSelect.value || '';
+      const stockValues = parametresCache
+        .filter(
+          (parametre) =>
+            parametre &&
+            parametre.nom === 'stockQuoi' + domaineValue
+        )
+        .flatMap((parametre) => parseParametreValues(parametre.niv1));
+      quostockSelect.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '';
+      quostockSelect.append(emptyOption);
+      stockValues.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        quostockSelect.append(option);
+      });
+      setQuostockValue(targetValue);
+    };
+
+    const getParametreByNom = (nom) => {
+      if (!nom || !parametresCache.length) {
+        return null;
+      }
+      const target = normalizeParametreKey(nom);
+      return (
+        parametresCache.find(
+          (parametre) => normalizeParametreKey(parametre?.nom) === target
+        ) || null
+      );
+    };
+
+    const applyQuogenreOptions = (domaineValue) => {
+      if (!quogenreSelect) {
+        return;
+      }
+      const targetValue = pendingQuogenreValue || quogenreSelect.value || '';
+      const parametre = getParametreByNom(`genreQuoi${domaineValue || ''}`);
+      const options = parseParametreValues(parametre?.niv1);
+      quogenreSelect.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '';
+      quogenreSelect.append(emptyOption);
+      options.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        quogenreSelect.append(option);
+      });
+      setQuogenreValue(targetValue);
+    };
+
+    const applyQuopaysOptions = (domaineValue, genreValue) => {
+      if (!quopaysSelect) {
+        return;
+      }
+      const targetValue = pendingQuopaysValue || quopaysSelect.value || '';
+      const parametre =
+        getParametreByNom(`paysQuoi${domaineValue || ''}${genreValue || ''}`) ||
+        getParametreByNom(`genreQuoi${domaineValue || ''}${genreValue || ''}`);
+      const options = parseParametreValues(parametre?.niv1);
+      quopaysSelect.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '';
+      quopaysSelect.append(emptyOption);
+      options.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        quopaysSelect.append(option);
+      });
+      setQuopaysValue(targetValue);
+    };
+
+    // Charge tous les parametres en cache (domaine + stock)
+    const loadParametres = async () => {
+      if (parametresCache.length) {
+        return parametresCache;
+      }
+      const response = await fetch('/parametres');
+      if (!response.ok) {
+        throw new Error('Impossible de recuperer les parametres');
+      }
+      parametresCache = await response.json();
+      return parametresCache;
+    };
+
+    // Charge la liste domaineQuoi depuis /parametres puis hydrate le select
+    const loadDomaineQuoiOptions = async () => {
+      if (!quodomaineSelect) {
+        return;
+      }
+      try {
+        const parametres = await loadParametres();
+        const domaineQuoiParametre = Array.isArray(parametres)
+          ? parametres.find((parametre) => parametre && parametre.nom === 'domaineQuoi')
+          : null;
+        domaineQuoiOptions = parseParametreValues(domaineQuoiParametre?.niv1);
+      } catch (error) {
+        console.error('Unable to load domaineQuoi parametre', error);
+        domaineQuoiOptions = [];
+      }
+      applyQuodomaineOptions();
+      const currentDomaine = document.getElementById('quodomaine')?.value || '';
+      applyQuostockOptions(currentDomaine);
+    };
+
+    const updateImageVariantDisplay = (variant) => {
+      if (imageVariantLabel) {
+        imageVariantLabel.textContent = variant;
+      }
+    };
+
+    const setImageCountText = (count) => {
+      if (!imageCountLabel) {
+        return;
+      }
+      if (!Number.isFinite(count) || count < 0) {
+        imageCountLabel.textContent = '?';
+        return;
+      }
+      const plural = count > 1 ? 'photos' : 'photo';
+      imageCountLabel.textContent = `${count} ${plural}`;
+    };
+
+    const updateAvailableImageCount = async (id) => {
+      if (!imageCountLabel) {
+        return;
+      }
+      if (!id) {
+        setImageCountText(0);
+        return;
+      }
+      const requestToken = ++imageCountRequestToken;
+      try {
+        const availability = await Promise.all(
+          IMAGE_VARIANTS.map((variant) => checkImageVariantExists(id, variant))
+        );
+        if (requestToken !== imageCountRequestToken) {
+          return;
+        }
+        const count = availability.filter(Boolean).length;
+        setImageCountText(count);
+      } catch (error) {
+        if (requestToken === imageCountRequestToken) {
+          console.error('Unable to count available quoi images', error);
+          imageCountLabel.textContent = '?';
+        }
+      }
+    };
+
+    const getVariantByOffset = (variant, offset) => {
+      const index = IMAGE_VARIANTS.indexOf(variant);
+      const safeIndex = index === -1 ? 0 : index;
+      const nextIndex = (safeIndex + offset + IMAGE_VARIANTS.length) % IMAGE_VARIANTS.length;
+      return IMAGE_VARIANTS[nextIndex];
+    };
+
+    const getNextImageVariant = (variant) => getVariantByOffset(variant, 1);
+
+    const getPreviousImageVariant = (variant) => getVariantByOffset(variant, -1);
+
+    const rememberLastFocusedButton = (element) => {
+      if (!element || !element.id) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(LAST_FOCUS_STORAGE_KEY, element.id);
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const restoreLastFocusedButton = () => {
+      let targetId = null;
+      try {
+        targetId = window.localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+      } catch (error) {
+        // ignore storage failures
+      }
+      if (!targetId) {
+        return;
+      }
+      const element = document.getElementById(targetId);
+      if (!element || typeof element.focus !== 'function') {
+        return;
+      }
+      try {
+        element.focus({ preventScroll: true });
+      } catch (error) {
+        element.focus();
+      }
+    };
+
+    const parseInitialQuery = () => {
+      const search = window.location.search;
+      if (!search || search.length <= 1) {
+        return { id: null, params: null };
+      }
+      const raw = search.substring(1);
+      if (!raw.includes('=')) {
+        return { id: raw, params: null };
+      }
+      const params = new URLSearchParams(raw);
+      const legacySegment = raw.split('&')[0];
+      const legacyId = legacySegment && !legacySegment.includes('=') ? legacySegment : null;
+      const id = params.get('id') || legacyId;
+      return { id: id || null, params };
+    };
+
+    const getInputValue = (id) => {
+      const element = document.getElementById(id);
+      if (!element || typeof element.value !== 'string') {
+        return '';
+      }
+      return element.value.trim();
+    };
+
+    const buildQuoiSavePayload = () => ({
+      nom: getInputValue('quoinom'),
+      domaine: getInputValue('quodomaine'),
+      genre: getInputValue('quogenre'),
+      pays: getInputValue('quopays'),
+      stock: getInputValue('quostock'),
+      qualif: getInputValue('quoqualif'),
+      datedernierevisu: getInputValue('quodatedernierevisu'),
+      remarque: getInputValue('quoRemarque'),
+      liendisk: getInputValue('quolienDisk'),
+      lienweb: getInputValue('quolienWeb'),
+      date_aaaa: sanitizeDateAaaaInput(getInputValue('quodateaaaa')),
+      date_mm: getInputValue('quodatemm'),
+      date_jj: getInputValue('quodatejj'),
+    });
+
+    const applyQuoiUpdateResponse = (payload) => {
+      if (!payload || typeof payload !== 'object') {
+        return;
+      }
+      updateRecordMeta(payload.id, payload.modifts);
+    };
+
+    const saveQuoiDetails = async ({ silent = false } = {}) => {
+      const idInput = document.getElementById('quoiid');
+      const idValue = idInput ? idInput.value.trim() : '';
+      if (!idValue) {
+        return false;
+      }
+      autoSaveInProgress = true;
+      try {
+        const response = await fetch(`/quois/${encodeURIComponent(idValue)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildQuoiSavePayload()),
+        });
+        if (!response.ok) {
+          throw new Error('Sauvegarde du quoi impossible');
+        }
+        const data = await response.json();
+        applyQuoiUpdateResponse(data);
+        if (!silent && window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'QUOI_REFRESH' }, window.location.origin || '*');
+          } catch (error) {
+            console.warn('Impossible de notifier la fenetre parente apres sauvegarde', error);
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error('Unable to save quoi details', error);
+        if (!silent) {
+          alert('Sauvegarde des informations du quoi impossible.');
+        }
+        return false;
+      } finally {
+        autoSaveInProgress = false;
+      }
+    };
+
+    const scheduleAutoSave = () => {
+      const idInput = document.getElementById('quoiid');
+      const idValue = idInput ? idInput.value.trim() : '';
+      if (!idValue) {
+        return;
+      }
+      if (autoSaveTimeoutId) {
+        clearTimeout(autoSaveTimeoutId);
+      }
+      autoSaveTimeoutId = window.setTimeout(() => {
+        autoSaveTimeoutId = null;
+        saveQuoiDetails({ silent: true });
+      }, AUTO_SAVE_DEBOUNCE_MS);
+    };
+
+    const registerAutoSaveInputs = () => {
+      AUTO_SAVE_INPUT_IDS.forEach((id) => {
+        const element = document.getElementById(id);
+        if (!element) {
+          return;
+        }
+        ['input', 'change', 'blur'].forEach((eventName) => {
+          element.addEventListener(eventName, scheduleAutoSave);
+        });
+      });
+    };
+
+    const updateRecordMeta = (id, modifts) => {
+      if (!recordMetaElement) {
+        return;
+      }
+      const parts = [];
+      const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+      if (normalizedId) {
+        parts.push('id: ' + normalizedId);
+      }
+      const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+      if (normalizedModifts) {
+        parts.push('modifts: ' + normalizedModifts);
+      }
+      recordMetaElement.textContent = parts.join(' | ');
+    };
+
+    const applySelectionModeFromParams = (params) => {
+      if (!selectionButton) {
+        selectionModeContext = null;
+        return;
+      }
+      if (params && params.get('mode') === QUOI_SELECTION_MODE_QUI) {
+        selectionModeContext = {
+          mode: QUOI_SELECTION_MODE_QUI,
+          quiId: params.get('quiId') || '',
+          quiNom: params.get('quiNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+        };
+        const labelText = selectionModeContext.selectionLabel
+          || (selectionModeContext.quiNom
+            ? `Ajouter ce quoi \u00e0 ${selectionModeContext.quiNom}`
+            : `Ajouter ce quoi au qui ${selectionModeContext.quiId || ''}`);
+        selectionButton.textContent = labelText;
+        selectionButton.style.display = 'inline-block';
+      } else {
+        selectionModeContext = null;
+        selectionButton.style.display = 'none';
+        selectionButton.textContent = '';
+      }
+    };
+
+    const attachQuoiToQui = async () => {
+      if (!selectionModeContext || selectionModeContext.mode !== QUOI_SELECTION_MODE_QUI || !selectionModeContext.quiId) {
+        return;
+      }
+      const idInput = document.getElementById('quoiid');
+      const idValue = idInput ? idInput.value.trim() : '';
+      if (!idValue) {
+        alert('Aucun quoi n\'est charg\u00e9.');
+        return;
+      }
+      try {
+        const response = await fetch('/roles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_quoi: idValue,
+            id_qui: selectionModeContext.quiId,
+          }),
+        });
+        if (!response.ok) {
+          alert('Cr\u00e9ation du role impossible.');
+          return;
+        }
+        const quoiNom = document.getElementById('quoinom')?.value?.trim() || `Quoi ${idValue}`;
+        const quiNom = selectionModeContext.quiNom || `Qui ${selectionModeContext.quiId}`;
+        alert(`role ${quoiNom} ajout\u00e9 \u00e0 ${quiNom}`);
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(
+              {
+                type: 'ROLE_REFRESH',
+                id_qui: selectionModeContext.quiId,
+                id_quoi: idValue,
+              },
+              window.location.origin || '*'
+            );
+          }
+        } catch (error) {
+          console.warn('Impossible de notifier la fen\u00eatre parente apr\u00e8s l\u2019ajout du role', error);
+        }
+        window.close();
+      } catch (error) {
+        console.error('Impossible de cr\u00e9er le role', error);
+        alert('Une erreur est survenue lors de la cr\u00e9ation du role.');
+      }
+    };
+
+    const registerButtonFocusTracking = () => {
+      const clickableElements = document.querySelectorAll('.button');
+      clickableElements.forEach((element) => {
+        element.addEventListener('click', () => rememberLastFocusedButton(element));
+      });
+    };
+
+    const checkImageVariantExists = async (id, variant) => {
+      try {
+        const response = await fetch(`/quois/imgQuoi/${encodeURIComponent(id)}/variant/${encodeURIComponent(variant)}/exists`);
+        if (!response.ok) {
+          return false;
+        }
+        const data = await response.json();
+        return Boolean(data.exists);
+      } catch (error) {
+        console.error('Unable to check quoi image variant', error);
+        return false;
+      }
+    };
+
+    const ensureImageVariant = async (id, variant) => {
+      try {
+        const response = await fetch(`/quois/imgQuoi/${encodeURIComponent(id)}/variant/${encodeURIComponent(variant)}/ensure`, {
+          method: 'POST',
+        });
+        return response.ok;
+      } catch (error) {
+        console.error('Unable to ensure quoi image variant', error);
+        return false;
+      }
+    };
+
+    const ensureVariantReady = async (id, targetVariant, allowCreation = true) => {
+      if (targetVariant === DEFAULT_IMAGE_VARIANT) {
+        return true;
+      }
+      if (!IMAGE_VARIANTS.includes(targetVariant)) {
+        return false;
+      }
+      const exists = await checkImageVariantExists(id, targetVariant);
+      if (exists) {
+        return true;
+      }
+      if (!allowCreation) {
+        return false;
+      }
+      const variantNumber = parseInt(targetVariant, 10);
+      const confirmCreate = window.confirm(`voulez-vous creer la photo ${Number.isNaN(variantNumber) ? targetVariant : variantNumber} ?`);
+      if (!confirmCreate) {
+        return false;
+      }
+      const ensured = await ensureImageVariant(id, targetVariant);
+      if (!ensured) {
+        alert(`La photo ${Number.isNaN(variantNumber) ? targetVariant : variantNumber} n'a pas pu etre creee.`);
+        return false;
+      }
+      return true;
+    };
+
+    updateImageVariantDisplay(currentImageVariant);
+
+    const resolveMessageOrigin = () => {
+      const origin = window.location.origin;
+      if (!origin || origin === 'null') {
+        return '*';
+      }
+      return origin;
+    };
+
+    const messageTargetOrigin = resolveMessageOrigin();
+
+    const isSameOriginEvent = (origin) => {
+      const expected = window.location.origin;
+      if (!expected || expected === 'null') {
+        return true;
+      }
+      return origin === expected;
+    };
+
+    const QWANT_BASE_URL = 'https://www.qwant.com/';
+    const QWANT_CLIENT = 'brz-moz';
+    const QWANT_SEARCH_TYPE = 'images';
+
+    const setImageSource = (id, variant = currentImageVariant || DEFAULT_IMAGE_VARIANT, cacheBuster = Date.now()) => {
+      if (!id) {
+        if (previewObjectUrl) {
+          URL.revokeObjectURL(previewObjectUrl);
+          previewObjectUrl = null;
+        }
+        imageElement.removeAttribute('src');
+        currentImageVariant = DEFAULT_IMAGE_VARIANT;
+        pendingImageVariant = currentImageVariant;
+        updateImageVariantDisplay(currentImageVariant);
+        return;
+      }
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+      }
+      currentImageVariant = variant || DEFAULT_IMAGE_VARIANT;
+      pendingImageVariant = currentImageVariant;
+      updateImageVariantDisplay(currentImageVariant);
+      imageElement.src = `/quois/imgQuoi/${encodeURIComponent(id)}?variant=${encodeURIComponent(currentImageVariant)}&v=${cacheBuster}`;
+    };
+
+    const clearPreviewImage = () => {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+      }
+    };
+
+    const showPreviewImage = (file) => {
+      if (!file) {
+        return;
+      }
+      clearPreviewImage();
+      previewObjectUrl = URL.createObjectURL(file);
+      pendingImageVariant = currentImageVariant;
+      imageElement.src = previewObjectUrl;
+    };
+
+    const uploadQuoiImage = async ({ silentOnMissingFile = false, silentOnMissingId = false } = {}) => {
+      const file = pendingImageFile;
+      if (!file) {
+        if (!silentOnMissingFile) {
+          alert('Selectionner une photo avant de sauvegarder.');
+        }
+        return false;
+      }
+      const id = normalizeId(currentQuoiId || document.getElementById('quoiid')?.value);
+      if (!id) {
+        if (!silentOnMissingId) {
+          alert('Aucun quoi selectionne pour associer la photo.');
+        }
+        return false;
+      }
+
+      if (!previewObjectUrl) {
+        showPreviewImage(file);
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+      const uploadVariant = pendingImageVariant || currentImageVariant || DEFAULT_IMAGE_VARIANT;
+
+      try {
+        const response = await fetch(`/quois/imgQuoi/${encodeURIComponent(id)}?variant=${encodeURIComponent(uploadVariant)}`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+        pendingImageFile = null;
+        pendingImageVariant = currentImageVariant;
+        clearPreviewImage();
+        setImageSource(id, uploadVariant, Date.now());
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        updateAvailableImageCount(id);
+      } catch (error) {
+        console.error('Unable to upload quoi image', error);
+        alert('Impossible d\'enregistrer la photo.');
+        return false;
+      }
+      return true;
+    };
+
+    const buildQwantUrl = (query) => {
+      const params = new URLSearchParams({
+        client: QWANT_CLIENT,
+        t: QWANT_SEARCH_TYPE,
+        q: query,
+      });
+      return `${QWANT_BASE_URL}?${params.toString()}`;
+    };
+
+    let quoiOrder = [];
+    let currentQuoiId = null;
+    let navigationFallback = { previous: null, next: null };
+    let currentRoleLinkCount = null;
+    let currentRelThemeLinkCount = null;
+    let linkCountRequestToken = 0;
+    let roleListRequestToken = 0;
+    let themeListRequestToken = 0;
+
+    const normalizeId = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+      const text = String(value).trim();
+      if (!text || /^0+$/.test(text)) {
+        return null;
+      }
+      return text;
+    };
+
+    const clearRoleListContent = () => {
+      if (!roleListElement) {
+        return;
+      }
+      roleListElement.textContent = '';
+    };
+
+    const setRoleListLinks = (roles) => {
+      clearRoleListContent();
+      if (!roleListElement || !Array.isArray(roles) || !roles.length) {
+        return;
+      }
+      roles.forEach((role, index) => {
+        if (index > 0) {
+          roleListElement.append(document.createTextNode(' ; '));
+        }
+        const label = role.label || role.id || '';
+        if (role.id) {
+          const link = document.createElement('a');
+          link.href = 'quiDetail.html?' + encodeURIComponent(role.id);
+          link.target = 'quiDetail' + role.id;
+          link.textContent = label;
+          roleListElement.append(link);
+        } else {
+          roleListElement.append(document.createTextNode(label));
+        }
+      });
+    };
+
+    const clearThemeListContent = () => {
+      if (!themeListElement) {
+        return;
+      }
+      themeListElement.textContent = '';
+    };
+
+    const setThemeListLinks = (themes) => {
+      clearThemeListContent();
+      if (!themeListElement || !Array.isArray(themes) || !themes.length) {
+        return;
+      }
+      themes.forEach((theme, index) => {
+        if (index > 0) {
+          themeListElement.append(document.createTextNode(' ; '));
+        }
+        const label = theme.label || theme.id || '';
+        if (theme.id) {
+          const link = document.createElement('a');
+          link.href = 'themeDetail.html?' + encodeURIComponent(theme.id);
+          link.target = 'themeDetail' + theme.id;
+          link.textContent = label;
+          themeListElement.append(link);
+        } else {
+          themeListElement.append(document.createTextNode(label));
+        }
+      });
+    };
+
+    const refreshRoleListForQuoi = async (quoiId) => {
+      roleListRequestToken += 1;
+      const requestId = roleListRequestToken;
+      if (!roleListElement) {
+        return;
+      }
+      const normalizedQuoiId = normalizeId(quoiId);
+      if (!normalizedQuoiId) {
+        clearRoleListContent();
+        return;
+      }
+      try {
+        const response = await fetch('/roles');
+        if (!response.ok) {
+          throw new Error('Unable to fetch roles');
+        }
+        const payload = await response.json();
+        if (requestId !== roleListRequestToken) {
+          return;
+        }
+        const rolesByKey = new Map();
+        if (Array.isArray(payload)) {
+          payload
+            .filter((role) => normalizeId(role && role.id_quoi) === normalizedQuoiId)
+            .forEach((role) => {
+              if (!role) {
+                return;
+              }
+              const id = normalizeId(role.id_qui);
+              const label = String(role.qui_nomprenom ?? '').trim() || id;
+              if (!label) {
+                return;
+              }
+              const key = id || label;
+              if (!rolesByKey.has(key)) {
+                rolesByKey.set(key, { id, label });
+              }
+            });
+        }
+        setRoleListLinks(Array.from(rolesByKey.values()));
+      } catch (error) {
+        if (requestId !== roleListRequestToken) {
+          return;
+        }
+        console.error('Unable to load linked role names', error);
+        clearRoleListContent();
+      }
+    };
+
+    const refreshThemeListForQuoi = async (quoiId) => {
+      themeListRequestToken += 1;
+      const requestId = themeListRequestToken;
+      if (!themeListElement) {
+        return;
+      }
+      const normalizedQuoiId = normalizeId(quoiId);
+      if (!normalizedQuoiId) {
+        clearThemeListContent();
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes/quoi/' + encodeURIComponent(normalizedQuoiId));
+        if (!response.ok) {
+          throw new Error('Unable to fetch relthemes');
+        }
+        const payload = await response.json();
+        if (requestId !== themeListRequestToken) {
+          return;
+        }
+        const themesByKey = new Map();
+        if (Array.isArray(payload)) {
+          payload.forEach((relTheme) => {
+            if (!relTheme) {
+              return;
+            }
+            const id = normalizeId(relTheme.id_theme);
+            const name = String(relTheme.theme_nom ?? relTheme.nom_theme ?? '').trim();
+            const label = name || id;
+            if (!label) {
+              return;
+            }
+            const key = id || label;
+            if (!themesByKey.has(key)) {
+              themesByKey.set(key, { id, label });
+            }
+          });
+        }
+        setThemeListLinks(Array.from(themesByKey.values()));
+      } catch (error) {
+        if (requestId !== themeListRequestToken) {
+          return;
+        }
+        console.error('Unable to load linked theme names', error);
+        clearThemeListContent();
+      }
+    };
+
+    const applyNavigationTarget = (anchor, targetId) => {
+      if (!anchor) {
+        return;
+      }
+      if (targetId) {
+        anchor.dataset.targetId = targetId;
+        anchor.href = `quoiDetail.html?${encodeURIComponent(targetId)}`;
+        anchor.classList.remove('disabled');
+        anchor.setAttribute('aria-disabled', 'false');
+      } else {
+        delete anchor.dataset.targetId;
+        anchor.href = '#';
+        anchor.classList.add('disabled');
+        anchor.setAttribute('aria-disabled', 'true');
+      }
+    };
+
+    const updateDeleteButtonState = ({ isLoading = false, customMessage = null } = {}) => {
+      if (!btDelete) {
+        return;
+      }
+      const hasId = Boolean(currentQuoiId);
+      const hasBlockingLinks =
+        (typeof currentRoleLinkCount === 'number' && currentRoleLinkCount > 0)
+        || (typeof currentRelThemeLinkCount === 'number' && currentRelThemeLinkCount > 0);
+      const countsLoaded = currentRoleLinkCount !== null && currentRelThemeLinkCount !== null;
+      const canDelete = hasId && countsLoaded && !hasBlockingLinks && !isLoading;
+      if (canDelete) {
+        btDelete.classList.remove('disabled');
+        btDelete.setAttribute('aria-disabled', 'false');
+        btDelete.removeAttribute('title');
+        return;
+      }
+      btDelete.classList.add('disabled');
+      btDelete.setAttribute('aria-disabled', 'true');
+      let titleMessage = customMessage || '';
+      if (!titleMessage) {
+        if (!hasId) {
+          titleMessage = 'Aucun quoi selectionne';
+        } else if (isLoading || !countsLoaded) {
+          titleMessage = 'Verification des liens en cours...';
+        } else if (typeof currentRoleLinkCount === 'number' && currentRoleLinkCount > 0) {
+          titleMessage = `${currentRoleLinkCount} role(s) lie(s) - suppression interdite.`;
+        } else if (typeof currentRelThemeLinkCount === 'number' && currentRelThemeLinkCount > 0) {
+          titleMessage = `${currentRelThemeLinkCount} reltheme(s) lie(s) - suppression interdite.`;
+        } else {
+          titleMessage = 'Suppression indisponible.';
+        }
+      }
+      if (titleMessage) {
+        btDelete.setAttribute('title', titleMessage);
+      } else {
+        btDelete.removeAttribute('title');
+      }
+    };
+
+    const refreshLinkAvailability = async (quoiId) => {
+      linkCountRequestToken += 1;
+      const requestId = linkCountRequestToken;
+      currentRoleLinkCount = null;
+      currentRelThemeLinkCount = null;
+      if (!quoiId) {
+        updateDeleteButtonState();
+        return;
+      }
+      updateDeleteButtonState({ isLoading: true });
+      try {
+        const [roleResponse, relThemeResponse] = await Promise.all([
+          fetch(`/quois/${encodeURIComponent(quoiId)}/roleCount`),
+          fetch(`/quois/${encodeURIComponent(quoiId)}/relthemeCount`),
+        ]);
+        if (!roleResponse.ok || !relThemeResponse.ok) {
+          throw new Error('Unable to fetch link counts');
+        }
+        const [rolePayload, relThemePayload] = await Promise.all([
+          roleResponse.json(),
+          relThemeResponse.json(),
+        ]);
+        if (requestId !== linkCountRequestToken) {
+          return;
+        }
+        const rawRoleCount =
+          typeof rolePayload.count === 'number'
+            ? rolePayload.count
+            : Number.parseInt(rolePayload.count, 10);
+        const rawRelThemeCount =
+          typeof relThemePayload.count === 'number'
+            ? relThemePayload.count
+            : Number.parseInt(relThemePayload.count, 10);
+        currentRoleLinkCount = Number.isFinite(rawRoleCount) ? rawRoleCount : null;
+        currentRelThemeLinkCount = Number.isFinite(rawRelThemeCount) ? rawRelThemeCount : null;
+        updateDeleteButtonState();
+      } catch (error) {
+        if (requestId !== linkCountRequestToken) {
+          return;
+        }
+        console.warn('Unable to retrieve link counts for quoi', error);
+        currentRoleLinkCount = null;
+        currentRelThemeLinkCount = null;
+        updateDeleteButtonState({ customMessage: 'Suppression indisponible (erreur de verification).' });
+      }
+    };
+
+    updateDeleteButtonState();
+
+    const updateNavigationLinks = () => {
+      let previousTarget = null;
+      let nextTarget = null;
+      if (currentQuoiId && quoiOrder.length) {
+        const index = quoiOrder.indexOf(currentQuoiId);
+        if (index !== -1) {
+          previousTarget = index > 0 ? quoiOrder[index - 1] : null;
+          nextTarget = index < quoiOrder.length - 1 ? quoiOrder[index + 1] : null;
+        }
+      }
+      if (!previousTarget && navigationFallback.previous) {
+        previousTarget = navigationFallback.previous;
+      }
+      if (!nextTarget && navigationFallback.next) {
+        nextTarget = navigationFallback.next;
+      }
+      applyNavigationTarget(navigationLinks.previous, previousTarget);
+      applyNavigationTarget(navigationLinks.next, nextTarget);
+    };
+
+    const requestQuoiOrder = () => {
+      if (!window.opener || window.opener.closed) {
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: 'QUOI_ORDER_REQUEST' }, messageTargetOrigin);
+      } catch (error) {
+        console.warn('Unable to request quoi order from opener', error);
+      }
+    };
+
+    const setQuoiOrder = (order) => {
+      if (!Array.isArray(order)) {
+        quoiOrder = [];
+      } else {
+        quoiOrder = order
+          .map((id) => normalizeId(id))
+          .filter((id, index, array) => id && array.indexOf(id) === index);
+      }
+      updateNavigationLinks();
+    };
+
+    const handleNavigationClick = (event) => {
+      const targetId = event.currentTarget.dataset.targetId;
+      if (!targetId) {
+        event.preventDefault();
+        return;
+      }
+      event.preventDefault();
+      window.location.href = `quoiDetail.html?${encodeURIComponent(targetId)}`;
+    };
+
+    if (navigationLinks.previous) {
+      navigationLinks.previous.addEventListener('click', handleNavigationClick);
+    }
+    if (navigationLinks.next) {
+      navigationLinks.next.addEventListener('click', handleNavigationClick);
+    }
+
+    if (imagDivision) {
+      imagDivision.addEventListener('click', () => {
+        if (fileInput) {
+          fileInput.click();
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+          pendingImageFile = null;
+          pendingImageVariant = currentImageVariant;
+          clearPreviewImage();
+          setImageSource(currentQuoiId, currentImageVariant);
+          return;
+        }
+        pendingImageFile = file;
+        showPreviewImage(file);
+        const id = normalizeId(currentQuoiId || document.getElementById('quoiid')?.value);
+        if (id) {
+          await uploadQuoiImage({ silentOnMissingFile: true, silentOnMissingId: true });
+        }
+      });
+    }
+
+    registerButtonFocusTracking();
+    registerAutoSaveInputs();
+
+    const quodateaaaaInput = document.getElementById('quodateaaaa');
+    if (quodateaaaaInput) {
+      const applyFormattedDateAaaa = () => {
+        quodateaaaaInput.value = formatDateAaaa(sanitizeDateAaaaInput(quodateaaaaInput.value));
+      };
+      ['change', 'blur'].forEach((eventName) => {
+        quodateaaaaInput.addEventListener(eventName, applyFormattedDateAaaa);
+      });
+    }
+    restoreLastFocusedButton();
+
+    if (btSave) {
+      btSave.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const saved = await saveQuoiDetails();
+        if (!saved) {
+          return;
+        }
+        alert('Sauvegarde réussie.');
+      });
+    }
+    if (btDelete) {
+      btDelete.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await deleteQuoi();
+      });
+    }
+    if (selectionButton) {
+      selectionButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        attachQuoiToQui();
+      });
+    }
+    if (btImageSuivante) {
+      btImageSuivante.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('quoiid').value;
+        if (!id) {
+          return;
+        }
+        const targetVariant = getNextImageVariant(currentImageVariant);
+        const ready = await ensureVariantReady(id, targetVariant, true);
+        if (!ready) {
+          return;
+        }
+        setImageSource(id, targetVariant, Date.now());
+      });
+    }
+    if (btImagePrecedente) {
+      btImagePrecedente.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('quoiid').value;
+        if (!id) {
+          return;
+        }
+        const targetVariant = getPreviousImageVariant(currentImageVariant);
+        const ready = await ensureVariantReady(id, targetVariant, false);
+        if (!ready) {
+          return;
+        }
+        setImageSource(id, targetVariant, Date.now());
+      });
+    }
+
+    if (btRecherchePhotoWeb) {
+      btRecherchePhotoWeb.setAttribute('target', '_blank');
+      btRecherchePhotoWeb.setAttribute('rel', 'noopener noreferrer');
+      btRecherchePhotoWeb.addEventListener('click', (event) => {
+        event.preventDefault();
+        const nom = document.getElementById('quoinom').value.trim();
+        const domaine = document.getElementById('quodomaine').value.trim();
+        const genre = document.getElementById('quogenre').value.trim();
+        const pays = document.getElementById('quopays').value.trim();
+        const queryParts = [nom, domaine, genre, pays].filter(Boolean);
+        if (!queryParts.length) {
+          alert('Renseigner au moins le nom pour effectuer la recherche.');
+          return;
+        }
+        const queryValue = queryParts.join(' ').replace(/\s+/g, ' ').trim();
+        if (!queryValue) {
+          alert('Renseigner au moins le nom pour effectuer la recherche.');
+          return;
+        }
+        const qwantUrl = buildQwantUrl(queryValue);
+        window.open(qwantUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
+    if (btOpenLienDisk) {
+      const lienDiskPathLabel = document.getElementById('quolienDiskPath');
+
+      const computeLienDiskTargetUrl = async ({
+        showErrorMessage = false,
+      } = {}) => {
+        const lienDiskValue = lienDiskInput ? lienDiskInput.value.trim() : '';
+        const domaineValue = document.getElementById('quodomaine')?.value.trim() || '';
+        if (!domaineValue) {
+          if (showErrorMessage) {
+            alert('Renseigner un domaine.');
+          } else if (lienDiskPathLabel) {
+            lienDiskPathLabel.textContent = '';
+          }
+          return '';
+        }
+        try {
+          await loadParametres();
+          const parametreNom = `lienDiskQuoi${domaineValue}_prefixe`;
+          const parametre = getParametreByNom(parametreNom);
+          const prefix = parametre?.niv1 ? String(parametre.niv1).trim() : '';
+          if (!prefix) {
+            if (showErrorMessage) {
+              alert(`Paramètre ${parametreNom} non trouvé.`);
+            } else if (lienDiskPathLabel) {
+              lienDiskPathLabel.textContent = `(paramètre ${parametreNom} non trouvé)`;
+            }
+            return '';
+          }
+          const genreValue = document.getElementById('quogenre')?.value.trim() || '';
+          const paysValue = document.getElementById('quopays')?.value.trim() || '';
+          const nomValue = document.getElementById('quoinom')?.value.trim() || '';
+          let targetUrl = `${prefix}\\${genreValue}`;
+
+          if (domaineValue === 'MUS') {
+            if (paysValue) {
+              targetUrl = `${targetUrl} ${paysValue}`;
+            }
+            if (nomValue) {
+              targetUrl = `${targetUrl}\\${nomValue}`;
+            }
+          }
+
+          if (domaineValue === 'CINE') {
+            if (paysValue) {
+              targetUrl = `${targetUrl}\\${paysValue}`;
+            }
+            if (nomValue) {
+              targetUrl = `${targetUrl}\\${nomValue}`;
+            }
+          }
+
+          const normalizedTargetUrl = `${targetUrl}\\${lienDiskValue}`;
+          if (showErrorMessage) {
+            return normalizedTargetUrl;
+          }
+          if (lienDiskPathLabel) {
+            lienDiskPathLabel.textContent = normalizedTargetUrl;
+          }
+          return normalizedTargetUrl;
+        } catch (error) {
+          if (showErrorMessage) {
+            return '';
+          }
+          if (lienDiskPathLabel) {
+            lienDiskPathLabel.textContent = '(erreur calcul chemin)';
+          }
+          return '';
+        }
+      };
+
+      const updateLienDiskPath = async () => {
+        await computeLienDiskTargetUrl();
+      };
+
+      // attach listeners to keep preview updated
+      if (lienDiskInput) lienDiskInput.addEventListener('input', updateLienDiskPath);
+      const domaineElem = document.getElementById('quodomaine');
+      if (domaineElem) domaineElem.addEventListener('change', updateLienDiskPath);
+      const genreElem = document.getElementById('quogenre');
+      if (genreElem) genreElem.addEventListener('change', updateLienDiskPath);
+      const paysElem = document.getElementById('quopays');
+      if (paysElem) paysElem.addEventListener('change', updateLienDiskPath);
+
+      // update once on load
+      updateLienDiskPath();
+
+      btOpenLienDisk.addEventListener('click', async () => {
+        const targetUrl = await computeLienDiskTargetUrl({ showErrorMessage: true });
+        if (!targetUrl) {
+          return;
+        }
+        const redirectUrl = `/tools/open-file-local?target=${encodeURIComponent(targetUrl)}`;
+        window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
+    if (btOpenLienWeb) {
+      btOpenLienWeb.addEventListener('click', async () => {
+        const lienWebValue = lienWebInput ? lienWebInput.value.trim() : '';
+        if (!lienWebValue) {
+          alert('Renseigner un lien Web .');
+          return;
+        }
+        let targetUrl = '';
+        try {
+          window.open(lienWebValue, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+          console.warn('Impossible d\'ouvrir le lien web', error);
+          alert(`Ouverture du lien disque impossible.${lienWebValue}`);
+        }
+      });
+    }
+
+    window.addEventListener('message', (event) => {
+      if (!isSameOriginEvent(event.origin)) {
+        return;
+      }
+      const data = event.data;
+      if (!data || typeof data !== 'object') {
+        return;
+      }
+      if (data.type === 'QUOI_ORDER_RESPONSE' && Array.isArray(data.order)) {
+        setQuoiOrder(data.order);
+      }
+    });
+
+    const sendOrderUnsubscribe = () => {
+      if (!window.opener || window.opener.closed) {
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: 'QUOI_ORDER_UNSUBSCRIBE' }, messageTargetOrigin);
+      } catch (error) {
+        // ignore unsubscribe errors
+      }
+    };
+
+    window.addEventListener('beforeunload', sendOrderUnsubscribe);
+
+    async function refreshQuoi(id) {
+      try {
+        const response = await fetch(`/quois/${id}`);
+        if (!response.ok) {
+          throw new Error('Quoi introuvable');
+        }
+        const quoi = await response.json();
+        document.getElementById('quoiid').value = quoi.id ?? '';
+        document.getElementById('quoinom').value = quoi.nom ?? '';
+        setQuodomaineValue(quoi.domaine ?? '');
+        applyQuogenreOptions(quoi.domaine ?? '');
+        setQuogenreValue(quoi.genre ?? '');
+        applyQuopaysOptions(quoi.domaine ?? '', quoi.genre ?? '');
+        setQuopaysValue(quoi.pays ?? '');
+        applyQuostockOptions(quoi.domaine ?? '');
+        setQuostockValue(quoi.stock ?? '');
+        document.getElementById('quoqualif').value = quoi.qualif ?? '';
+        document.getElementById('quodatedernierevisu').value = formatDate(quoi.datedernierevisu);
+        document.getElementById('quoRemarque').value = quoi.remarque ?? '';
+        if (lienDiskInput) {
+          lienDiskInput.value = quoi.liendisk ?? '';
+        }
+        if (lienWebInput) {
+          lienWebInput.value = quoi.lienweb ?? '';
+        }
+        document.getElementById('quodateaaaa').value = formatDateAaaa(quoi.date_aaaa);
+        document.getElementById('quodatemm').value = quoi.date_mm ?? '';
+        document.getElementById('quodatejj').value = quoi.date_jj ?? '';
+        pendingImageFile = null;
+        if (autoSaveTimeoutId) {
+          clearTimeout(autoSaveTimeoutId);
+          autoSaveTimeoutId = null;
+        }
+        autoSaveInProgress = false;
+        clearPreviewImage();
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        currentImageVariant = DEFAULT_IMAGE_VARIANT;
+        pendingImageVariant = currentImageVariant;
+        updateImageVariantDisplay(currentImageVariant);
+        setImageSource(quoi.id, currentImageVariant);
+        updateAvailableImageCount(quoi.id);
+        document.getElementById('pageTitle').textContent = quoi.nom ? `${quoi.nom}` : 'Detail Quoi';
+        document.title = quoi.nom ? `Quoi Detail - ${quoi.nom}` : 'Quoi Detail';
+        if (btRoleListeQuoi) {
+          if (quoi.id) {
+            btRoleListeQuoi.href = `roleListe.html?id_quoi=${encodeURIComponent(quoi.id)}&sort=naissance&order=asc`;
+            btRoleListeQuoi.setAttribute('target', '_blank');
+            btRoleListeQuoi.setAttribute('rel', 'noopener noreferrer');
+            btRoleListeQuoi.classList.remove('disabled');
+            btRoleListeQuoi.setAttribute('aria-disabled', 'false');
+          } else {
+            btRoleListeQuoi.href = '#';
+            btRoleListeQuoi.classList.add('disabled');
+            btRoleListeQuoi.setAttribute('aria-disabled', 'true');
+            btRoleListeQuoi.removeAttribute('target');
+            btRoleListeQuoi.removeAttribute('rel');
+          }
+        }
+        if (btRelThemeQuoi) {
+          if (quoi.id) {
+            btRelThemeQuoi.href = `relThemeListe.html?id_quoi=${encodeURIComponent(quoi.id)}`;
+            btRelThemeQuoi.setAttribute('target', '_blank');
+            btRelThemeQuoi.setAttribute('rel', 'noopener noreferrer');
+            btRelThemeQuoi.classList.remove('disabled');
+            btRelThemeQuoi.setAttribute('aria-disabled', 'false');
+          } else {
+            btRelThemeQuoi.href = '#';
+            btRelThemeQuoi.classList.add('disabled');
+            btRelThemeQuoi.setAttribute('aria-disabled', 'true');
+            btRelThemeQuoi.removeAttribute('target');
+            btRelThemeQuoi.removeAttribute('rel');
+          }
+        }
+
+        updateRecordMeta(quoi.id, quoi.modifts);
+        currentQuoiId = normalizeId(quoi.id);
+        refreshRoleListForQuoi(currentQuoiId);
+        refreshThemeListForQuoi(currentQuoiId);
+        refreshLinkAvailability(currentQuoiId);
+        navigationFallback = {
+          previous: normalizeId(quoi.idPrecedent),
+          next: normalizeId(quoi.idSuivant),
+        };
+        updateNavigationLinks();
+        // trigger input/change events so preview (chemin disque) updates
+        try {
+          if (lienDiskInput) lienDiskInput.dispatchEvent(new Event('input'));
+          const domaineElem = document.getElementById('quodomaine');
+          if (domaineElem) domaineElem.dispatchEvent(new Event('change'));
+          const genreElem = document.getElementById('quogenre');
+          if (genreElem) genreElem.dispatchEvent(new Event('change'));
+          const paysElem = document.getElementById('quopays');
+          if (paysElem) paysElem.dispatchEvent(new Event('change'));
+        } catch (e) {
+          // ignore
+        }
+        requestQuoiOrder();
+      } catch (err) {
+        console.error(err);
+        refreshRoleListForQuoi(null);
+        refreshLinkAvailability(null);
+      }
+    }
+
+    async function deleteQuoi() {
+      const idInput = document.getElementById('quoiid');
+      const idValue = idInput ? idInput.value.trim() : '';
+      if (!idValue) {
+        alert('Aucun quoi a supprimer.');
+        return;
+      }
+      if (currentRoleLinkCount === null || currentRelThemeLinkCount === null) {
+        alert('Verification des liens en cours. Merci de reessayer dans un instant.');
+        refreshLinkAvailability(currentQuoiId);
+        return;
+      }
+      if (currentRoleLinkCount > 0 || currentRelThemeLinkCount > 0) {
+        const parts = [];
+        if (currentRoleLinkCount > 0) {
+          parts.push(`${currentRoleLinkCount} role(s) lie(s)`);
+        }
+        if (currentRelThemeLinkCount > 0) {
+          parts.push(`${currentRelThemeLinkCount} reltheme(s) lie(s)`);
+        }
+        const joinMessage = parts.join(' et ') || 'liens existants';
+        alert(`Suppression impossible: ${joinMessage} a ce quoi.`);
+        return;
+      }
+      const confirmDelete = window.confirm('Confirmer la suppression ?');
+      if (!confirmDelete) {
+        return;
+      }
+      try {
+        const response = await fetch('/quois/' + encodeURIComponent(idValue), {
+          method: 'DELETE',
+        });
+        if (response.status === 409) {
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch (parseError) {
+            // ignore JSON parse error for conflict response
+          }
+          const payloadRoleCount =
+            payload && typeof payload.roleCount === 'number'
+              ? payload.roleCount
+              : Number.parseInt(payload && payload.roleCount, 10);
+          const payloadRelThemeCount =
+            payload && typeof payload.relThemeCount === 'number'
+              ? payload.relThemeCount
+              : Number.parseInt(payload && payload.relThemeCount, 10);
+          if (Number.isFinite(payloadRoleCount)) {
+            currentRoleLinkCount = payloadRoleCount;
+          }
+          if (Number.isFinite(payloadRelThemeCount)) {
+            currentRelThemeLinkCount = payloadRelThemeCount;
+          }
+          updateDeleteButtonState({ customMessage: 'Suppression impossible (liens existants).' });
+          const parts = [];
+          if (Number.isFinite(payloadRoleCount)) {
+            parts.push(`${payloadRoleCount} role(s) lie(s)`);
+          }
+          if (Number.isFinite(payloadRelThemeCount)) {
+            parts.push(`${payloadRelThemeCount} reltheme(s) lie(s)`);
+          }
+          const countMessage = parts.length ? parts.join(' et ') : 'des liens sont lies';
+          alert(`Suppression impossible: ${countMessage} a ce quoi.`);
+          refreshLinkAvailability(currentQuoiId);
+          return;
+        }
+        if (!response.ok) {
+          alert('Suppression impossible.');
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'QUOI_REFRESH' }, window.location.origin);
+          } catch (error) {
+            console.warn('Unable to notify opener window for refresh', error);
+          }
+        }
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) {
+            alert('Quoi supprime. Vous pouvez fermer cet onglet.');
+          }
+        }, 200);
+      } catch (error) {
+        console.error('Unable to delete quoi', error);
+        alert('Une erreur est survenue lors de la suppression.');
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      const { id, params } = parseInitialQuery();
+      applySelectionModeFromParams(params);
+      await loadDomaineQuoiOptions();
+      if (id) {
+        await refreshQuoi(id);
+      } else {
+        const domaineValue = document.getElementById('quodomaine')?.value || '';
+        applyQuogenreOptions(domaineValue);
+        const genreValue = document.getElementById('quogenre')?.value || '';
+        applyQuopaysOptions(domaineValue, genreValue);
+        applyQuostockOptions(domaineValue);
+      }
+      const refreshGenreAndPays = () => {
+        const domaineValue = document.getElementById('quodomaine')?.value || '';
+        applyQuogenreOptions(domaineValue);
+        const genreValue = document.getElementById('quogenre')?.value || '';
+        applyQuopaysOptions(domaineValue, genreValue);
+      };
+      const refreshPaysOnly = () => {
+        const domaineValue = document.getElementById('quodomaine')?.value || '';
+        const genreValue = document.getElementById('quogenre')?.value || '';
+        applyQuopaysOptions(domaineValue, genreValue);
+      };
+      const updateStockOptions = () => {
+        const domaineValue = document.getElementById('quodomaine')?.value || '';
+        applyQuostockOptions(domaineValue);
+      };
+      const domaineSelect = document.getElementById('quodomaine');
+      if (domaineSelect) {
+        domaineSelect.addEventListener('change', () => {
+          refreshGenreAndPays();
+          updateStockOptions();
+        });
+      }
+      const genreSelect = document.getElementById('quogenre');
+      if (genreSelect) {
+        genreSelect.addEventListener('change', () => {
+          refreshPaysOnly();
+          updateStockOptions();
+        });
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (!event.ctrlKey) {
+            return;
+        }
+        const pressedKey = event.key ? event.key.toLowerCase() : '';
+        if (pressedKey == 'v') {
+            event.preventDefault();
+            if (btSuivant) {
+                btSuivant.click();
+            }
+            return;
+        }
+        if (pressedKey == 'p') {
+            event.preventDefault();
+            if (btPrecedent) {
+                btPrecedent.click();
+            }
+            return;
+        }
+        if (pressedKey == 's') {
+            event.preventDefault();
+            if (btSave) {
+                btSave.click();
+            }
+            return;
+        }
+        if (pressedKey == 'q') {
+            event.preventDefault();
+            if (btRecherchePhotoWeb) {
+                btRecherchePhotoWeb.click();
+            }
+            return;
+        }
+        if (pressedKey == 'y') {
+            event.preventDefault();
+            if (btImagePrecedente) {
+                btImagePrecedente.click();
+            }
+            return;
+        }
+        if (pressedKey == 'z') {
+            event.preventDefault();
+            if (btImageSuivante) {
+                btImageSuivante.click();
+            }
+            return;
+        }
+
+    });
+    
+  </script>
+</body>
+</html>

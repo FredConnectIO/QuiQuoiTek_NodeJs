@@ -1,0 +1,26 @@
+{
+  "name": "quiquoitek",
+  "version": "1.0.0",
+  "description": "quiquoitek CRUD with Express and Postgres",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"No test specified\" && exit 0",
+    "db:compact-ids": "node db/tools/compactIds.js",
+    "db:compact-ids:execute": "node db/tools/compactIds.js --execute",
+    "img:h120": "node zoutils/resizeImages120.js",
+    "img:webp2png": "node zoutils/webpToPng.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "pg": "^8.18.0",
+    "sharp": "^0.34.5"
+  }
+}

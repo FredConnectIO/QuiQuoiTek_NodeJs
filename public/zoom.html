@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zoom photo</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      position: relative;
+      color: #fff;
+    }
+    #zoom-image {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      object-position: center;
+    }
+    .zoom-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 100%;
+      transform: translateX(-100%);
+      display: inline-flex;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 10px 18px;
+      border-radius: 999px;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+    .zoom-controls button {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .zoom-controls button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .zoom-controls button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    #zoom-caption {
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    #zoom-status {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.65);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <img id="zoom-image" alt="Photo zoomée" />
+  <div class="zoom-controls">
+    <button type="button" id="zoom-prev">Précédent</button>
+    <button type="button" id="zoom-play-pause">Lecture</button>
+    <button type="button" id="zoom-next">Suivant</button>
+    <span id="zoom-caption"></span>
+  </div>
+  <div id="zoom-status"></div>
+  <script>
+    (function () {
+      const imageEl = document.getElementById('zoom-image');
+      const captionEl = document.getElementById('zoom-caption');
+      const prevButton = document.getElementById('zoom-prev');
+      const nextButton = document.getElementById('zoom-next');
+      const playPauseButton = document.getElementById('zoom-play-pause');
+      const statusEl = document.getElementById('zoom-status');
+      const urlParams = new URLSearchParams(window.location.search);
+      const folderParam = urlParams.get('folder') || '';
+      const modeParam = urlParams.get('mode') || '';
+      const QUI_DIAPORAMA_STORAGE_KEY = 'quiDiaporamaSelection';
+      const RELTHEME_THEME_STORAGE_KEY = 'relThemeThemeDiaporama';
+      const RELTHEME_LIST_STORAGE_KEY = 'relThemeListeDiaporama';
+      const ROLE_LIST_DIAPORAMA_STORAGE_KEY = 'roleListDiaporama';
+      const isQuiDiaporama = modeParam === 'qui';
+      const isRelThemeThemeDiaporama = modeParam === 'reltheme-theme';
+      const isRelThemeListDiaporama = modeParam === 'reltheme-liste';
+      const isRoleDiaporama = modeParam === 'role';
+      const QUI_IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+      const ROLE_IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+      const DEFAULT_SLIDE_DURATION = 2000;
+      const DURATION_STORAGE_KEY = 'diaporamaSlideDuration';
+
+      const parsePositiveInteger = (value) => {
+        const numberValue = Number.parseInt(String(value ?? '').trim(), 10);
+        return Number.isFinite(numberValue) && numberValue > 0 ? numberValue : null;
+      };
+
+      const urlDuration = parsePositiveInteger(urlParams.get('duration'));
+      const storedDuration = parsePositiveInteger(window.localStorage.getItem(DURATION_STORAGE_KEY));
+      const SLIDE_DURATION = urlDuration ?? storedDuration ?? DEFAULT_SLIDE_DURATION;
+
+      if (urlDuration) {
+        window.localStorage.setItem(DURATION_STORAGE_KEY, urlDuration);
+      } else if (!storedDuration) {
+        window.localStorage.removeItem(DURATION_STORAGE_KEY);
+      }
+
+      let photos = [];
+      let currentIndex = 0;
+      let intervalId = null;
+      let isPlaying = false;
+
+      const stopAutoPlay = () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        isPlaying = false;
+        playPauseButton.textContent = 'Lecture';
+      };
+
+      const setStatus = (message) => {
+        if (message) {
+          statusEl.textContent = message;
+          statusEl.style.display = 'block';
+        } else {
+          statusEl.textContent = '';
+          statusEl.style.display = 'none';
+        }
+      };
+
+      const buildQuiPhotoEntry = (idString, variant, baseLabel, birthYear) => {
+        const yearLabel = birthYear && String(birthYear).trim()
+          ? ` (${String(birthYear).trim()})`
+          : '';
+        return {
+          filename: `${baseLabel}${yearLabel} (${variant})`,
+          url: `/quis/imgQui/${encodeURIComponent(idString)}?variant=${encodeURIComponent(variant)}`,
+        };
+      };
+
+      const checkQuiVariantExists = async (idString, variant) => {
+        try {
+          const response = await fetch(`/quis/imgQui/${encodeURIComponent(idString)}/variant/${encodeURIComponent(variant)}/exists`);
+          if (!response.ok) {
+            return false;
+          }
+          const data = await response.json();
+          return Boolean(data?.exists);
+        } catch (error) {
+          console.warn('Unable to check image variant existence', error);
+          return false;
+        }
+      };
+
+      const buildQuiPhotosWithVariants = async (idString, baseLabel, birthYear) => {
+        const safeLabel = baseLabel || `Qui ${idString}`;
+        const safeBirthYear = birthYear && String(birthYear).trim() ? String(birthYear).trim() : '';
+        const variants = [];
+        const primaryVariant = QUI_IMAGE_VARIANTS[0];
+        variants.push(buildQuiPhotoEntry(idString, primaryVariant, safeLabel, safeBirthYear));
+
+        const additionalVariants = await Promise.all(
+          QUI_IMAGE_VARIANTS.slice(1).map(async (variant) => {
+            const exists = await checkQuiVariantExists(idString, variant);
+            if (exists) {
+              return buildQuiPhotoEntry(idString, variant, safeLabel, safeBirthYear);
+            }
+            return null;
+          })
+        );
+
+        for (const photo of additionalVariants) {
+          if (photo) {
+            variants.push(photo);
+          }
+        }
+        return variants;
+      };
+
+      const buildRolePhotoEntry = (idString, variant, baseLabel) => ({
+        filename: `${baseLabel} (${variant})`,
+        url: `/roles/imgRole/${encodeURIComponent(idString)}?variant=${encodeURIComponent(variant)}`,
+      });
+
+      const checkRoleVariantExists = async (idString, variant) => {
+        try {
+          const response = await fetch(`/roles/imgRole/${encodeURIComponent(idString)}/variant/${encodeURIComponent(variant)}/exists`);
+          if (!response.ok) {
+            return false;
+          }
+          const data = await response.json();
+          return Boolean(data?.exists);
+        } catch (error) {
+          console.warn('Unable to check role image variant existence', error);
+          return false;
+        }
+      };
+
+      const buildRolePhotosWithVariants = async (idString, baseLabel) => {
+        const safeLabel = baseLabel || `Role ${idString}`;
+        const photos = [];
+        const availability = await Promise.all(
+          ROLE_IMAGE_VARIANTS.map(async (variant) => {
+            const exists = await checkRoleVariantExists(idString, variant);
+            return exists ? buildRolePhotoEntry(idString, variant, safeLabel) : null;
+          })
+        );
+        availability.forEach((photo) => {
+          if (photo) {
+            photos.push(photo);
+          }
+        });
+        return photos;
+      };
+
+      const disableControls = () => {
+        prevButton.disabled = true;
+        nextButton.disabled = true;
+        playPauseButton.disabled = true;
+        stopAutoPlay();
+      };
+
+      const enableControls = () => {
+        const isSinglePhoto = photos.length <= 1;
+        prevButton.disabled = isSinglePhoto;
+        nextButton.disabled = isSinglePhoto;
+        if (isSinglePhoto) {
+          playPauseButton.disabled = true;
+          stopAutoPlay();
+        } else {
+          playPauseButton.disabled = false;
+        }
+      };
+
+      const updateDisplay = () => {
+        if (!photos.length) {
+          imageEl.style.display = 'none';
+          captionEl.textContent = '';
+          setStatus('Aucune photo disponible pour le moment.');
+          disableControls();
+          return;
+        }
+
+        imageEl.style.display = 'block';
+        const photo = photos[currentIndex];
+        imageEl.src = photo.url;
+        imageEl.alt = photo.filename || 'Photo';
+        captionEl.textContent = `${photo.filename} - ${currentIndex + 1} / ${photos.length}`;
+        document.title = photo.filename || 'Photo';
+        setStatus('');
+        enableControls();
+        playPauseButton.textContent = isPlaying ? 'Pause' : 'Lecture';
+      };
+
+      const showNext = () => {
+        if (!photos.length) return;
+        currentIndex = (currentIndex + 1) % photos.length;
+        updateDisplay();
+      };
+
+      const startAutoPlay = () => {
+        if (intervalId || photos.length <= 1) return;
+        intervalId = setInterval(showNext, SLIDE_DURATION);
+        isPlaying = true;
+        playPauseButton.textContent = 'Pause';
+      };
+
+      const showPrevious = () => {
+        if (!photos.length) return;
+        currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+        updateDisplay();
+      };
+
+      prevButton.addEventListener('click', () => {
+        stopAutoPlay();
+        showPrevious();
+      });
+
+      nextButton.addEventListener('click', () => {
+        stopAutoPlay();
+        showNext();
+      });
+
+      playPauseButton.addEventListener('click', () => {
+        if (!photos.length || photos.length <= 1) return;
+        if (isPlaying) {
+          stopAutoPlay();
+        } else {
+          startAutoPlay();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+          stopAutoPlay();
+          showPrevious();
+        } else if (event.key === 'ArrowRight') {
+          stopAutoPlay();
+          showNext();
+        } else if (event.key === 'Escape') {
+          window.close();
+        } else if (event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          playPauseButton.click();
+        }
+      });
+
+      const loadPhotos = async () => {
+        setStatus('Chargement des photos...');
+        stopAutoPlay();
+        disableControls();
+
+        if (isQuiDiaporama || isRelThemeThemeDiaporama || isRelThemeListDiaporama || isRoleDiaporama) {
+          let parsedSelection = [];
+          try {
+            const storageKey = isQuiDiaporama
+              ? QUI_DIAPORAMA_STORAGE_KEY
+              : isRelThemeThemeDiaporama
+              ? RELTHEME_THEME_STORAGE_KEY
+              : isRelThemeListDiaporama
+                ? RELTHEME_LIST_STORAGE_KEY
+                : ROLE_LIST_DIAPORAMA_STORAGE_KEY;
+            const rawSelection = window.localStorage.getItem(storageKey);
+            if (rawSelection) {
+              parsedSelection = JSON.parse(rawSelection);
+            }
+          } catch (error) {
+            console.error('Unable to read diaporama selection:', error);
+          } finally {
+            try {
+              const storageKey = isQuiDiaporama
+                ? QUI_DIAPORAMA_STORAGE_KEY
+                : isRelThemeThemeDiaporama
+                ? RELTHEME_THEME_STORAGE_KEY
+                : isRelThemeListDiaporama
+                  ? RELTHEME_LIST_STORAGE_KEY
+                  : ROLE_LIST_DIAPORAMA_STORAGE_KEY;
+              window.localStorage.removeItem(storageKey);
+            } catch (cleanupError) {
+              console.warn('Unable to clear diaporama selection:', cleanupError);
+            }
+          }
+
+          const selectionArray = (() => {
+            if ((isRelThemeThemeDiaporama || isRelThemeListDiaporama || isRoleDiaporama) && parsedSelection && Array.isArray(parsedSelection.entries)) {
+              return parsedSelection.entries;
+            }
+            if (Array.isArray(parsedSelection)) {
+              return parsedSelection;
+            }
+            return [];
+          })();
+
+          const buildPhotoFromSelection = async (item) => {
+            if (!item) {
+              return [];
+            }
+            if (isQuiDiaporama) {
+              if (typeof item.id === 'undefined' || item.id === null) {
+                return [];
+              }
+              const idString = String(item.id).trim();
+              if (!idString) {
+                return [];
+              }
+              return buildQuiPhotosWithVariants(
+                idString,
+                item.label || `Qui ${idString}`,
+                item.datenaiss_aaaa ?? null
+              );
+            }
+
+            if (isRelThemeThemeDiaporama || isRelThemeListDiaporama) {
+              const idQui = item.idQui ?? item.id_qui ?? null;
+              if (idQui === null || idQui === undefined) {
+                return [];
+              }
+              const idString = String(idQui).trim();
+              if (!idString) {
+                return [];
+              }
+              return buildQuiPhotosWithVariants(
+                idString,
+                item.label || `Qui ${idString}`,
+                item.datenaiss_aaaa ?? null
+              );
+            }
+            if (isRoleDiaporama) {
+              const idRole = item.idRole ?? item.id_role ?? null;
+              if (idRole === null || idRole === undefined) {
+                return [];
+              }
+              const idString = String(idRole).trim();
+              if (!idString) {
+                return [];
+              }
+              return buildRolePhotosWithVariants(idString, item.label || `Role ${idString}`);
+            }
+            return [];
+          };
+
+          const photoGroups = await Promise.all(selectionArray.map(buildPhotoFromSelection));
+          photos = photoGroups.flat().filter(Boolean);
+
+          const initialIndex = parseInt(urlParams.get('index'), 10);
+          if (!Number.isNaN(initialIndex) && initialIndex >= 0 && initialIndex < photos.length) {
+            currentIndex = initialIndex;
+          } else {
+            currentIndex = 0;
+          }
+
+          if (!photos.length) {
+            imageEl.style.display = 'none';
+            captionEl.textContent = '';
+            setStatus('Aucune photo disponible pour ce diaporama.');
+            return;
+          }
+
+          updateDisplay();
+          return;
+        }
+
+        try {
+          const requestUrl = new URL('/photos', window.location.origin);
+          if (folderParam) {
+            requestUrl.searchParams.set('folder', folderParam);
+          }
+          const response = await fetch(requestUrl.toString());
+          if (!response.ok) {
+            throw new Error('Erreur HTTP');
+          }
+          photos = await response.json();
+          const initialIndex = parseInt(urlParams.get('index'), 10);
+          if (!Number.isNaN(initialIndex) && initialIndex >= 0 && initialIndex < photos.length) {
+            currentIndex = initialIndex;
+          } else {
+            currentIndex = 0;
+          }
+          updateDisplay();
+        } catch (error) {
+          console.error('Unable to load photos:', error);
+          disableControls();
+          imageEl.style.display = 'none';
+          captionEl.textContent = '';
+          setStatus('Impossible de charger les photos.');
+        }
+      };
+
+      disableControls();
+      loadPhotos();
+    })();
+  </script>
+</body>
+</html>

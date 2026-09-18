@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Thèque - Thème</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1 id="pageTitle">Qui Quoi Thèque - Thèmes</h1>
+  <span id="selection_mode_label" class="mode-indicator" aria-live="polite"></span>
+
+  <div>
+    
+    <a href="#" id="btAjouter" class="button">Ajouter</a>
+    <button type="button" id="btActualiser" class="button">Actualiser</button>
+    <span id="theme_count" class="list-count" aria-live="polite"></span>
+  </div>
+  <table id="theme_table" class="table">
+    <thead>
+      <tr>
+        <th>nom</th>
+        <th>liste des entités</th>
+      </tr>
+    </thead>
+    <tbody id="theme_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const pageTitleElement = document.getElementById('pageTitle');
+    const selectionModeLabel = document.getElementById('selection_mode_label');
+    const THEME_SELECTION_MODE_QUI = 'select-theme-for-qui';
+    const THEME_SELECTION_MODE_QUOI = 'select-theme-for-quoi';
+    const THEME_SELECTION_MODE_ROLE = 'select-theme-for-role';
+    const DEFAULT_PAGE_TITLE = 'Qui Quoi Thèque - Thèmes';
+    let selectionContext = null;
+
+    const normalizeId = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+      const text = String(value).trim();
+      return text || null;
+    };
+
+    const createTd = (value) => {
+      const td = document.createElement('td');
+      td.textContent = value ?? '';
+      return td;
+    };
+
+    const buildThemeDetailHref = (id) => {
+      if (!selectionContext || !selectionContext.mode) {
+        return 'themeDetail.html?' + id;
+      }
+      const params = new URLSearchParams();
+      params.set('mode', selectionContext.mode);
+      if (selectionContext.mode === THEME_SELECTION_MODE_QUI) {
+        params.set('id_qui', selectionContext.idQui || '');
+        if (selectionContext.selectionLabel) {
+          params.set('selectionLabel', selectionContext.selectionLabel);
+        }
+        if (selectionContext.quiLabel) {
+          params.set('quiNom', selectionContext.quiLabel);
+        }
+      } else if (selectionContext.mode === THEME_SELECTION_MODE_QUOI) {
+        params.set('id_quoi', selectionContext.idQuoi || '');
+        if (selectionContext.selectionLabel) {
+          params.set('selectionLabel', selectionContext.selectionLabel);
+        }
+        if (selectionContext.quoiLabel) {
+          params.set('quoiNom', selectionContext.quoiLabel);
+        }
+      } else if (selectionContext.mode === THEME_SELECTION_MODE_ROLE) {
+        params.set('id_role', selectionContext.idRole || '');
+        if (selectionContext.selectionLabel) {
+          params.set('selectionLabel', selectionContext.selectionLabel);
+        }
+        if (selectionContext.roleLabel) {
+          params.set('roleNom', selectionContext.roleLabel);
+        }
+      } else {
+        return 'themeDetail.html?' + id;
+      }
+      params.set('source', selectionContext.source || 'themeListe');
+      return `themeDetail.html?${id}&${params.toString()}`;
+    };
+
+    const getThemeDetailTarget = (id) => {
+      if (!selectionContext || !selectionContext.mode) {
+        return `themeDetail${id}`;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_QUI) {
+        return `themeDetailSelect${id}`;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_QUOI) {
+        return `themeDetailSelectQuoi${id}`;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_ROLE) {
+        return `themeDetailSelectRole${id}`;
+      }
+      return `themeDetail${id}`;
+    };
+
+    const createLinkCell = (value, id) => {
+      const td = document.createElement('td');
+      const link = document.createElement('a');
+      link.textContent = value ?? '';
+      link.href = buildThemeDetailHref(id);
+      link.target = getThemeDetailTarget(id);
+      td.append(link);
+      return td;
+    };
+
+    const buildRelThemeIndex = (relThemes) => {
+      const index = new Map();
+      if (!Array.isArray(relThemes)) {
+        return index;
+      }
+      relThemes.forEach((relTheme) => {
+        const themeId = normalizeId(relTheme && relTheme.id_theme);
+        if (!themeId) {
+          return;
+        }
+        let entry = index.get(themeId);
+        if (!entry) {
+          entry = { qui: new Set(), quoi: new Set() };
+          index.set(themeId, entry);
+        }
+        const quiLabel = relTheme && relTheme.qui_nomprenom ? String(relTheme.qui_nomprenom).trim() : '';
+        const quoiLabel = relTheme && relTheme.quoi_nom ? String(relTheme.quoi_nom).trim() : '';
+        const quiFallback = normalizeId(relTheme && relTheme.id_qui);
+        const quoiFallback = normalizeId(relTheme && relTheme.id_quoi);
+        if (quiLabel) {
+          entry.qui.add(quiLabel);
+        } else if (quiFallback) {
+          entry.qui.add(quiFallback);
+        }
+        if (quoiLabel) {
+          entry.quoi.add(quoiLabel);
+        } else if (quoiFallback) {
+          entry.quoi.add(quoiFallback);
+        }
+        const roleLabel = relTheme && relTheme.role_nom ? String(relTheme.role_nom).trim() : '';
+        const roleFallback = normalizeId(relTheme && relTheme.id_role);
+        if (roleLabel) {
+          entry.qui.add(`role: ${roleLabel}`);
+        } else if (roleFallback) {
+          entry.qui.add(`role: ${roleFallback}`);
+        }
+      });
+      return index;
+    };
+
+    const joinSetValues = (set) => {
+      if (!set || typeof set.size !== 'number' || set.size === 0) {
+        return '';
+      }
+      return Array.from(set).join(' ; ');
+    };
+
+    const sortThemesByNom = (themes) => {
+      return themes.sort((a, b) => {
+        const nomA = (a.nom || '').toLowerCase();
+        const nomB = (b.nom || '').toLowerCase();
+        return nomA.localeCompare(nomB);
+      });
+    };
+
+    let currentThemes = [];
+    const themeCountLabel = document.getElementById("theme_count");
+
+    const updateThemeCount = (count) => {
+      if (!themeCountLabel) {
+        return;
+      }
+      themeCountLabel.textContent = `( ${count} )`;
+    };
+
+    const updateTitle = () => {
+      const isQuiMode = selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUI;
+      const isQuoiMode = selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUOI;
+      const isRoleMode = selectionContext && selectionContext.mode === THEME_SELECTION_MODE_ROLE;
+      let titleText = DEFAULT_PAGE_TITLE;
+      if (isQuiMode) {
+        titleText = selectionContext.quiLabel
+          ? `ajouter un thème à ${selectionContext.quiLabel}`
+          : 'ajouter un thème';
+      } else if (isQuoiMode) {
+        titleText = selectionContext.quoiLabel
+          ? `ajouter un thème à ${selectionContext.quoiLabel}`
+          : 'ajouter un thème';
+      } else if (isRoleMode) {
+        titleText = selectionContext.roleLabel
+          ? `ajouter un thème à ${selectionContext.roleLabel}`
+          : 'ajouter un thème';
+      }
+      if (pageTitleElement) {
+        pageTitleElement.textContent = titleText;
+      }
+      document.title = titleText;
+      if (selectionModeLabel) {
+        if (isQuiMode) {
+          const label =
+            selectionContext.selectionLabel ||
+            (selectionContext.quiLabel
+              ? `Mode : ajout d'un thème à ${selectionContext.quiLabel}`
+              : `Mode : ajout d'un thème au qui ${selectionContext.idQui || ''}`);
+          selectionModeLabel.textContent = label;
+        } else if (isQuoiMode) {
+          const label =
+            selectionContext.selectionLabel ||
+            (selectionContext.quoiLabel
+              ? `Mode : ajout d'un thème à ${selectionContext.quoiLabel}`
+              : `Mode : ajout d'un thème au quoi ${selectionContext.idQuoi || ''}`);
+          selectionModeLabel.textContent = label;
+        } else if (isRoleMode) {
+          const label =
+            selectionContext.selectionLabel ||
+            (selectionContext.roleLabel
+              ? `Mode : ajout d'un thème à ${selectionContext.roleLabel}`
+              : `Mode : ajout d'un thème au role ${selectionContext.idRole || ''}`);
+          selectionModeLabel.textContent = label;
+        } else {
+          selectionModeLabel.textContent = '';
+        }
+      }
+    };
+
+    const parseSelectionContext = () => {
+      const search = window.location.search;
+      if (!search || search.length <= 1) {
+        selectionContext = null;
+        updateTitle();
+        return;
+      }
+      const params = new URLSearchParams(search.substring(1));
+      const mode = params.get('mode');
+      if (mode === THEME_SELECTION_MODE_QUI) {
+        const idQuiParam = params.get('id_qui') || params.get('idQui') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_QUI,
+          idQui: idQuiParam.trim(),
+          selectionLabel: params.get('selectionLabel') || '',
+          quiLabel: params.get('quiNom') || '',
+          source: params.get('source') || '',
+        };
+      } else if (mode === THEME_SELECTION_MODE_QUOI) {
+        const idQuoiParam = params.get('id_quoi') || params.get('idQuoi') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_QUOI,
+          idQuoi: idQuoiParam.trim(),
+          selectionLabel: params.get('selectionLabel') || '',
+          quoiLabel: params.get('quoiNom') || '',
+          source: params.get('source') || '',
+        };
+      } else if (mode === THEME_SELECTION_MODE_ROLE) {
+        const idRoleParam = params.get('id_role') || params.get('idRole') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_ROLE,
+          idRole: idRoleParam.trim(),
+          selectionLabel: params.get('selectionLabel') || '',
+          roleLabel: params.get('roleNom') || '',
+          source: params.get('source') || '',
+        };
+      } else {
+        selectionContext = null;
+      }
+      updateTitle();
+    };
+
+    const fetchQuiLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUI || !selectionContext.idQui) {
+        return;
+      }
+      if (selectionContext.quiLabel) {
+        return;
+      }
+      try {
+        const response = await fetch('/quis/' + selectionContext.idQui);
+        if (!response.ok) {
+          return;
+        }
+        const qui = await response.json();
+        const label =
+          (qui.fullname && String(qui.fullname).trim()) ||
+          [qui.prenom, qui.nom].filter((part) => !!part).join(' ').trim();
+        if (label) {
+          selectionContext.quiLabel = label;
+          updateTitle();
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le qui cible', error);
+      }
+    };
+
+    const fetchRoleLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_ROLE || !selectionContext.idRole) {
+        return;
+      }
+      if (selectionContext.roleLabel) {
+        return;
+      }
+      try {
+        const response = await fetch('/roles/' + selectionContext.idRole);
+        if (!response.ok) {
+          return;
+        }
+        const role = await response.json();
+        const label = role.nom ? String(role.nom).trim() : '';
+        if (label) {
+          selectionContext.roleLabel = label;
+          updateTitle();
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le role cible', error);
+      }
+    };
+
+    const fetchQuoiLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUOI || !selectionContext.idQuoi) {
+        return;
+      }
+      if (selectionContext.quoiLabel) {
+        return;
+      }
+      try {
+        const response = await fetch('/quois/' + selectionContext.idQuoi);
+        if (!response.ok) {
+          return;
+        }
+        const quoi = await response.json();
+        const label = quoi.nom ? String(quoi.nom).trim() : '';
+        if (label) {
+          selectionContext.quoiLabel = label;
+          updateTitle();
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le quoi cible', error);
+      }
+    };
+
+
+    const renderThemes = (themes, relThemeIndex) => {
+      const tbody = document.getElementById('theme_table_tbody');
+      tbody.innerHTML = '';
+      themes.forEach((theme) => {
+        const tr = document.createElement('tr');
+        tr.append(createLinkCell(theme.nom || '', theme.id));
+        const themeKey = normalizeId(theme && theme.id);
+        const relThemeEntry = themeKey && relThemeIndex ? relThemeIndex.get(themeKey) : null;
+        const quiList = relThemeEntry ? joinSetValues(relThemeEntry.qui) : '';
+        const quoiList = relThemeEntry ? joinSetValues(relThemeEntry.quoi) : '';
+        const tdParts = [];
+        if (quiList && quiList !== '0') {
+          tdParts.push(quiList);
+        }
+        if (quoiList && quoiList !== '0') {
+          tdParts.push(quoiList);
+        }
+        const tdText = tdParts.join(' --- ');
+        tr.append(createTd(tdText));
+        tbody.append(tr);
+      });
+      updateThemeCount(themes.length);
+    };
+
+    async function fetchThemes() {
+      const response = await fetch('/themes');
+      if (!response.ok) {
+        alert('Lecture des thèmes impossible');
+        return [];
+      }
+      return response.json();
+    }
+
+    async function fetchRelThemes() {
+      const response = await fetch('/relthemes');
+      if (!response.ok) {
+        alert('Lecture des relations thème impossible');
+        return [];
+      }
+      return response.json();
+    }
+
+    async function refreshThemes() {
+      const [themes, relThemes] = await Promise.all([fetchThemes(), fetchRelThemes()]);
+      // trie systématiquement par nom pour garder l'affichage cohérent
+      currentThemes = sortThemesByNom(themes);
+      const relThemeIndex = buildRelThemeIndex(relThemes);
+      renderThemes(currentThemes, relThemeIndex);
+      if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUI) {
+        fetchQuiLabel();
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUOI) {
+        fetchQuoiLabel();
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_ROLE) {
+        fetchRoleLabel();
+      }
+    }
+
+    async function createTheme() {
+      const response = await fetch('/themes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom: 'Nouveau thème' })
+      });
+      if (!response.ok) {
+        alert('Création impossible');
+        return;
+      }
+      try {
+        const theme = await response.json();
+        if (theme && theme.id) {
+          window.location.href = buildThemeDetailHref(theme.id);
+          return;
+        }
+      } catch (error) {
+        console.warn('Impossible de désérialiser le thème créé', error);
+      }
+      refreshThemes();
+    }
+
+    document.getElementById('btAjouter').addEventListener('click', (event) => {
+      event.preventDefault();
+      createTheme();
+    });
+    document.getElementById('btActualiser').addEventListener('click', (event) => {
+      event.preventDefault();
+      refreshThemes();
+    });
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      if (event.data && event.data.type === 'THEME_REFRESH') {
+        refreshThemes();
+      }
+    });
+
+    parseSelectionContext();
+    refreshThemes();
+  </script>
+</body>
+</html>

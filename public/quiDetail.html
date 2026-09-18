@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta content="text/html; charset=UTF-8; X-Content-Type-Options=nosniff" http-equiv="Content-Type" />
+<head>  
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qui Quoi Th&egrave;que</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <style>
+        #imgDiv {
+            max-width: 100%;
+        }
+
+        #image {
+            display: block;
+            width: auto;
+            height: 580px;
+            max-height: 92vh;
+            max-width: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="pageTitle">Detail Qui</h1>
+    </div>
+
+    <div class="container">
+        <form id="qui-form">
+            <table>
+                <tr>
+                    <td>
+                        <div id="imgDiv" >
+                            <img id="image"/>
+                            cliquez sur l'image pour la changer - 
+                            (photo: <span id="imageVariantNumero"></span>/<span id="imageCount"></span>)
+                            <span id="quiNavigationInfo" class="navigation-info" aria-live="polite"></span>
+                        </div>
+                        <input type="file" id="imgInput" accept="image/*" style="display:none;">
+                        
+                    </td>
+                    <td>
+
+                        <table>
+                            <tr>
+                                <td>
+                                    nom                                    
+                                </td>
+                                <td>
+                                    <input id="quiid" type="hidden" name="id" placeholder="id">
+                                    <input id="quinom" type="text" name="nom" class="form-control" placeholder="nom">
+                                    <input id="quiprenom" type="text" name="prenom" class="form-control" placeholder="prenom">
+                                    <input id="quifullname" type="hidden" name="fullname" class="form-control" placeholder="fullname">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    domaine genre pays style                                    
+                                </td>
+                                <td>
+                                    <select id="quidomaine" name="domaine" class="form-control" placeholder="domaine"></select>
+                                    <select id="quigenre" class="form-control">
+                                        <option value=""></option>
+                                        <option value="F">F</option>
+                                        <option value="M">M</option>
+                                        <option value="G">G</option>
+                                    </select>
+                                    <input id="quipays" type="text" name="pays" class="form-control" placeholder="pays" size="5">
+                                    <input id="quistyle" type="text" name="style" class="form-control" placeholder="style" size="5">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    date naiss
+                                </td>
+                                <td>
+                                    <input id="quidatenaiss_aaaa" type="text" name="datenaiss_aaaa" class="form-control" placeholder="naiss_aaaa" size="4">
+                                    <input id="quidatenaiss_mm" type="text" name="datenaiss_mm" class="form-control" placeholder="mm" size="2">
+                                    <input id="quidatenaiss_jj" type="text" name="datenaiss_jj" class="form-control" placeholder="jj" size="2">
+                                    <span id="quiage"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    date deces
+                                </td>
+                                <td>
+                                    <input id="quidatedeces_aaaa" type="text" name="datedeces_aaaa" class="form-control" placeholder="deces_aaaa" size="4">
+                                    <input id="quidatedeces_mm" type="text" name="datedeces_mm" class="form-control" placeholder="mm" size="2">
+                                    <input id="quidatedeces_jj" type="text" name="datedeces_jj" class="form-control" placeholder="jj" size="2">
+                                    <span id="quiageDeces"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    remarque
+                                </td>
+                                <td>
+                                    <textarea id="quiremarque" name="remarque" class="form-control form-control-wide remarque-control" placeholder="remarque" rows="4"></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Lien disque</td>
+                                <td>
+                                    <input id="quilienDisk" type="text" class="form-control form-control-wide" placeholder="lienDisk" />
+                                    <button type="button" id="btOpenLienDisk" class="buttonSmall">Ouvrir sur le serveur</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Lien Web</td>
+                                <td>
+                                    <input id="quilienWeb" type="text" class="form-control form-control-wide" placeholder="lienWeb" />
+                                    <button type="button" id="btOpenLienWeb" class="buttonSmall">Ouvrir</button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Roles</td>
+                                <td id="listeRoles">
+                                </td>
+                            </tr>   
+                            <tr>
+                                <td>Themes</td>
+                                <td id="listeThemes">
+                                </td>
+                            </tr>                              
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+
+        </form>
+    </div>
+
+    <a id="btPrecedent" href="" class="button">(P)r&eacute;c&eacute;dent</a>
+    <a id="btSuivant" href="" class="button">Sui(v)ant</a>
+    <a id="btRecherchePhotoWeb" href="#" class="button">(Q)want photo web</a>
+    <a id="btRelTheme" href="#" class="button">RelTheme</a>
+    <a id="btRoleListeQuiElement" href="#" class="button">Roles</a>
+    <a id="btRoleListeQuiEnsemble" href="#" class="button">Roles (via ses ensembles)</a>
+    <a id="btPosteListeQuiElement" href="#" class="button">Postes (ensembles de l'élément)</a>
+    <a id="btPosteListeQuiEnsemble" href="#" class="button">Postes (éléments de l'ensemble)</a>
+    <a id="btSave" href="#" class="button">(S)auver</a>
+    <a id="btDelete" href="#" class="button">Supprimer</a>
+    <a id="btImagePrecedente" href="#" class="button">Image precedente (y)</a>
+    <a id="btImageSuivante" href="#" class="button">Image suivante (z)</a>
+    <button type="button" id="btSelectQuiForNewRole" class="button" style="display:none;"></button>
+
+        <span id="record_meta" class="record-meta"></span>
+
+
+    <script>
+        const imageElement = document.getElementById('image');
+        let previewObjectUrl = null;
+        const imagDivision = document.getElementById('imgDiv');
+        const fileInput = document.getElementById('imgInput');
+        const IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+        const DEFAULT_IMAGE_VARIANT = IMAGE_VARIANTS[0];
+        let currentImageVariant = DEFAULT_IMAGE_VARIANT;
+        let currentImageFile = null;
+        let currentImageFileVariant = DEFAULT_IMAGE_VARIANT;
+        let imageCountRequestToken = 0;
+        const imageVariantLabel = document.getElementById('imageVariantNumero');
+        const imageCountLabel = document.getElementById('imageCount');
+        const btSuivant = document.getElementById('btSuivant');
+        const btPrecedent = document.getElementById('btPrecedent');
+        const btImagePrecedente = document.getElementById('btImagePrecedente');
+        const btImageSuivante = document.getElementById('btImageSuivante');
+        const navigationInfo = document.getElementById('quiNavigationInfo');
+        const btRecherchePhotoWeb = document.getElementById('btRecherchePhotoWeb');
+        const birthYearInput = document.getElementById('quidatenaiss_aaaa');
+        const deathYearInput = document.getElementById('quidatedeces_aaaa');
+        const ageDisplay = document.getElementById('quiage');
+        const ageDecesDisplay = document.getElementById('quiageDeces');
+        const relThemeLink = document.getElementById('btRelTheme');
+        const roleListLink = document.getElementById('btRoleListeQuiElement');
+        const roleListGroupLink = document.getElementById('btRoleListeQuiEnsemble');
+        const posteListByQuiElementLink = document.getElementById('btPosteListeQuiElement');
+        const posteListByQuiEnsembleLink = document.getElementById('btPosteListeQuiEnsemble');
+        const selectionButton = document.getElementById('btSelectQuiForNewRole');
+        const recordMetaElement = document.getElementById('record_meta');
+        const roleListElement = document.getElementById('listeRoles');
+        const themeListElement = document.getElementById('listeThemes');
+        const lienDiskInput = document.getElementById('quilienDisk');
+        const lienWebInput = document.getElementById('quilienWeb');
+        const btOpenLienDisk = document.getElementById('btOpenLienDisk');
+        const btOpenLienWeb = document.getElementById('btOpenLienWeb');
+        let roleListRequestToken = 0;
+        let themeListRequestToken = 0;
+        const REL_THEME_QUI_NAV_KEY = 'relThemeQuiNavigation';
+        const QUI_LIST_NAV_KEY = 'quiListNavigation';
+        const QUI_LIST_NAV_PREFIX = 'quiListNavigation:';
+        const QUI_SELECTION_MODE_THEME = 'select-qui-for-theme';
+        const QUI_SELECTION_MODE_QUOI = 'select-qui-for-quoi';
+        const QWANT_BASE_URL = 'https://www.qwant.com/';
+        const QWANT_CLIENT = 'brz-moz';
+        const QWANT_SEARCH_TYPE = 'images';
+        const LAST_FOCUS_STORAGE_KEY = 'quiDetailLastButtonFocus';
+        let selectionModeContext = null;
+        let parametresCache = [];
+        const DOMAINE_QUI_PARAM_NAME = 'domainequi';
+        const domaineSelect = document.getElementById('quidomaine');
+        let domaineQuiOptions = [];
+
+        function focusButton(button) {
+            if (button && typeof button.focus === 'function') {
+                button.focus();
+            }
+        }
+
+        function rememberButtonFocus(button) {
+            if (!button || !button.id) {
+                return;
+            }
+            try {
+                localStorage.setItem(LAST_FOCUS_STORAGE_KEY, button.id);
+            } catch (error) {
+                console.warn('Impossible de memoriser le focus du bouton', error);
+            }
+        }
+
+        function restoreButtonFocus() {
+            try {
+                const lastButtonId = localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+                if (!lastButtonId) {
+                    return;
+                }
+                const button = document.getElementById(lastButtonId);
+                focusButton(button);
+            } catch (error) {
+                console.warn('Impossible de restaurer le focus du bouton', error);
+            }
+        }
+
+        const updateRecordMeta = (id, modifts) => {
+            if (!recordMetaElement) {
+                return;
+            }
+            const parts = [];
+            const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+            if (normalizedId) {
+                parts.push('id: ' + normalizedId);
+            }
+            const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+            if (normalizedModifts) {
+                parts.push('modifts: ' + normalizedModifts);
+            }
+            recordMetaElement.textContent = parts.join(' | ');
+        };
+
+        const normalizeId = (value) => {
+            if (value === null || value === undefined) {
+                return null;
+            }
+            const text = String(value).trim();
+            return text || null;
+        };
+
+        const normalizeOptionValue = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value).trim();
+        };
+
+        const normalizeParametreKey = (value) => {
+            return normalizeOptionValue(value)
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '_');
+        };
+
+        const getParametreByNom = (nom) => {
+            if (!nom || !parametresCache.length) {
+                return null;
+            }
+            const target = normalizeParametreKey(nom);
+            return (
+                parametresCache.find(
+                    (parametre) => normalizeParametreKey(parametre?.nom) === target
+                ) || null
+            );
+        };
+
+        const loadParametres = async () => {
+            if (parametresCache.length) {
+                return parametresCache;
+            }
+            const response = await fetch('/parametres');
+            if (!response.ok) {
+                throw new Error('Impossible de recuperer les parametres');
+            }
+            parametresCache = await response.json();
+            return parametresCache;
+        };
+
+        const applyDomaineOptions = (selectedValue) => {
+            if (!domaineSelect) {
+                return;
+            }
+            const targetValue = normalizeOptionValue(
+                selectedValue !== undefined ? selectedValue : domaineSelect.value
+            );
+            domaineSelect.innerHTML = '';
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = '';
+            domaineSelect.append(emptyOption);
+            domaineQuiOptions.forEach((value) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                domaineSelect.append(option);
+            });
+            if (targetValue) {
+                const exists = domaineQuiOptions.includes(targetValue);
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = targetValue;
+                    option.textContent = targetValue;
+                    domaineSelect.append(option);
+                }
+                domaineSelect.value = targetValue;
+            }
+        };
+
+        const extractDomaineQuiOptions = (parametres) => {
+            if (!Array.isArray(parametres)) {
+                return [];
+            }
+            const domaineParam = parametres.find((param) => {
+                const name = normalizeOptionValue(param && param.nom).toLowerCase();
+                return name === DOMAINE_QUI_PARAM_NAME;
+            });
+            if (!domaineParam || !domaineParam.niv1) {
+                return [];
+            }
+            return String(domaineParam.niv1)
+                .split(';')
+                .map((entry) => entry.trim())
+                .filter((entry) => entry.length > 0);
+        };
+
+        const loadDomaineQuiOptions = async () => {
+            try {
+                const parametres = await loadParametres();
+                domaineQuiOptions = extractDomaineQuiOptions(parametres);
+                applyDomaineOptions();
+            } catch (error) {
+                console.warn('Impossible de charger les domaines de Qui', error);
+            }
+        };
+
+        // Alimente l'affichage des roles du qui courant dans la cellule listeRoles.
+        const clearRoleListContent = () => {
+            if (!roleListElement) {
+                return;
+            }
+            roleListElement.textContent = '';
+        };
+
+        const setRoleListLinks = (roles) => {
+            clearRoleListContent();
+            if (!roleListElement || !Array.isArray(roles) || !roles.length) {
+                return;
+            }
+            roles.forEach((role, index) => {
+                if (index > 0) {
+                    roleListElement.append(document.createTextNode(' ; '));
+                }
+                const label = role.label || role.id || '';
+                if (role.id) {
+                    const link = document.createElement('a');
+                    link.href = 'quoiDetail.html?' + encodeURIComponent(role.id);
+                    link.target = 'quoiDetail' + role.id;
+                    link.textContent = label;
+                    roleListElement.append(link);
+                } else {
+                    roleListElement.append(document.createTextNode(label));
+                }
+            });
+        };
+
+        // Alimente l'affichage des themes du qui courant dans la cellule listeThemes.
+        const clearThemeListContent = () => {
+            if (!themeListElement) {
+                return;
+            }
+            themeListElement.textContent = '';
+        };
+
+        const setThemeListLinks = (themes) => {
+            clearThemeListContent();
+            if (!themeListElement || !Array.isArray(themes) || !themes.length) {
+                return;
+            }
+            themes.forEach((theme, index) => {
+                if (index > 0) {
+                    themeListElement.append(document.createTextNode(' ; '));
+                }
+                const label = theme.label || theme.id || '';
+                if (theme.id) {
+                    const link = document.createElement('a');
+                    link.href = 'themeDetail.html?' + encodeURIComponent(theme.id);
+                    link.target = 'themeDetail' + theme.id;
+                    link.textContent = label;
+                    themeListElement.append(link);
+                } else {
+                    themeListElement.append(document.createTextNode(label));
+                }
+            });
+        };
+
+        // Charge tous les roles et extrait les noms des quoi lies a ce qui (nom_quoi ou quoi_nom), dedoublonnes.
+        const refreshRoleListForQui = async (quiId) => {
+            roleListRequestToken += 1;
+            const requestId = roleListRequestToken;
+            if (!roleListElement) {
+                return;
+            }
+            const normalizedQuiId = normalizeId(quiId);
+            if (!normalizedQuiId) {
+                clearRoleListContent();
+                return;
+            }
+            try {
+                const response = await fetch('/roles');
+                if (!response.ok) {
+                    throw new Error('Unable to fetch roles');
+                }
+                const payload = await response.json();
+                if (requestId !== roleListRequestToken) {
+                    return;
+                }
+                const rolesByKey = new Map();
+                if (Array.isArray(payload)) {
+                    payload
+                        .filter((role) => normalizeId(role && role.id_qui) === normalizedQuiId)
+                        .forEach((role) => {
+                            if (!role) {
+                                return;
+                            }
+                            const id = normalizeId(role.id_quoi);
+                            const quoiName = String(role.nom_quoi ?? role.quoi_nom ?? '').trim();
+                            const label = quoiName || id;
+                            if (!label) {
+                                return;
+                            }
+                            const key = id || label;
+                            if (!rolesByKey.has(key)) {
+                                rolesByKey.set(key, { id, label });
+                            }
+                        });
+                }
+                setRoleListLinks(Array.from(rolesByKey.values()));
+            } catch (error) {
+                console.warn('Impossible de charger les roles', error);
+                if (requestId === roleListRequestToken) {
+                    clearRoleListContent();
+                }
+            }
+        };
+
+        // Charge les relthemes du qui et liste les noms de theme correspondants (theme_nom ou id_theme).
+        const refreshThemeListForQui = async (quiId) => {
+            themeListRequestToken += 1;
+            const requestId = themeListRequestToken;
+            if (!themeListElement) {
+                return;
+            }
+            const normalizedQuiId = normalizeId(quiId);
+            if (!normalizedQuiId) {
+                clearThemeListContent();
+                return;
+            }
+            try {
+                const response = await fetch('/relthemes/qui/' + encodeURIComponent(normalizedQuiId));
+                if (!response.ok) {
+                    throw new Error('Unable to fetch relthemes');
+                }
+                const payload = await response.json();
+                if (requestId !== themeListRequestToken) {
+                    return;
+                }
+                const themesByKey = new Map();
+                if (Array.isArray(payload)) {
+                    payload.forEach((relTheme) => {
+                        if (!relTheme) {
+                            return;
+                        }
+                        const id = normalizeId(relTheme.id_theme);
+                        const name = String(relTheme.theme_nom ?? relTheme.nom_theme ?? '').trim();
+                        const label = name || id;
+                        if (!label) {
+                            return;
+                        }
+                        const key = id || label;
+                        if (!themesByKey.has(key)) {
+                            themesByKey.set(key, { id, label });
+                        }
+                    });
+                }
+                setThemeListLinks(Array.from(themesByKey.values()));
+            } catch (error) {
+                console.warn('Impossible de charger les relthemes', error);
+                if (requestId === themeListRequestToken) {
+                    clearThemeListContent();
+                }
+            }
+        };
+
+        const parseInitialQuery = () => {
+            const search = window.location.search;
+            if (!search || search.length <= 1) {
+                return { id: null, params: null };
+            }
+            const raw = search.substring(1);
+            if (!raw.includes('=')) {
+                return { id: raw, params: null };
+            }
+            const params = new URLSearchParams(raw);
+            const legacySegment = raw.split('&')[0];
+            const legacyId = legacySegment && !legacySegment.includes('=') ? legacySegment : null;
+            const id = params.get('id') || legacyId;
+            return { id: id || null, params };
+        };
+
+        const buildQuiDetailNavigationHref = (id) => {
+            if (!id) {
+                return '#';
+            }
+            if (!selectionModeContext) {
+                return `quiDetail.html?${id}`;
+            }
+            const params = new URLSearchParams();
+            params.set('id', id);
+            params.set('mode', selectionModeContext.mode);
+            if (selectionModeContext.mode === QUI_SELECTION_MODE_THEME) {
+                if (selectionModeContext.themeId) {
+                    params.set('themeId', selectionModeContext.themeId);
+                }
+                if (selectionModeContext.themeNom) {
+                    params.set('themeNom', selectionModeContext.themeNom);
+                }
+            } else if (selectionModeContext.mode === QUI_SELECTION_MODE_QUOI) {
+                if (selectionModeContext.quoiId) {
+                    params.set('quoiId', selectionModeContext.quoiId);
+                }
+                if (selectionModeContext.quoiNom) {
+                    params.set('quoiNom', selectionModeContext.quoiNom);
+                }
+            }
+            if (selectionModeContext.selectionLabel) {
+                params.set('selectionLabel', selectionModeContext.selectionLabel);
+            }
+            return `quiDetail.html?${params.toString()}`;
+        };
+
+        const applySelectionModeFromParams = (params) => {
+            if (!selectionButton) {
+                selectionModeContext = null;
+                return;
+            }
+            const modeParam = params ? params.get('mode') : null;
+            if (modeParam === QUI_SELECTION_MODE_THEME) {
+                selectionModeContext = {
+                    mode: QUI_SELECTION_MODE_THEME,
+                    themeId: params.get('themeId') || '',
+                    themeNom: params.get('themeNom') || '',
+                    selectionLabel: params.get('selectionLabel') || '',
+                };
+                const labelText = selectionModeContext.selectionLabel
+                    || (selectionModeContext.themeNom
+                        ? `ajouter ce qui au th\u00e8me ${selectionModeContext.themeNom}`
+                        : `ajouter ce qui au th\u00e8me ${selectionModeContext.themeId || ''}`);
+                selectionButton.textContent = labelText;
+                selectionButton.style.display = 'inline-block';
+                return;
+            }
+            if (modeParam === QUI_SELECTION_MODE_QUOI) {
+                selectionModeContext = {
+                    mode: QUI_SELECTION_MODE_QUOI,
+                    quoiId: params.get('quoiId') || '',
+                    quoiNom: params.get('quoiNom') || '',
+                    selectionLabel: params.get('selectionLabel') || '',
+                };
+                const labelText = selectionModeContext.quoiNom
+                    ? `Ajouter ce Qui \u00e0 ${selectionModeContext.quoiNom}`
+                    : `Ajouter ce Qui au quoi ${selectionModeContext.quoiId || ''}`;
+                selectionButton.textContent = labelText;
+                selectionButton.style.display = 'inline-block';
+                return;
+            }
+            selectionModeContext = null;
+            selectionButton.style.display = 'none';
+            selectionButton.textContent = '';
+        };
+
+        const attachQuiToTheme = async () => {
+            if (!selectionModeContext || selectionModeContext.mode !== QUI_SELECTION_MODE_THEME || !selectionModeContext.themeId) {
+                return;
+            }
+            const quiId = document.getElementById('quiid').value;
+            if (!quiId) {
+                alert("Aucun Qui n'est chargé.");
+                return;
+            }
+            try {
+                const response = await fetch('/relthemes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_qui: quiId,
+                        id_theme: selectionModeContext.themeId,
+                        nom: selectionModeContext.selectionLabel
+                            || `Ajout pour ${selectionModeContext.themeNom || 'thème'}`,
+                    }),
+                });
+                if (!response.ok) {
+                    alert('Création de la relation impossible.');
+                    return;
+                }
+                alert(`qui ajouté au thème`);
+
+                try {
+                    const notifyMessage = {
+                        type: 'RELTHEME_REFRESH',
+                        themeId: selectionModeContext.themeId,
+                    };
+                    if (window.opener && !window.opener.closed) {
+                        window.opener.postMessage(notifyMessage, window.location.origin || '*');
+                        if (window.opener.opener && !window.opener.opener.closed) {
+                            window.opener.opener.postMessage(notifyMessage, window.location.origin || '*');
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Impossible de notifier la fenêtre parente', error);
+                }
+                try {
+                    const targetThemeId = selectionModeContext.themeId;
+                    const findRelThemeWindow = () => {
+                        const candidates = [];
+                        if (window.opener && !window.opener.closed) {
+                            candidates.push(window.opener);
+                            if (window.opener.opener && !window.opener.opener.closed) {
+                                candidates.push(window.opener.opener);
+                            }
+                        }
+                        for (const candidate of candidates) {
+                            try {
+                                const href = candidate.location && typeof candidate.location.href === 'string' ? candidate.location.href : '';
+                                if (!href || href.indexOf('relThemeListe.html') === -1) {
+                                    continue;
+                                }
+                                const search = candidate.location.search || '';
+                                const params = new URLSearchParams(search.startsWith('?') ? search.substring(1) : search);
+                                const candidateThemeId = params.get('id_theme') || '';
+                                if (candidateThemeId && candidateThemeId === targetThemeId) {
+                                    return candidate;
+                                }
+                            } catch (error) {
+                                // ignore cross-window errors
+                            }
+                        }
+                        return null;
+                    };
+                    const relThemeWindow = findRelThemeWindow();
+                    if (relThemeWindow) {
+                        relThemeWindow.location.reload();
+                    }
+                } catch (error) {
+                    console.warn('Impossible de rafraîchir la page relThemeListe cible', error);
+                }
+                window.close();
+            } catch (error) {
+                console.error('Impossible de créer la relation thème', error);
+                alert('Une erreur est survenue lors de la création de la relation.');
+            }
+        };
+
+        const attachQuiToQuoi = async () => {
+            if (!selectionModeContext || selectionModeContext.mode !== QUI_SELECTION_MODE_QUOI || !selectionModeContext.quoiId) {
+                return;
+            }
+            const quiId = document.getElementById('quiid').value;
+            if (!quiId) {
+                alert('Aucun Qui n\'est charg\u00e9.');
+                return;
+            }
+            try {
+                const response = await fetch('/roles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_qui: quiId,
+                        id_quoi: selectionModeContext.quoiId,
+                    }),
+                });
+                if (!response.ok) {
+                    alert('Cr\u00e9ation du role impossible.');
+                    return;
+                }
+
+                const quiPrenom = document.getElementById('quiprenom')?.value?.trim() || '';
+                const quiNom = document.getElementById('quinom')?.value?.trim() || '';
+                const quiLabel = [quiPrenom, quiNom].filter(Boolean).join(' ') || `Qui ${quiId}`;
+                const quoiLabel = selectionModeContext.quoiNom || `Quoi ${selectionModeContext.quoiId}`;
+                alert(`${quiLabel} ajouté à ${quoiLabel}`);
+
+                try {
+                    if (window.opener && !window.opener.closed) {
+                        window.opener.postMessage(
+                            {
+                                type: 'ROLE_REFRESH',
+                                id_quoi: selectionModeContext.quoiId,
+                            },
+                            window.location.origin || '*'
+                        );
+                    }
+                } catch (error) {
+                    console.warn('Impossible de notifier la fen\u00eatre parente', error);
+                }
+                window.close();
+            } catch (error) {
+                console.error('Impossible de cr\u00e9er le role', error);
+                alert('Une erreur est survenue lors de la cr\u00e9ation du role.');
+            }
+        };
+
+        function registerPersistentFocus(button) {
+            if (!button) {
+                return;
+            }
+            button.addEventListener('click', () => rememberButtonFocus(button));
+        }
+
+        [btSuivant, btPrecedent, btImageSuivante, btImagePrecedente].forEach(registerPersistentFocus);
+        restoreButtonFocus();
+
+        function updateNavigationPosition(position, total) {
+            //alert("updateNavigationPosition position="+position+" total=" +total)
+            if (!navigationInfo) {
+                return;
+            }
+            if (typeof position === 'number' && typeof total === 'number' && total > 0) {
+                navigationInfo.textContent = '  (qui : '  + position + ' / ' + total+')';
+            } else {
+                navigationInfo.textContent = '';
+            }
+        }
+
+        const computeAge = (year) => {
+            const birthYear = Number.parseInt(year, 10);
+            if (Number.isNaN(birthYear) || birthYear <= 0) {
+                return '';
+            }
+            const currentYear = new Date().getFullYear();
+            const age = currentYear - birthYear;
+            return age >= 0 ? String(age) : '';
+        };
+
+        const computeAgeAtDeath = (birthYear, deathYear) => {
+            const birth = Number.parseInt(birthYear, 10);
+            const death = Number.parseInt(deathYear, 10);
+            if (Number.isNaN(birth) || birth <= 0 || Number.isNaN(death) || death <= 0) {
+                return '';
+            }
+            const age = death - birth;
+            return age >= 0 ? String(age) : '';
+        };
+
+        const updateAgeDisplay = () => {
+            const age = computeAge(birthYearInput.value);
+            ageDisplay.textContent = age ? `${age} ans` : '';
+        };
+
+        const updateAgeDecesDisplay = () => {
+            const age = computeAgeAtDeath(birthYearInput.value, deathYearInput.value);
+            ageDecesDisplay.textContent = age ? `${age} ans` : '';
+        };
+
+        const updateImageVariantDisplay = (variant) => {
+            if (!imageVariantLabel) {
+                return;
+            }
+            const index = IMAGE_VARIANTS.indexOf(variant);
+            imageVariantLabel.textContent = index === -1 ? '' : String(index + 1);
+        };
+
+        const getVariantByOffset = (variant, offset) => {
+            const index = IMAGE_VARIANTS.indexOf(variant);
+            const safeIndex = index === -1 ? 0 : index;
+            const nextIndex = (safeIndex + offset + IMAGE_VARIANTS.length) % IMAGE_VARIANTS.length;
+            return IMAGE_VARIANTS[nextIndex];
+        };
+
+        const getNextImageVariant = (variant) => getVariantByOffset(variant, 1);
+
+        const getPreviousImageVariant = (variant) => getVariantByOffset(variant, -1);
+
+        updateImageVariantDisplay(currentImageVariant);
+
+        const setImageCountText = (count) => {
+            if (!imageCountLabel) {
+                return;
+            }
+            if (!Number.isFinite(count) || count < 0) {
+                imageCountLabel.textContent = '?';
+                return;
+            }
+            imageCountLabel.textContent = String(count);
+        };
+
+        const updateAvailableImageCount = async (id) => {
+            if (!imageCountLabel) {
+                return;
+            }
+            const normalizedId = (id === null || id === undefined) ? '' : String(id).trim();
+            if (!normalizedId) {
+                setImageCountText(0);
+                return;
+            }
+            const requestToken = ++imageCountRequestToken;
+            try {
+                const availability = await Promise.all(
+                    IMAGE_VARIANTS.map((variant) => checkImageVariantExists(id, variant))
+                );
+                if (requestToken !== imageCountRequestToken) {
+                    return;
+                }
+                const count = availability.filter(Boolean).length;
+                setImageCountText(count);
+            } catch (error) {
+                if (requestToken === imageCountRequestToken) {
+                    console.error('Unable to count available images', error);
+                    setImageCountText(null);
+                }
+            }
+        };
+
+        const buildQwantUrl = (query) => {
+            const params = new URLSearchParams({
+                client: QWANT_CLIENT,
+                t: QWANT_SEARCH_TYPE,
+                q: query,
+            });
+            return `${QWANT_BASE_URL}?${params.toString()}`;
+        };
+
+        const setImageSource = (id, variant = currentImageVariant || DEFAULT_IMAGE_VARIANT, cacheBuster = Date.now()) => {
+            if (!id) {
+                if (previewObjectUrl) {
+                    URL.revokeObjectURL(previewObjectUrl);
+                    previewObjectUrl = null;
+                }
+                imageElement.removeAttribute('src');
+                currentImageVariant = DEFAULT_IMAGE_VARIANT;
+                updateImageVariantDisplay(currentImageVariant);
+                return;
+            }
+            if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+                previewObjectUrl = null;
+            }
+            currentImageVariant = variant || DEFAULT_IMAGE_VARIANT;
+            updateImageVariantDisplay(currentImageVariant);
+            const imageUrl = `/quis/imgQui/${encodeURIComponent(id)}?variant=${encodeURIComponent(currentImageVariant)}&v=${cacheBuster}`;
+            imageElement.src = imageUrl;
+        };
+
+        const uploadQuiImageFile = async (id, file, variantOverride) => {
+            if (!id || !file) {
+                return false;
+            }
+            const uploadVariant = variantOverride || currentImageVariant || DEFAULT_IMAGE_VARIANT;
+            const formData = new FormData();
+            formData.append('image', file);
+            const uploadUrl = `/quis/imgQui/${encodeURIComponent(id)}?variant=${encodeURIComponent(uploadVariant)}`;
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) {
+                throw new Error('upload-failed');
+            }
+            if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+                previewObjectUrl = null;
+            }
+            currentImageFile = null;
+            currentImageFileVariant = uploadVariant;
+            fileInput.value = '';
+            if (uploadVariant === (currentImageVariant || DEFAULT_IMAGE_VARIANT)) {
+                setImageSource(id, uploadVariant, Date.now());
+            }
+            updateAvailableImageCount(id);
+            return true;
+        };
+
+        const checkImageVariantExists = async (id, variant) => {
+            try {
+                const response = await fetch(`/quis/imgQui/${encodeURIComponent(id)}/variant/${encodeURIComponent(variant)}/exists`);
+                if (!response.ok) {
+                    return false;
+                }
+                const data = await response.json();
+                return Boolean(data.exists);
+            } catch (error) {
+                console.error('Unable to check image variant', error);
+                return false;
+            }
+        };
+
+        const ensureImageVariant = async (id, variant) => {
+            try {
+                const response = await fetch(`/quis/imgQui/${encodeURIComponent(id)}/variant/${encodeURIComponent(variant)}/ensure`, {
+                    method: 'POST',
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Unable to ensure image variant', error);
+                return false;
+            }
+        };
+
+        const ensureVariantReady = async (id, targetVariant, allowCreation = true) => {
+            if (targetVariant === DEFAULT_IMAGE_VARIANT) {
+                return true;
+            }
+            if (!IMAGE_VARIANTS.includes(targetVariant)) {
+                return false;
+            }
+            const exists = await checkImageVariantExists(id, targetVariant);
+            if (exists) {
+                return true;
+            }
+            if (!allowCreation) {
+                return false;
+            }
+            const variantNumber = parseInt(targetVariant, 10);
+            const confirmCreate = window.confirm(`voulez-vous creer la photo ${Number.isNaN(variantNumber) ? targetVariant : variantNumber} ?`);
+            if (!confirmCreate) {
+                return false;
+            }
+            const ensured = await ensureImageVariant(id, targetVariant);
+            if (!ensured) {
+                alert(`La photo ${Number.isNaN(variantNumber) ? targetVariant : variantNumber} n'a pas pu etre creee.`);
+                return false;
+            }
+            return true;
+        };
+
+        const loadImagePreview = (file) => {
+            if (!file) return;
+            if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+                previewObjectUrl = null;
+            }
+            currentImageFile = file;
+            currentImageFileVariant = currentImageVariant;
+            previewObjectUrl = URL.createObjectURL(file);
+            imageElement.src = previewObjectUrl;
+        };
+
+        window.onload = async () => {
+            const { id, params } = parseInitialQuery();
+            applySelectionModeFromParams(params);
+            try {
+                await loadDomaineQuiOptions();
+            } catch (error) {
+                console.warn('Impossible de charger les options de domaine', error);
+            }
+            if (id) {
+                try {
+                    await refreshQui(id);
+                } catch (error) {
+                    console.error('Impossible de charger le qui', error);
+                }
+            }
+        };
+
+        document.getElementById('btSave').addEventListener('click', (event) => {
+            event.preventDefault();
+            saveQui();
+        });
+        document.getElementById('btDelete').addEventListener('click', (event) => {
+            event.preventDefault();
+            const confirmed = window.confirm('Confirmer la suppression ?');
+            if (confirmed) {
+                deleteQui();
+            }
+        });
+        if (selectionButton) {
+            selectionButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (!selectionModeContext) {
+                    return;
+                }
+                if (selectionModeContext.mode === QUI_SELECTION_MODE_THEME) {
+                    attachQuiToTheme();
+                } else if (selectionModeContext.mode === QUI_SELECTION_MODE_QUOI) {
+                    attachQuiToQuoi();
+                }
+            });
+        }
+        if (btImageSuivante) {
+            btImageSuivante.addEventListener('click', async (event) => {
+                event.preventDefault();
+                try {
+                    const id = document.getElementById('quiid').value;
+                    if (!id) {
+                        return;
+                    }
+                    const targetVariant = getNextImageVariant(currentImageVariant);
+                    const ready = await ensureVariantReady(id, targetVariant, true);
+                    if (!ready) {
+                        return;
+                    }
+                    setImageSource(id, targetVariant, Date.now());
+                } finally {
+                    focusButton(btImageSuivante);
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (!event.ctrlKey) {
+                return;
+            }
+            const pressedKey = event.key ? event.key.toLowerCase() : '';
+            if (pressedKey == 'v') {
+                event.preventDefault();
+                if (btSuivant) {
+                    btSuivant.click();
+                }
+                return;
+            }
+            if (pressedKey == 'p') {
+                event.preventDefault();
+                if (btPrecedent) {
+                    btPrecedent.click();
+                }
+                return;
+            }
+            if (pressedKey == 's') {
+                event.preventDefault();
+                if (btSave) {
+                    btSave.click();
+                }
+                return;
+            }
+
+            if (pressedKey == 'y') {
+                event.preventDefault();
+                if (btImagePrecedente) {
+                    btImagePrecedente.click();
+                }
+                return;
+            }
+
+            if (pressedKey == 'z') {
+                event.preventDefault();
+                if (btImageSuivante) {
+                    btImageSuivante.click();
+                }
+                return;
+            }
+            if (pressedKey == 'q') {
+                event.preventDefault();
+                if (btRecherchePhotoWeb) {
+                    btRecherchePhotoWeb.click();
+                }
+                return;
+            }
+        });
+
+        if (btRecherchePhotoWeb) {
+            btRecherchePhotoWeb.setAttribute('target', '_blank');
+            btRecherchePhotoWeb.setAttribute('rel', 'noopener noreferrer');
+            btRecherchePhotoWeb.addEventListener('click', (event) => {
+                event.preventDefault();
+                const nom = document.getElementById('quinom').value.trim();
+                const prenom = document.getElementById('quiprenom').value.trim();
+                const fullNameParts = [prenom, nom].filter(Boolean);
+                if (!fullNameParts.length) {
+                    alert('Renseigner le nom ou le prenom pour effectuer la recherche.');
+                    return;
+                }
+                const queryValue = fullNameParts.join(' ').replace(/\s+/g, ' ').trim();
+                if (!queryValue) {
+                    alert('Renseigner le nom ou le prenom pour effectuer la recherche.');
+                    return;
+                }
+                const qwantUrl = buildQwantUrl(queryValue);
+                const openedWindow = window.open(qwantUrl, '_blank', 'noopener,noreferrer');
+                //if (!openedWindow) {
+                //    alert('La fenetre de recherche a ete bloquee. Autorisez les fenetres pop-up pour ce site.');
+                //}
+            });
+        }
+        if (btOpenLienDisk) {
+            btOpenLienDisk.addEventListener('click', async () => {
+                const lienDiskValue = lienDiskInput ? lienDiskInput.value.trim() : '';
+                const domaineValue = document.getElementById('quidomaine')?.value.trim() || '';
+                if (!domaineValue) {
+                    alert('Renseigner un domaine.');
+                    return;
+                }
+                let targetUrl = '';
+                try {
+                    await loadParametres();
+                    const parametreNom = `lienDiskQui${domaineValue}_prefixe`;
+                    const parametre = getParametreByNom(parametreNom);
+                    const prefix = parametre?.niv1 ? String(parametre.niv1).trim() : '';
+                    if (!prefix) {
+                        alert(`Paramètre ${parametreNom} non trouvé.`);
+                        return;
+                    }
+                    const genreValue = document.getElementById('quigenre')?.value.trim() || '';
+                    targetUrl = `${prefix}/${genreValue}`;
+                    const paysValue = document.getElementById('quipays')?.value.trim() || '';
+                    if (paysValue) {
+                        targetUrl = targetUrl + '/' + paysValue;
+                    }
+                    targetUrl = `${targetUrl}/${lienDiskValue}`;
+                    const redirectUrl = `/tools/open-file-local?target=${encodeURIComponent(targetUrl)}`;
+                    window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+                } catch (error) {
+                    console.warn('Impossible d\'ouvrir le lien disque', error);
+                    const suffix = targetUrl ? ` (${targetUrl})` : '';
+                    alert(`Ouverture du lien disque impossible.${suffix}`);
+                }
+            });
+        }
+
+        if (btOpenLienWeb) {
+            btOpenLienWeb.addEventListener('click', async () => {
+                const lienWebValue = lienWebInput ? lienWebInput.value.trim() : '';
+                if (!lienWebValue) {
+                    alert('Renseigner un lien Web .');
+                    return;
+                }
+                try {
+                    window.open(lienWebValue, '_blank', 'noopener,noreferrer');
+                } catch (error) {
+                    console.warn('Impossible d\'ouvrir le lien web', error);
+                    alert(`Ouverture du lien disque impossible.${lienWebValue}`);
+                }
+            });
+        }
+        if (btImagePrecedente) {
+            btImagePrecedente.addEventListener('click', async (event) => {
+                event.preventDefault();
+                try {
+                    const id = document.getElementById('quiid').value;
+                    if (!id) {
+                        return;
+                    }
+                    const targetVariant = getPreviousImageVariant(currentImageVariant);
+                    const ready = await ensureVariantReady(id, targetVariant, false);
+                    if (!ready) {
+                        return;
+                    }
+                    setImageSource(id, targetVariant, Date.now());
+                } finally {
+                    focusButton(btImagePrecedente);
+                }
+            });
+        }
+
+        imagDivision.addEventListener('click', () => {
+            fileInput.click();
+        });
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                currentImageFile = null;
+                return;
+            }
+            loadImagePreview(file);
+            const idValue = document.getElementById('quiid')?.value?.trim();
+            if (idValue) {
+                try {
+                    await uploadQuiImageFile(idValue, file, currentImageVariant);
+                } catch (error) {
+                    console.error('Unable to upload qui image', error);
+                    alert('Impossible d\'enregistrer la photo.');
+                }
+            }
+        });
+        const recalcAges = () => {
+            const deathYear = Number.parseInt(deathYearInput.value, 10); // Année de décès saisie (base 10)
+            const hasDeathYear = Number.isFinite(deathYear) && deathYear > 0;
+            if (hasDeathYear) {
+                ageDisplay.textContent = '';
+            } else {
+                updateAgeDisplay();
+            }
+            updateAgeDecesDisplay();
+        };
+
+        birthYearInput.addEventListener('input', recalcAges);
+        deathYearInput.addEventListener('input', recalcAges);
+
+        async function refreshQui(value) {
+            const reponse = await fetch('/quis/'+value)
+            const qui = await reponse.json();
+            updateNavigationPosition(null, null);
+            if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+                previewObjectUrl = null;
+            }
+            currentImageFile = null;
+            currentImageFileVariant = DEFAULT_IMAGE_VARIANT;
+            fileInput.value = '';
+            document.getElementById('quiid').value=qui.id;
+            document.getElementById('quinom').value=qui.nom;
+            document.getElementById('quiprenom').value=qui.prenom;
+            document.getElementById('quifullname').value=qui.fullname;
+            document.getElementById('quigenre').value=qui.genre;
+            applyDomaineOptions(qui.domaine);
+            document.getElementById('quipays').value=qui.pays;
+            document.getElementById('quistyle').value=qui.style;
+            document.getElementById('quiremarque').value=qui.remarque;
+            document.getElementById('quilienDisk').value=qui.liendisk ?? qui.lienDisk ?? '';
+            document.getElementById('quilienWeb').value=qui.lienweb ?? qui.lienWeb ?? '';
+            document.getElementById('quidatenaiss_aaaa').value=qui.datenaiss_aaaa;
+            document.getElementById('quidatenaiss_mm').value=qui.datenaiss_mm;
+            document.getElementById('quidatenaiss_jj').value=qui.datenaiss_jj;
+            document.getElementById('quidatedeces_aaaa').value=qui.datedeces_aaaa;
+            document.getElementById('quidatedeces_mm').value=qui.datedeces_mm;
+            document.getElementById('quidatedeces_jj').value=qui.datedeces_jj;
+            recalcAges();
+
+            document.getElementById('pageTitle').innerHTML=qui.fullname;
+            currentImageVariant = DEFAULT_IMAGE_VARIANT;
+            updateImageVariantDisplay(currentImageVariant);
+            setImageSource(qui.id, currentImageVariant);
+            document.getElementById("btSuivant").href = buildQuiDetailNavigationHref(qui.idSuivant); 
+            document.getElementById("btPrecedent").href = buildQuiDetailNavigationHref(qui.idPrecedent); 
+            const windowNavigationKey = window.name ? `${QUI_LIST_NAV_PREFIX}${window.name}` : '';
+            if (
+                !applyNavigationFromStorage(REL_THEME_QUI_NAV_KEY, qui.id) &&
+                !(windowNavigationKey && applyNavigationFromStorage(windowNavigationKey, qui.id))
+            ) {
+                applyNavigationFromStorage(QUI_LIST_NAV_KEY, qui.id);
+            }
+            if (relThemeLink) {
+                relThemeLink.href =  `relThemeListe.html?id_qui=${encodeURIComponent(qui.id)}`;
+                relThemeLink.target = '_blank';
+            }
+            if (roleListLink) {
+                if (qui.id) {
+                    roleListLink.href = `roleListe.html?id_qui=${encodeURIComponent(qui.id)}&sort=annee&order=asc`;
+                    roleListLink.setAttribute('target', '_blank');
+                    roleListLink.setAttribute('rel', 'noopener noreferrer');
+                    roleListLink.classList.remove('disabled');
+                    roleListLink.setAttribute('aria-disabled', 'false');
+                } else {
+                    roleListLink.href = '#';
+                    roleListLink.classList.add('disabled');
+                    roleListLink.setAttribute('aria-disabled', 'true');
+                    roleListLink.removeAttribute('target');
+                    roleListLink.removeAttribute('rel');
+                }
+            }
+            if (roleListGroupLink) {
+                if (qui.id) {
+                    roleListGroupLink.href = `roleListeQuiDeEnsemble.html?id_qui=${encodeURIComponent(qui.id)}`;
+                    roleListGroupLink.setAttribute('target', '_blank');
+                    roleListGroupLink.setAttribute('rel', 'noopener noreferrer');
+                    roleListGroupLink.classList.remove('disabled');
+                    roleListGroupLink.setAttribute('aria-disabled', 'false');
+                } else {
+                    roleListGroupLink.href = '#';
+                    roleListGroupLink.classList.add('disabled');
+                    roleListGroupLink.setAttribute('aria-disabled', 'true');
+                    roleListGroupLink.removeAttribute('target');
+                    roleListGroupLink.removeAttribute('rel');
+                }
+            }
+            if (posteListByQuiElementLink) {
+                if (qui.id) {
+                    posteListByQuiElementLink.href = `posteListe.html?id_qui_element=${encodeURIComponent(qui.id)}`;
+                    posteListByQuiElementLink.setAttribute('target', '_blank');
+                    posteListByQuiElementLink.setAttribute('rel', 'noopener noreferrer');
+                    posteListByQuiElementLink.classList.remove('disabled');
+                    posteListByQuiElementLink.setAttribute('aria-disabled', 'false');
+                } else {
+                    posteListByQuiElementLink.href = '#';
+                    posteListByQuiElementLink.classList.add('disabled');
+                    posteListByQuiElementLink.setAttribute('aria-disabled', 'true');
+                    posteListByQuiElementLink.removeAttribute('target');
+                    posteListByQuiElementLink.removeAttribute('rel');
+                }
+            }
+            if (posteListByQuiEnsembleLink) {
+                if (qui.id) {
+                    posteListByQuiEnsembleLink.href = `posteListe.html?id_qui_ensemble=${encodeURIComponent(qui.id)}`;
+                    posteListByQuiEnsembleLink.setAttribute('target', '_blank');
+                    posteListByQuiEnsembleLink.setAttribute('rel', 'noopener noreferrer');
+                    posteListByQuiEnsembleLink.classList.remove('disabled');
+                    posteListByQuiEnsembleLink.setAttribute('aria-disabled', 'false');
+                } else {
+                    posteListByQuiEnsembleLink.href = '#';
+                    posteListByQuiEnsembleLink.classList.add('disabled');
+                    posteListByQuiEnsembleLink.setAttribute('aria-disabled', 'true');
+                    posteListByQuiEnsembleLink.removeAttribute('target');
+                    posteListByQuiEnsembleLink.removeAttribute('rel');
+                }
+            }
+
+            document.title="quiDetail, "+ qui.fullname;
+            updateAvailableImageCount(qui.id);
+            updateRecordMeta(qui.id, qui.modifts);
+            // Rafraichit l'affichage des roles relies a ce qui.
+            refreshRoleListForQui(qui.id);
+            // Rafraichit l'affichage des themes relies a ce qui.
+            refreshThemeListForQui(qui.id);
+            console.log(qui);
+        }
+
+        function debugNavigationList(storageKey, ids, labels) {
+            if (!ids || !ids.length) {
+                console.debug(`Navigation ${storageKey}: <vide>`);
+                return;
+            }
+            const display = Array.isArray(labels) && labels.length === ids.length ? labels : ids;
+            console.debug(`Navigation ${storageKey}:`, display);
+        }
+
+        const applyNavigationFromStorage = (storageKey, currentId) => {
+            try {
+                const raw = window.localStorage.getItem(storageKey);
+                if (!raw) {
+                    return false;
+                }
+                const data = JSON.parse(raw);
+                if (!data || !Array.isArray(data.ids) || data.ids.length === 0) {
+                    return false;
+                }
+                const ids = data.ids.map((value) => String(value));
+                const labels = Array.isArray(data.labels) ? data.labels : null;
+                debugNavigationList(storageKey, ids, labels);
+                const currentIndex = ids.indexOf(String(currentId));
+                if (currentIndex === -1) {
+                    return false;
+                }
+                const previousId = ids[(currentIndex - 1 + ids.length) % ids.length];
+                const nextId = ids[(currentIndex + 1) % ids.length];
+                updateNavigationPosition(currentIndex + 1, ids.length);
+                document.getElementById("btPrecedent").href = buildQuiDetailNavigationHref(previousId);
+                document.getElementById("btSuivant").href = buildQuiDetailNavigationHref(nextId);
+                return true;
+            } catch (error) {
+                console.warn('Impossible d\'appliquer la navigation stockee', error);
+                return false;
+            }
+        };
+
+        async function saveQui() {
+            try {
+                const qui = {
+                    id: document.getElementById('quiid').value,
+                    nom: document.getElementById('quinom').value,
+                    prenom: document.getElementById('quiprenom').value,
+                    fullname: document.getElementById('quifullname').value,
+                    domaine: document.getElementById('quidomaine').value,
+                    genre: document.getElementById('quigenre').value,
+                    pays: document.getElementById('quipays').value,
+                    style: document.getElementById('quistyle').value,
+                    remarque: document.getElementById('quiremarque').value,
+                    liendisk: document.getElementById('quilienDisk').value,
+                    lienweb: document.getElementById('quilienWeb').value,
+                    datenaiss_aaaa: document.getElementById('quidatenaiss_aaaa').value,
+                    datenaiss_mm: document.getElementById('quidatenaiss_mm').value,
+                    datenaiss_jj: document.getElementById('quidatenaiss_jj').value,
+                    datedeces_aaaa: document.getElementById('quidatedeces_aaaa').value,
+                    datedeces_mm: document.getElementById('quidatedeces_mm').value,
+                    datedeces_jj: document.getElementById('quidatedeces_jj').value,
+                };
+
+                const method = qui.id ? 'PUT' : 'POST';
+                const url = qui.id ? '/quis/' + qui.id : '/quis';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(qui)
+                });
+
+                if (!response.ok) {
+                    alert('Erreur de sauvegarde');
+                    return;
+                }
+
+                let savedId = qui.id;
+                try {
+                    const savedQui = await response.json();
+                    savedId = savedQui.id || savedId;
+                } catch (err) {
+                    // ignore JSON parse errors
+                }
+                if (currentImageFile && savedId) {
+                    try {
+                        await uploadQuiImageFile(
+                            savedId,
+                            currentImageFile,
+                            currentImageFileVariant || currentImageVariant || DEFAULT_IMAGE_VARIANT
+                        );
+                    } catch (uploadError) {
+                        console.error('Unable to upload qui image', uploadError);
+                        alert('Les informations ont ete enregistrees, mais l image n a pas pu etre televersee.');
+                        return;
+                    }
+                }
+                alert('Sauvegarde réussie.');
+            } catch (error) {
+                console.error('Unable to save qui or image', error);
+                alert('Une erreur est survenue lors de la sauvegarde.');
+            }
+        }
+
+        async function deleteQui() {
+            const id = document.getElementById('quiid').value;
+            if (!id) {
+                alert('Aucun enregistrement a supprimer.');
+                return;
+            }
+            const parseCount = (payload, key) => {
+                if (payload && typeof payload[key] === 'number') {
+                    return payload[key];
+                }
+                const raw = payload ? payload[key] : null;
+                const parsed = Number.parseInt(raw, 10);
+                return Number.isFinite(parsed) ? parsed : 0;
+            };
+            let roleCount = 0;
+            let relThemeCount = 0;
+            let posteCount = 0;
+            try {
+                const [roleRes, relThemeRes, posteRes] = await Promise.all([
+                    fetch('/quis/' + encodeURIComponent(id) + '/roleCount'),
+                    fetch('/quis/' + encodeURIComponent(id) + '/relthemeCount'),
+                    fetch('/quis/' + encodeURIComponent(id) + '/posteCount'),
+                ]);
+                if (!roleRes.ok || !relThemeRes.ok || !posteRes.ok) {
+                    throw new Error('Verification des liens impossible');
+                }
+                const [rolePayload, relThemePayload, postePayload] = await Promise.all([
+                    roleRes.json(),
+                    relThemeRes.json(),
+                    posteRes.json(),
+                ]);
+                roleCount = parseCount(rolePayload, 'count');
+                relThemeCount = parseCount(relThemePayload, 'count');
+                posteCount = parseCount(postePayload, 'count');
+            } catch (error) {
+                console.error('Unable to verify delete constraints', error);
+                alert('Verification des liens en cours. Merci de reessayer.');
+                return;
+            }
+            if (roleCount > 0 || relThemeCount > 0 || posteCount > 0) {
+                const parts = [];
+                if (roleCount > 0) {
+                    parts.push(`${roleCount} role(s) lie(s)`);
+                }
+                if (relThemeCount > 0) {
+                    parts.push(`${relThemeCount} reltheme(s) lie(s)`);
+                }
+                if (posteCount > 0) {
+                    parts.push(`${posteCount} poste(s) lie(s)`);
+                }
+                alert(`Suppression impossible: ${parts.join(' et ') || 'liens existants'}.`);
+                return;
+            }
+            const confirmed = window.confirm('Confirmer la suppression ?');
+            if (!confirmed) {
+                return;
+            }
+            const response = await fetch('/quis/' + id, { method: 'DELETE' });
+            if (response.status === 409) {
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (err) {
+                    payload = null;
+                }
+                if (payload) {
+                    roleCount = parseCount(payload, 'roleCount');
+                    relThemeCount = parseCount(payload, 'relThemeCount');
+                    posteCount = parseCount(payload, 'posteCount');
+                }
+                const parts = [];
+                if (roleCount > 0) {
+                    parts.push(`${roleCount} role(s) lie(s)`);
+                }
+                if (relThemeCount > 0) {
+                    parts.push(`${relThemeCount} reltheme(s) lie(s)`);
+                }
+                if (posteCount > 0) {
+                    parts.push(`${posteCount} poste(s) lie(s)`);
+                }
+                alert(`Suppression impossible: ${parts.join(' et ') || 'liens existants'}.`);
+                return;
+            }
+            if (response.ok) {
+                if (window.opener && !window.opener.closed) {
+                    try {
+                        window.opener.postMessage({ type: 'QUI_REFRESH' }, window.location.origin);
+                    } catch (error) {
+                        console.warn('Unable to notify opener window for refresh', error);
+                    }
+                }
+                window.close();
+                setTimeout(() => {
+                    if (!window.closed) {
+                        alert('Enregistrement supprime. Vous pouvez fermer cet onglet.');
+                    }
+                }, 200);
+            } else {
+                alert('Erreur de suppression');
+            }
+        }
+        
+
+</script>
+</body>
+</html>

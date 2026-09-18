@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Thèque</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1>Qui Quoi Thèque - Qui</h1>
+  <span id="selection_mode_label" class="mode-indicator" aria-live="polite"></span>
+
+  <div>
+    <a href="#" id="btAjouter" class="button">Ajouter</a>
+    <button type="button" id="btDiaporama" class="button">Diaporama</button>
+    <button type="button" id="btAnniversaire" class="button">Anniversaire</button>
+    <button type="button" id="btActualiser" class="button">Actualiser</button>
+    <button type="button" id="btYearMinus" class="buttonSmall" aria-label="Diminuer les filtres ann&eacute;es">-</button>
+    <button type="button" id="btYearPlus" class="buttonSmall" aria-label="Augmenter les filtres ann&eacute;es">+</button>
+    <label for="year_increment">incr&eacute;ment:</label>
+    <input type="number" id="year_increment" min="1" value="1" class="filter-input largeur_etroite" aria-label="Incr&eacute;ment ann&eacute;es" />
+    <span id="qui_count" class="list-count" aria-live="polite"></span>
+  </div>
+
+  <label for="domaine_filter">Domaine:</label>
+  <select id="domaine_filter">
+    <option value="">-- tous --</option>
+    <option value="CINE">CINE</option>
+    <option value="MUS">MUS</option>
+    <option value="ECR">ECR</option>
+    <option value="VISU">VISU</option>
+    <option value="BUZ">BUZ</option>
+    <option value="FAM">FAM</option>
+  </select>
+
+  <label for="nom_start_filter">Nom:</label>
+  <input type="text" id="nom_start_filter" placeholder="Nom..." />
+
+  <label for="prenom_start_filter">Pr&eacute;nom:</label>
+  <input type="text" id="prenom_start_filter" placeholder="Pr&eacute;nom..." />
+
+  <label for="style_start_filter">Style:</label>
+  <input type="text" id="style_start_filter" placeholder="Style..." size="5" />
+
+  <label for="genre_filter">Genre:</label>
+  <select id="genre_filter">
+    <option value="">-- tous --</option>
+    <option value="F">F</option>
+    <option value="M">M</option>
+    <option value="G">G</option>
+    <option value="#G">#G</option>
+  </select>
+
+  <label for="pays_filter">Pays:</label>
+  <input type="text" id="pays_filter" placeholder="Pays..." size="5" />
+
+  <label for="order_select">Ordre:</label>
+  <select id="order_select">
+    <option value="asc">croissant</option>
+    <option value="desc">d&eacute;croissant</option>
+  </select>
+
+  <label for="year_start_filter">naiss d&eacute;but:</label>
+  <input type="number" id="year_start_filter" min="0" max="9999" placeholder="AAAA" />
+
+  <label for="year_end_filter">naiss fin:</label>
+  <input type="number" id="year_end_filter" min="0" max="9999" placeholder="AAAA" />
+
+  <table id="qui_table" class="table">
+    <thead>
+      <tr>
+        <th>
+          <button id="btTriDomaine" class="buttonSmall">Tri par domaine</button>
+          <img id="imgSensTriDomaine" height="25"/>
+        </th>
+        <th>
+            <button id="btTriNom" class="buttonSmall">Tri par nom</button>
+            <img id="imgSensTriNom" height="25"/>
+        </th>
+        <th>
+          <button id="btTriPrenom" class="buttonSmall">Tri par pr&eacute;nom</button>
+            <img id="imgSensTriPrenom" height="25"/>
+        </th>
+        <th>
+          <button id="btTriGenre" class="buttonSmall">Tri par genre</button>
+          <img id="imgSensTriGenre" height="25"/>
+        </th>
+        <th>
+          <button id="btTriDatenaiss" class="buttonSmall">Tri par naissance</button>
+            <img id="imgSensTriDatenaiss" height="25"/>
+        </th>
+        <th>
+          <button id="btTriPays" class="buttonSmall">Tri par pays</button>
+          <img id="imgSensTriPays" height="25"/>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="qui_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const QUI_DIAPORAMA_STORAGE_KEY = 'quiDiaporamaSelection';
+    const QUI_ANNIVERSAIRE_STORAGE_KEY = 'quiAnniversaireSelection';
+    const QUI_LIST_NAV_KEY = 'quiListNavigation';
+    const QUI_LIST_NAV_PREFIX = 'quiListNavigation:';
+    const QUI_SELECTION_MODE_THEME = 'select-qui-for-theme';
+    const QUI_SELECTION_MODE_QUOI = 'select-qui-for-quoi';
+    const selectionModeLabel = document.getElementById('selection_mode_label');
+    const imgSensTriDomaine = document.getElementById('imgSensTriDomaine');
+    const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const imgSensTriPrenom = document.getElementById('imgSensTriPrenom');
+    const imgSensTriGenre = document.getElementById('imgSensTriGenre');
+    const imgSensTriDatenaiss = document.getElementById('imgSensTriDatenaiss');
+    const imgSensTriPays = document.getElementById('imgSensTriPays');
+    let selectionContext = null;
+    let currentQuis = [];
+    const quiCountLabel = document.getElementById("qui_count");
+
+    const updateQuiCount = (count) => {
+      if (!quiCountLabel) {
+        return;
+      }
+      quiCountLabel.textContent = `( ${count} )`;
+    };
+
+    const SORT_ICONS = {
+      none: 'img/fleche_vide.svg',
+      asc: 'img/fleche_haut.svg',
+      desc: 'img/fleche_bas.svg',
+    };
+    let nomSortState = 'none';
+    let prenomSortState = 'none';
+    let datenaissSortState = 'none';
+    let domaineSortState = 'none';
+    let genreSortState = 'none';
+    let paysSortState = 'none';
+
+    const updateOrderSelectIfNeeded = (state) => {
+      if (state === 'asc' || state === 'desc') {
+        const orderSelect = document.getElementById('order_select');
+        if (orderSelect) {
+          orderSelect.value = state;
+        }
+      }
+    };
+
+    const updateNomSortIndicator = (state) => {
+      nomSortState = state;
+      if (imgSensTriNom) {
+        imgSensTriNom.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const updatePrenomSortIndicator = (state) => {
+      prenomSortState = state;
+      if (imgSensTriPrenom) {
+        imgSensTriPrenom.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const updateDatenaissSortIndicator = (state) => {
+      datenaissSortState = state;
+      if (imgSensTriDatenaiss) {
+        imgSensTriDatenaiss.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const updateDomaineSortIndicator = (state) => {
+      domaineSortState = state;
+      if (imgSensTriDomaine) {
+        imgSensTriDomaine.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const updateGenreSortIndicator = (state) => {
+      genreSortState = state;
+      if (imgSensTriGenre) {
+        imgSensTriGenre.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const updatePaysSortIndicator = (state) => {
+      paysSortState = state;
+      if (imgSensTriPays) {
+        imgSensTriPays.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+      updateOrderSelectIfNeeded(state);
+    };
+
+    const resetNomSortIndicator = () => updateNomSortIndicator('none');
+    const resetPrenomSortIndicator = () => updatePrenomSortIndicator('none');
+    const resetDatenaissSortIndicator = () => updateDatenaissSortIndicator('none');
+    const resetDomaineSortIndicator = () => updateDomaineSortIndicator('none');
+    const resetGenreSortIndicator = () => updateGenreSortIndicator('none');
+    const resetPaysSortIndicator = () => updatePaysSortIndicator('none');
+
+    const applyActiveSort = () => {
+      if (nomSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const comp = safeCompare(a.nom, b.nom);
+          return nomSortState === 'desc' ? -comp : comp;
+        });
+        return;
+      }
+      if (prenomSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const comp = safeCompare(a.prenom, b.prenom);
+          return prenomSortState === 'desc' ? -comp : comp;
+        });
+        return;
+      }
+      if (datenaissSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const left = getBirthSortableValue(a);
+          const right = getBirthSortableValue(b);
+          if (!left && !right) {
+            return 0;
+          }
+          if (!left) {
+            return datenaissSortState === 'desc' ? -1 : 1;
+          }
+          if (!right) {
+            return datenaissSortState === 'desc' ? 1 : -1;
+          }
+          if (left.year !== right.year) {
+            const diff = left.year - right.year;
+            return datenaissSortState === 'desc' ? -diff : diff;
+          }
+          if (left.month !== right.month) {
+            const diff = left.month - right.month;
+            return datenaissSortState === 'desc' ? -diff : diff;
+          }
+          if (left.day !== right.day) {
+            const diff = left.day - right.day;
+            return datenaissSortState === 'desc' ? -diff : diff;
+          }
+          return 0;
+        });
+        return;
+      }
+      if (domaineSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const comp = safeCompare(a.domaine, b.domaine);
+          return domaineSortState === 'desc' ? -comp : comp;
+        });
+        return;
+      }
+      if (genreSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const comp = safeCompare(a.genre, b.genre);
+          return genreSortState === 'desc' ? -comp : comp;
+        });
+        return;
+      }
+      if (paysSortState !== 'none') {
+        currentQuis.sort((a, b) => {
+          const comp = safeCompare(a.pays, b.pays);
+          return paysSortState === 'desc' ? -comp : comp;
+        });
+      }
+    };
+
+    const getYearIncrement = () => {
+      const input = document.getElementById('year_increment');
+      const value = input ? Number.parseInt(input.value.trim(), 10) : 1;
+      return Number.isNaN(value) || value < 1 ? 1 : value;
+    };
+
+    const adjustYearFilters = (direction) => {
+      const delta = direction * getYearIncrement();
+      const startInput = document.getElementById('year_start_filter');
+      const endInput = document.getElementById('year_end_filter');
+      const applyDelta = (input) => {
+        if (!input) {
+          return;
+        }
+        const current = Number.parseInt(input.value.trim(), 10);
+        if (Number.isNaN(current)) {
+          return;
+        }
+        input.value = current + delta;
+      };
+      applyDelta(startInput);
+      applyDelta(endInput);
+      refreshquis();
+    };
+
+    const safeCompare = (left, right) => {
+      const a = String(left || '');
+      const b = String(right || '');
+      return a.localeCompare(b);
+    };
+
+    function clearQuiNavigationEntries() {
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key && key.startsWith(QUI_LIST_NAV_PREFIX)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+      } catch (error) {
+        console.warn('Impossible de nettoyer les anciennes navigations', error);
+      }
+    }
+
+    const createTd = (value) => {
+      const td = document.createElement('td')
+      td.innerHTML = value
+      return td;
+    }
+
+    const buildQuiDetailHref = (id) => {
+      if (!selectionContext) {
+        return 'quiDetail.html?' + id;
+      }
+      const params = new URLSearchParams();
+      params.set('id', id);
+      params.set('mode', selectionContext.mode);
+      if (selectionContext.mode === QUI_SELECTION_MODE_THEME) {
+        if (selectionContext.themeId) {
+          params.set('themeId', selectionContext.themeId);
+        }
+        if (selectionContext.themeNom) {
+          params.set('themeNom', selectionContext.themeNom);
+        }
+      } else if (selectionContext.mode === QUI_SELECTION_MODE_QUOI) {
+        if (selectionContext.quoiId) {
+          params.set('quoiId', selectionContext.quoiId);
+        }
+        if (selectionContext.quoiNom) {
+          params.set('quoiNom', selectionContext.quoiNom);
+        }
+      }
+      if (selectionContext.selectionLabel) {
+        params.set('selectionLabel', selectionContext.selectionLabel);
+      }
+      params.set('source', selectionContext.source || 'quiListe');
+      return `quiDetail.html?${params.toString()}`;
+    };
+
+    const createTdA = (lib, id) => {
+      const td = document.createElement('td')
+      const a = document.createElement('a')
+      a.innerHTML = lib;
+      a.href = buildQuiDetailHref(id);
+      a.target = selectionContext ? `quiDetailSelect${id}` : `quiDetail${id}`;
+      a.addEventListener('click', () => {
+        persistQuiNavigationForTarget(a.target);
+      });
+      td.append(a)
+      return td;
+    }
+
+    const buildQuiLabel = (qui) => {
+      if (qui.fullname) {
+        return qui.fullname;
+      }
+      const parts = [qui.prenom, qui.nom].filter(Boolean);
+      return parts.length ? parts.join(' ') : `Qui ${qui.id}`;
+    };
+
+    const toIntOrNull = (value) => {
+      if (value === null || value === undefined || value === '') {
+        return null;
+      }
+      const parsed = Number.parseInt(value, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const formatBirthDate = (qui) => {
+      if (!qui) {
+        return '';
+      }
+      const year = toIntOrNull(qui.datenaiss_aaaa);
+      if (year === null) {
+        return '';
+      }
+      const month = toIntOrNull(qui.datenaiss_mm);
+      const day = toIntOrNull(qui.datenaiss_jj);
+      const parts = [];
+      if (day !== null) {
+        parts.push(String(day).padStart(2, '0'));
+      }
+      if (month !== null) {
+        parts.push(String(month).padStart(2, '0'));
+      }
+      parts.push(String(year));
+      return parts.join('/');
+    };
+
+    const getBirthSortableValue = (qui) => {
+      if (!qui) {
+        return null;
+      }
+      const year = toIntOrNull(qui.datenaiss_aaaa);
+      if (year === null) {
+        return null;
+      }
+      const month = toIntOrNull(qui.datenaiss_mm) ?? 0;
+      const day = toIntOrNull(qui.datenaiss_jj) ?? 0;
+      return { year, month, day };
+    };
+
+    const buildNavigationPayload = (quis) => {
+      if (!Array.isArray(quis) || quis.length === 0) {
+        return null;
+      }
+      const entries = [];
+      quis.forEach((qui) => {
+        if (qui && qui.id !== undefined && qui.id !== null) {
+          const id = String(qui.id);
+          if (id.length > 0) {
+            entries.push({
+              id,
+              label: buildQuiLabel(qui),
+            });
+          }
+        }
+      });
+      if (!entries.length) {
+        return null;
+      }
+      return {
+        ids: entries.map((entry) => entry.id),
+        labels: entries.map((entry) => entry.label),
+        timestamp: Date.now(),
+      };
+    };
+
+    const persistNavigationPayload = (storageKey, payload) => {
+      if (!storageKey) {
+        return;
+      }
+      if (!payload) {
+        window.localStorage.removeItem(storageKey);
+        return;
+      }
+      window.localStorage.setItem(storageKey, JSON.stringify(payload));
+    };
+
+    function persistQuiNavigation(quis) {
+      try {
+        clearQuiNavigationEntries();
+        const payload = buildNavigationPayload(quis);
+        persistNavigationPayload(QUI_LIST_NAV_KEY, payload);
+      } catch (error) {
+        console.warn('Impossible de sauvegarder la navigation des qui', error);
+      }
+    }
+
+    function persistQuiNavigationForTarget(targetName) {
+      if (!targetName) {
+        return;
+      }
+      try {
+        const payload = buildNavigationPayload(currentQuis);
+        if (!payload) {
+          return;
+        }
+        persistNavigationPayload(`${QUI_LIST_NAV_PREFIX}${targetName}`, payload);
+      } catch (error) {
+        console.warn('Impossible de sauvegarder la navigation des qui pour la fenetre', error);
+      }
+    }
+
+    const openDiaporama = () => {
+      if (!currentQuis.length) {
+        alert('Aucun qui disponible pour le moment.');
+        return;
+      }
+      const payload = currentQuis.map((qui) => ({
+        id: qui.id,
+        label: buildQuiLabel(qui),
+        datenaiss_aaaa: qui.datenaiss_aaaa ?? null,
+      }));
+      try {
+        window.localStorage.setItem(QUI_DIAPORAMA_STORAGE_KEY, JSON.stringify(payload));
+        window.open('zoom.html?mode=qui', '_blank');
+      } catch (error) {
+        console.error('Impossible d\'ouvrir le diaporama', error);
+        alert('Ouverture du diaporama impossible.');
+      }
+    };
+
+    const openAnniversaire = () => {
+      if (!currentQuis.length) {
+        alert('Aucun qui disponible pour le moment.');
+        return;
+      }
+      const payload = currentQuis.map((qui) => ({
+        id: qui.id ?? null,
+        nom: qui.nom ?? '',
+        prenom: qui.prenom ?? '',
+        datenaiss_aaaa: qui.datenaiss_aaaa ?? null,
+        datenaiss_mm: qui.datenaiss_mm ?? null,
+        datenaiss_jj: qui.datenaiss_jj ?? null,
+        genre: qui.genre ?? '',
+        domaine: qui.domaine ?? '',
+        pays: qui.pays ?? '',
+      }));
+      try {
+        window.localStorage.setItem(QUI_ANNIVERSAIRE_STORAGE_KEY, JSON.stringify(payload));
+        window.open('quiAnniversaire.html', '_blank');
+      } catch (error) {
+        console.error('Impossible d\'ouvrir la liste des anniversaires', error);
+        alert('Ouverture de la liste des anniversaires impossible.');
+      }
+    };
+
+    const renderQuis = (quis) => {
+      const tbody = document.getElementById('qui_table_tbody');
+      tbody.innerHTML = '';
+      const debugLabels = [];
+      quis.forEach((qui) => {
+        const tr = document.createElement('tr');
+        tr.append(createTd(qui.domaine));
+        tr.append(createTdA(qui.nom, qui.id));
+        tr.append(createTd(qui.prenom));
+        tr.append(createTd(qui.genre));
+        tr.append(createTd(formatBirthDate(qui)));
+        tr.append(createTd(qui.pays));
+        tbody.append(tr);
+        const nom = String(qui.nom || '').trim();
+        const prenom = String(qui.prenom || '').trim();
+        debugLabels.push([nom, prenom].filter(Boolean).join(' ').trim() || `#${qui.id}`);
+      updateQuiCount(quis.length);
+      });
+      persistQuiNavigation(quis);
+      if (debugLabels.length) {
+        console.debug('quiListe rafraichie:', debugLabels);
+      } else {
+        console.debug('quiListe rafraichie: <vide>');
+      }
+    }
+
+    async function fetchquis(genre, domaine, yearStart, yearEnd, nomStart, prenomStart, styleStart, pays) {
+      const params = new URLSearchParams();
+      if (genre) {
+        params.append('genre', genre);
+      }
+      if (domaine) {
+        params.append('domaine', domaine);
+      }
+      if (yearStart) {
+        params.append('datenaiss_aaaa_debut', yearStart);
+      }
+      if (yearEnd) {
+        params.append('datenaiss_aaaa_fin', yearEnd);
+      }
+      if (nomStart) {
+        params.append('nom_debut', nomStart);
+      }
+      if (prenomStart) {
+        params.append('prenom_debut', prenomStart);
+      }
+      if (styleStart) {
+        params.append('style_debut', styleStart);
+      }
+      if (pays) {
+        params.append('pays_debut', pays);
+      }
+      const query = params.toString();
+      const res = await fetch('/quis' + (query ? `?${query}` : ''));
+      return res.json();
+    }
+
+    async function refreshquis() {
+      const genre = document.getElementById('genre_filter').value;
+      const domaine = document.getElementById('domaine_filter').value;
+      const yearStart = document.getElementById('year_start_filter').value.trim();
+      const yearEnd = document.getElementById('year_end_filter').value.trim();
+      const nomStart = document.getElementById('nom_start_filter').value.trim();
+      const prenomStart = document.getElementById('prenom_start_filter').value.trim();
+      const styleStart = document.getElementById('style_start_filter').value.trim();
+      const pays = document.getElementById('pays_filter').value.trim();
+      currentQuis = await fetchquis(
+        genre,
+        domaine,
+        yearStart,
+        yearEnd,
+        nomStart,
+        prenomStart,
+        styleStart,
+        pays
+      );
+      applyActiveSort();
+      renderQuis(currentQuis);
+    }
+
+    function sortByNom() {
+      resetDomaineSortIndicator();
+      resetPrenomSortIndicator();
+      resetDatenaissSortIndicator();
+      resetGenreSortIndicator();
+      resetPaysSortIndicator();
+      const nextState = nomSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const comp = safeCompare(a.nom, b.nom);
+        return nextState === 'desc' ? -comp : comp;
+      });
+      updateNomSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    function sortByPrenom() {
+      resetNomSortIndicator();
+      resetDomaineSortIndicator();
+      resetDatenaissSortIndicator();
+      resetGenreSortIndicator();
+      resetPaysSortIndicator();
+      const nextState = prenomSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const comp = safeCompare(a.prenom, b.prenom);
+        return nextState === 'desc' ? -comp : comp;
+      });
+
+      updatePrenomSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    function sortByDatenaiss() {
+      resetNomSortIndicator();
+      resetPrenomSortIndicator();
+      resetDomaineSortIndicator();
+      resetGenreSortIndicator();
+      resetPaysSortIndicator();
+      const nextState = datenaissSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const left = getBirthSortableValue(a);
+        const right = getBirthSortableValue(b);
+        if (!left && !right) {
+          return 0;
+        }
+        if (!left) {
+          return nextState === 'desc' ? -1 : 1;
+        }
+        if (!right) {
+          return nextState === 'desc' ? 1 : -1;
+        }
+        if (left.year !== right.year) {
+          const diff = left.year - right.year;
+          return nextState === 'desc' ? -diff : diff;
+        }
+        if (left.month !== right.month) {
+          const diff = left.month - right.month;
+          return nextState === 'desc' ? -diff : diff;
+        }
+        if (left.day !== right.day) {
+          const diff = left.day - right.day;
+          return nextState === 'desc' ? -diff : diff;
+        }
+        return 0;
+      });
+      updateDatenaissSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    function sortByDomaine() {
+      resetNomSortIndicator();
+      resetPrenomSortIndicator();
+      resetDatenaissSortIndicator();
+      resetGenreSortIndicator();
+      resetPaysSortIndicator();
+      const nextState = domaineSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const comp = safeCompare(a.domaine, b.domaine);
+        return nextState === 'desc' ? -comp : comp;
+      });
+      updateDomaineSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    function sortByGenre() {
+      resetNomSortIndicator();
+      resetPrenomSortIndicator();
+      resetDatenaissSortIndicator();
+      resetDomaineSortIndicator();
+      resetPaysSortIndicator();
+      const nextState = genreSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const genreComparison = safeCompare(a.genre, b.genre);
+        if (genreComparison !== 0) {
+          return nextState === 'desc' ? -genreComparison : genreComparison;
+        }
+        const paysComparison = safeCompare(a.pays, b.pays);
+        return nextState === 'desc' ? -paysComparison : paysComparison;
+      });
+      updateGenreSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    function sortByPays() {
+      resetNomSortIndicator();
+      resetPrenomSortIndicator();
+      resetDatenaissSortIndicator();
+      resetDomaineSortIndicator();
+      resetGenreSortIndicator();
+      const nextState = paysSortState === 'asc' ? 'desc' : 'asc';
+      currentQuis.sort((a, b) => {
+        const comp = safeCompare(a.pays, b.pays);
+        return nextState === 'desc' ? -comp : comp;
+      });
+      updatePaysSortIndicator(nextState);
+      renderQuis(currentQuis);
+    }
+
+    async function createQui() {
+      const res = await fetch('/quis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom: 'nouveau qui' })
+      });
+      const qui = await res.json();
+      window.location.href = 'quiDetail.html?' + qui.id;
+    }
+
+    document.getElementById('btAjouter').addEventListener('click', (e) => {
+      e.preventDefault();
+      createQui();
+    });
+
+    //
+
+    document.getElementById('domaine_filter').addEventListener('change', refreshquis);
+    document.getElementById('nom_start_filter').addEventListener('input', refreshquis);
+    document.getElementById('prenom_start_filter').addEventListener('input', refreshquis);
+    document.getElementById('style_start_filter').addEventListener('input', refreshquis);
+    document.getElementById('genre_filter').addEventListener('change', refreshquis);
+    document.getElementById('pays_filter').addEventListener('input', refreshquis);
+    document.getElementById('order_select').addEventListener('change', refreshquis);
+    document.getElementById('year_start_filter').addEventListener('change', refreshquis);
+    document.getElementById('year_end_filter').addEventListener('change', refreshquis);
+    document.getElementById('btYearPlus').addEventListener('click', () => adjustYearFilters(1));
+    document.getElementById('btYearMinus').addEventListener('click', () => adjustYearFilters(-1));
+    document.getElementById('btTriDomaine').addEventListener('click', sortByDomaine);
+    document.getElementById('btTriNom').addEventListener('click', sortByNom);
+    document.getElementById('btTriPrenom').addEventListener('click', sortByPrenom);
+    document.getElementById('btTriGenre').addEventListener('click', sortByGenre);
+    document.getElementById('btTriDatenaiss').addEventListener('click', sortByDatenaiss);
+    document.getElementById('btTriPays').addEventListener('click', sortByPays);
+    document.getElementById('btActualiser').addEventListener('click', refreshquis);
+    document.getElementById('btDiaporama').addEventListener('click', openDiaporama);
+    document.getElementById('btAnniversaire').addEventListener('click', openAnniversaire);
+
+	// à l ouverture de la page, placer le focus sur l'input "domaine_filter"
+    const domaineFilter = document.getElementById('domaine_filter');
+    if (domaineFilter) {
+      domaineFilter.focus();
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      if (event.data && event.data.type === 'QUI_REFRESH') {
+        refreshquis();
+        return;
+      }
+      if (event.data && (event.data.type === 'RELTHEME_REFRESH' || event.data.type === 'ROLE_REFRESH')) {
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(event.data, window.location.origin || '*');
+          }
+        } catch (error) {
+          console.warn('Impossible de rediriger le message entrant', error);
+        }
+      }
+    });
+
+    const initializeSelectionMode = () => {
+      const search = window.location.search;
+      if (!search || search.length <= 1) {
+        if (selectionModeLabel) {
+          selectionModeLabel.textContent = '';
+        }
+        selectionContext = null;
+        return;
+      }
+      const params = new URLSearchParams(search.substring(1));
+      const modeParam = params.get('mode');
+      if (modeParam === QUI_SELECTION_MODE_THEME) {
+        selectionContext = {
+          mode: QUI_SELECTION_MODE_THEME,
+          themeId: params.get('themeId') || '',
+          themeNom: params.get('themeNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+          source: params.get('source') || '',
+        };
+        if (selectionModeLabel) {
+          const baseLabel = selectionContext.selectionLabel
+            || (selectionContext.themeNom
+              ? `Mode : liste pour ajouter un qui au th\u00e8me ${selectionContext.themeNom}`
+              : `Mode : liste pour ajouter un qui au th\u00e8me ${selectionContext.themeId || ''}`);
+          selectionModeLabel.textContent = baseLabel;
+        }
+        return;
+      }
+      if (modeParam === QUI_SELECTION_MODE_QUOI) {
+        selectionContext = {
+          mode: QUI_SELECTION_MODE_QUOI,
+          quoiId: params.get('quoiId') || '',
+          quoiNom: params.get('quoiNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+          source: params.get('source') || '',
+        };
+        if (selectionModeLabel) {
+          const baseLabel = selectionContext.selectionLabel
+            || (selectionContext.quoiNom
+              ? `Mode : ajout d'un qui \u00e0 ${selectionContext.quoiNom}`
+              : `Mode : ajout d'un qui au quoi ${selectionContext.quoiId || ''}`);
+          selectionModeLabel.textContent = baseLabel;
+        }
+        return;
+      }
+      selectionContext = null;
+      if (selectionModeLabel) {
+      selectionModeLabel.textContent = '';
+      }
+    };
+
+    initializeSelectionMode();
+    resetNomSortIndicator();
+    resetPrenomSortIndicator();
+    resetDatenaissSortIndicator();
+    resetDomaineSortIndicator();
+    resetGenreSortIndicator();
+    resetPaysSortIndicator();
+    refreshquis();
+  </script>
+</body>
+</html>

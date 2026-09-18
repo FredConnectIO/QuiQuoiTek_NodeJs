@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qui Quoi Thèque - Poste</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Détail Poste</h1>
+  </div>
+
+  <div class="container">
+    <form id="poste-form">
+      <div class="form-group">
+        <input id="postedesc" type="text" class="form-control" name="descr" placeholder="description" />
+
+        <input id="posteid" type="hidden" name="id" />
+        <input id="posteidqui_element" type="hidden"  name="id_qui_element" />
+        <input id="posteidqui_ensemble" type="hidden" name="id_qui_ensemble" />
+        <input id="postemodifts" type="hidden"  name="modifts" />
+      </div>
+    </form>
+  </div>
+
+  <div class="container linked-info">
+    <h2>Qui élément li&eacute;</h2>
+    <p><strong>Nom :</strong> <span id="poste-qui-nom">nr</span></p>
+    <p><strong>Prénom :</strong> <span id="poste-qui-prenom">nr</span></p>
+    <p><strong>Domaine :</strong> <span id="poste-qui-domaine">nr</span></p>
+    <p><strong>Genre :</strong> <span id="poste-qui-genre">nr</span></p>
+    <p><a id="poste-qui-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le détail du qui</a></p>
+  </div>
+
+  <div class="container linked-info">
+    <h2>Qui ensemble li&eacute;</h2>
+    <p><strong>Nom :</strong> <span id="poste-quiensemble-nom">nr</span></p>
+    <p><strong>Prénom :</strong> <span id="poste-quiensemble-prenom">nr</span></p>
+    <p><strong>Domaine :</strong> <span id="poste-quiensemble-domaine">nr</span></p>
+    <p><strong>Genre :</strong> <span id="poste-quiensemble-genre">nr</span></p>
+    <p><a id="poste-quiensemble-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le détail de l'ensemble</a></p>
+  </div>
+
+  <a id="btPrecedent" href="#" class="button">Précédent</a>
+  <a id="btSuivant" href="#" class="button">Suivant</a>
+  <a id="btSave" href="#" class="button">Sauver</a>
+  <a id="btDelete" href="#" class="button">Supprimer</a>
+
+    <span id="record_meta" class="record-meta"></span>
+
+  <script>
+    const getRequestedId = () => {
+      const query = window.location.search;
+      if (!query || query.length <= 1) {
+        return null;
+      }
+      return query.substring(1);
+    };
+
+    const navigationLinks = {
+      previous: document.getElementById('btPrecedent'),
+      next: document.getElementById('btSuivant'),
+    };
+    const LAST_FOCUS_STORAGE_KEY = 'posteDetail.lastButtonId';
+    const recordMetaElement = document.getElementById('record_meta');
+
+    const rememberLastFocusedButton = (element) => {
+      if (!element || !element.id) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(LAST_FOCUS_STORAGE_KEY, element.id);
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const restoreLastFocusedButton = () => {
+      let targetId = null;
+      try {
+        targetId = window.localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+      } catch (error) {
+        // ignore storage failures
+      }
+      if (!targetId) {
+        return;
+      }
+      const element = document.getElementById(targetId);
+      if (!element || typeof element.focus !== 'function') {
+        return;
+      }
+      try {
+        element.focus({ preventScroll: true });
+      } catch (focusError) {
+        element.focus();
+      }
+    };
+
+    const registerButtonFocusTracking = () => {
+      document.querySelectorAll('.button').forEach((element) => {
+        element.addEventListener('click', () => rememberLastFocusedButton(element));
+      });
+    };
+
+    const updateRecordMeta = (id, modifts) => {
+      if (!recordMetaElement) {
+        return;
+      }
+      const parts = [];
+      const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+      if (normalizedId) {
+        parts.push('id: ' + normalizedId);
+      }
+      const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+      if (normalizedModifts) {
+        parts.push('modifts: ' + normalizedModifts);
+      }
+      recordMetaElement.textContent = parts.join(' | ');
+    };
+
+    const resolveMessageOrigin = () => {
+      const origin = window.location.origin;
+      if (!origin || origin === 'null') {
+        return '*';
+      }
+      return origin;
+    };
+
+    const messageTargetOrigin = resolveMessageOrigin();
+
+    const isSameOriginEvent = (origin) => {
+      const expected = window.location.origin;
+      if (!expected || expected === 'null') {
+        return true;
+      }
+      return origin === expected;
+    };
+
+    const normalizeId = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+      const text = String(value).trim();
+      return text ? text : null;
+    };
+
+    let posteOrder = [];
+    let currentPosteId = null;
+    let navigationFallback = { previous: null, next: null };
+
+    const applyNavigationTarget = (anchor, targetId) => {
+      if (!anchor) {
+        return;
+      }
+      if (targetId) {
+        anchor.dataset.targetId = targetId;
+        anchor.href = 'posteDetail.html?' + encodeURIComponent(targetId);
+        anchor.classList.remove('disabled');
+        anchor.setAttribute('aria-disabled', 'false');
+      } else {
+        anchor.dataset.targetId = '';
+        anchor.href = '#';
+        anchor.classList.add('disabled');
+        anchor.setAttribute('aria-disabled', 'true');
+      }
+    };
+
+    const updateNavigationLinks = () => {
+      let previousTarget = null;
+      let nextTarget = null;
+      if (posteOrder.length && currentPosteId) {
+        const index = posteOrder.indexOf(currentPosteId);
+        if (index !== -1) {
+          const lastIndex = posteOrder.length - 1;
+          if (index > 0) {
+            previousTarget = posteOrder[index - 1];
+          } else if (posteOrder.length > 1) {
+            previousTarget = posteOrder[lastIndex];
+          }
+          if (index < lastIndex) {
+            nextTarget = posteOrder[index + 1];
+          } else if (posteOrder.length > 1) {
+            nextTarget = posteOrder[0];
+          } else {
+            nextTarget = posteOrder[0];
+          }
+        }
+      }
+      if (!previousTarget && navigationFallback.previous) {
+        previousTarget = navigationFallback.previous;
+      }
+      if (!nextTarget && navigationFallback.next) {
+        nextTarget = navigationFallback.next;
+      }
+      applyNavigationTarget(navigationLinks.previous, previousTarget);
+      applyNavigationTarget(navigationLinks.next, nextTarget);
+    };
+
+    const requestPosteOrder = () => {
+      if (!window.opener || window.opener.closed) {
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: 'POSTE_ORDER_REQUEST' }, messageTargetOrigin);
+      } catch (error) {
+        console.warn('Impossible de demander l’ordre des postes', error);
+      }
+    };
+
+    const setPosteOrder = (order) => {
+      if (!Array.isArray(order)) {
+        posteOrder = [];
+      } else {
+        posteOrder = order
+          .map((id) => normalizeId(id))
+          .filter((id, index, array) => id && array.indexOf(id) === index);
+      }
+      updateNavigationLinks();
+    };
+
+    const sendOrderUnsubscribe = () => {
+      if (!window.opener || window.opener.closed) {
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: 'POSTE_ORDER_UNSUBSCRIBE' }, messageTargetOrigin);
+      } catch (error) {
+        // silently ignore
+      }
+    };
+
+    const handleNavigationClick = (event) => {
+      const targetId = event.currentTarget.dataset.targetId;
+      if (!targetId) {
+        event.preventDefault();
+      }
+    };
+
+    if (navigationLinks.previous) {
+      navigationLinks.previous.addEventListener('click', handleNavigationClick);
+    }
+    if (navigationLinks.next) {
+      navigationLinks.next.addEventListener('click', handleNavigationClick);
+    }
+    window.addEventListener('beforeunload', sendOrderUnsubscribe);
+
+    const formatTitle = (poste) => {
+      if (!poste) {
+        return 'Détail Poste';
+      }
+      if (poste.descr) {
+        return `Détail Poste - ${poste.descr}`;
+      }
+      return `Détail Poste (${poste.id})`;
+    };
+
+    const setLinkOrDisable = (anchorId, id) => {
+      const anchor = document.getElementById(anchorId);
+      if (!anchor) {
+        return;
+      }
+      if (id) {
+        anchor.href = 'quiDetail.html?' + id;
+        anchor.classList.remove('disabled');
+      } else {
+        anchor.href = '#';
+        anchor.classList.add('disabled');
+      }
+    };
+
+    const clearQuiSection = (prefix) => {
+      document.getElementById(`${prefix}-nom`).textContent = 'nr';
+      document.getElementById(`${prefix}-prenom`).textContent = 'nr';
+      document.getElementById(`${prefix}-domaine`).textContent = 'nr';
+      document.getElementById(`${prefix}-genre`).textContent = 'nr';
+    };
+
+    const applyQuiToSection = (prefix, qui) => {
+      if (!qui) {
+        clearQuiSection(prefix);
+        return;
+      }
+      document.getElementById(`${prefix}-nom`).textContent = qui.nom ?? 'nr';
+      document.getElementById(`${prefix}-prenom`).textContent = qui.prenom ?? 'nr';
+      document.getElementById(`${prefix}-domaine`).textContent = qui.domaine ?? 'nr';
+      document.getElementById(`${prefix}-genre`).textContent = qui.genre ?? 'nr';
+    };
+
+    const updateLinkedQuiLabels = (poste) => {
+      applyQuiToSection('poste-qui', {
+        nom: poste.qui_nom,
+        prenom: poste.qui_prenom,
+        domaine: poste.qui_domaine,
+        genre: poste.qui_genre,
+      });
+      setLinkOrDisable('poste-qui-link', poste.id_qui_element);
+
+      applyQuiToSection('poste-quiensemble', {
+        nom: poste.quiensemble_nom,
+        prenom: poste.quiensemble_prenom,
+        domaine: poste.quiensemble_domaine,
+        genre: poste.quiensemble_genre,
+      });
+      setLinkOrDisable('poste-quiensemble-link', poste.id_qui_ensemble);
+    };
+
+    const fetchQuiById = async (id) => {
+      if (!id) {
+        return null;
+      }
+      const response = await fetch('/quis/' + id);
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    };
+
+    const refreshQuiFromInput = async (inputId, sectionPrefix, linkId) => {
+      const value = document.getElementById(inputId).value.trim();
+      if (!value) {
+        clearQuiSection(sectionPrefix);
+        setLinkOrDisable(linkId, null);
+        return;
+      }
+      const qui = await fetchQuiById(value);
+      applyQuiToSection(sectionPrefix, qui);
+      setLinkOrDisable(linkId, qui ? value : null);
+    };
+
+    const notifyParentList = () => {
+      if (!window.opener || window.opener.closed) {
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: 'POSTE_REFRESH' }, window.location.origin);
+      } catch (error) {
+        console.warn('Impossible de notifier la fenêtre parente', error);
+      }
+    };
+
+    async function refreshPoste(id) {
+      if (!id) {
+        return;
+      }
+      try {
+        const response = await fetch('/postes/' + id);
+        if (!response.ok) {
+          alert('Poste introuvable');
+          return;
+        }
+        const poste = await response.json();
+        document.getElementById('posteid').value = poste.id ?? '';
+        document.getElementById('postedesc').value = poste.descr ?? '';
+        document.getElementById('posteidqui_element').value = poste.id_qui_element ?? '';
+        document.getElementById('posteidqui_ensemble').value = poste.id_qui_ensemble ?? '';
+        document.getElementById('postemodifts').value = poste.modifts ?? '';
+        document.getElementById('pageTitle').textContent = formatTitle(poste);
+        document.title = formatTitle(poste);
+
+        currentPosteId = normalizeId(poste.id);
+        navigationFallback = {
+          previous: normalizeId(poste.idPrecedent),
+          next: normalizeId(poste.idSuivant),
+        };
+        updateNavigationLinks();
+        updateLinkedQuiLabels(poste);
+        updateRecordMeta(poste.id, poste.modifts);
+      } catch (error) {
+        console.error('Impossible de charger le poste', error);
+        alert('Lecture du poste impossible.');
+      }
+    }
+
+    async function savePoste() {
+      const id = document.getElementById('posteid').value;
+      const payload = {
+        descr: document.getElementById('postedesc').value,
+        id_qui_element: document.getElementById('posteidqui_element').value || null,
+        id_qui_ensemble: document.getElementById('posteidqui_ensemble').value || null,
+      };
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? '/postes/' + id : '/postes';
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          alert('Erreur de sauvegarde');
+          return;
+        }
+        let savedId = id;
+        try {
+          const saved = await response.json();
+          savedId = saved?.id ?? savedId;
+        } catch (err) {
+          console.warn('Réponse inattendue lors de la sauvegarde', err);
+        }
+        notifyParentList();
+        if (!id && savedId) {
+          window.location.replace('posteDetail.html?' + savedId);
+          return;
+        }
+        if (savedId) {
+          await refreshPoste(savedId);
+        }
+        alert('Sauvegarde réussie.');
+      } catch (error) {
+        console.error('Impossible de sauvegarder le poste', error);
+        alert('Une erreur est survenue lors de la sauvegarde.');
+      }
+    }
+
+    async function deletePoste() {
+      const id = document.getElementById('posteid').value;
+      if (!id) {
+        alert('Aucun poste à supprimer.');
+        return;
+      }
+      if (!confirm('Supprimer ce poste ?')) {
+        return;
+      }
+      try {
+        const response = await fetch('/postes/' + id, { method: 'DELETE' });
+        if (!response.ok) {
+          alert('Suppression impossible');
+          return;
+        }
+        notifyParentList();
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) {
+            alert('Poste supprimé. Vous pouvez fermer l’onglet.');
+          }
+        }, 200);
+      } catch (error) {
+        console.error('Impossible de supprimer le poste', error);
+        alert('Une erreur est survenue lors de la suppression.');
+      }
+    }
+
+    registerButtonFocusTracking();
+    restoreLastFocusedButton();
+
+    document.getElementById('btSave').addEventListener('click', (event) => {
+      event.preventDefault();
+      savePoste();
+    });
+    document.getElementById('btDelete').addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!window.confirm('Confirmer la suppression ?')) {
+        return;
+      }
+      deletePoste();
+    });
+
+    document.getElementById('posteidqui_element').addEventListener('change', () => {
+      refreshQuiFromInput('posteidqui_element', 'poste-qui', 'poste-qui-link');
+    });
+    document.getElementById('posteidqui_ensemble').addEventListener('change', () => {
+      refreshQuiFromInput('posteidqui_ensemble', 'poste-quiensemble', 'poste-quiensemble-link');
+    });
+
+    window.addEventListener('message', (event) => {
+      if (!isSameOriginEvent(event.origin)) {
+        return;
+      }
+      const data = event.data;
+      if (!data || typeof data !== 'object') {
+        return;
+      }
+      if (data.type === 'POSTE_ORDER_RESPONSE' && Array.isArray(data.order)) {
+        setPosteOrder(data.order);
+      }
+    });
+
+    window.addEventListener('load', () => {
+      const id = getRequestedId();
+      if (id) {
+        refreshPoste(id);
+      }
+      requestPosteOrder();
+    });
+  </script>
+</body>
+</html>

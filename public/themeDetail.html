@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qui Quoi Thèque - Détail Thème</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Détail Thème</h1>
+  </div>
+
+  <div class="container">
+    <form id="theme-form">
+      <div class="form-group">
+        <input id="themeid" type="hidden" name="id" />
+        <input id="themenom" type="text" class="form-control" name="nom" placeholder="nom" />
+        <input id="thememodifts" type="text" class="form-control" name="modifts" placeholder="modifts" readonly />
+      </div>
+    </form>
+  </div>
+
+  <a id="btPrecedent" href="" class="button">Précédent</a>
+  <a id="btSuivant" href="" class="button">Suivant</a>
+  <a id="btSave" href="#" class="button">Sauver</a>
+  <button type="button" id="btSelectThemeForQui" class="button" style="display:none;"></button>
+  <a id="btDelete" href="#" class="button">Supprimer</a>
+
+    <span id="record_meta" class="record-meta"></span>
+
+  <div id="themeRelThemeContainer" class="container" style="margin-top: 1rem;"></div>
+
+  <script>
+    const selectThemeForQuiButton = document.getElementById('btSelectThemeForQui');
+    const RELTHEME_CONTAINER_ID = 'themeRelThemeContainer';
+    const LAST_FOCUS_STORAGE_KEY = 'themeDetail.lastButtonId';
+    const recordMetaElement = document.getElementById('record_meta');
+    const THEME_SELECTION_MODE_QUI = 'select-theme-for-qui';
+    const THEME_SELECTION_MODE_QUOI = 'select-theme-for-quoi';
+    const THEME_SELECTION_MODE_ROLE = 'select-theme-for-role';
+    let selectionContext = null;
+    let currentThemeName = '';
+    const getIdFromLocation = () => {
+      const query = window.location.search;
+      if (!query || query.length <= 1) {
+        return null;
+      }
+      const raw = query.substring(1);
+      const params = new URLSearchParams(raw);
+      const idParam = params.get('id');
+      if (idParam) {
+        return idParam;
+      }
+      const firstToken = raw.split('&')[0];
+      return firstToken || null;
+    };
+
+    const rememberLastFocusedButton = (element) => {
+      if (!element || !element.id) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(LAST_FOCUS_STORAGE_KEY, element.id);
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const restoreLastFocusedButton = () => {
+      let targetId = null;
+      try {
+        targetId = window.localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+      } catch (error) {
+        // ignore storage failures
+      }
+      if (!targetId) {
+        return;
+      }
+      const element = document.getElementById(targetId);
+      if (!element || typeof element.focus !== 'function') {
+        return;
+      }
+      try {
+        element.focus({ preventScroll: true });
+      } catch (focusError) {
+        element.focus();
+      }
+    };
+
+    const registerButtonFocusTracking = () => {
+      document.querySelectorAll('.button').forEach((element) => {
+        element.addEventListener('click', () => rememberLastFocusedButton(element));
+      });
+    };
+
+    const updateRecordMeta = (id, modifts) => {
+      if (!recordMetaElement) {
+        return;
+      }
+      const parts = [];
+      const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+      if (normalizedId) {
+        parts.push('id: ' + normalizedId);
+      }
+      const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+      if (normalizedModifts) {
+        parts.push('modifts: ' + normalizedModifts);
+      }
+      recordMetaElement.textContent = parts.join(' | ');
+    };
+
+    const updateThemeRelThemeContainer = (themeId) => {
+      const container = document.getElementById(RELTHEME_CONTAINER_ID);
+      if (!container) {
+        return;
+      }
+      if (!themeId) {
+        container.innerHTML = '';
+        return;
+      }
+      const safeId = encodeURIComponent(String(themeId));
+      container.innerHTML = `
+        <h2>Relations du thème</h2>
+        <iframe src="relThemeListe.html?id_theme=${safeId}" style="width:100%; min-height:500px; border:1px solid #ccc;" title="Relations du thème"></iframe>
+      `;
+    };
+
+    const updateTitles = () => {
+      const pageTitleElement = document.getElementById('pageTitle');
+      const basePageTitle = currentThemeName ? `Détail Thème - ${currentThemeName}` : 'Détail Thème';
+      const baseDocumentTitle = currentThemeName ? `Thème ${currentThemeName}` : 'Thème';
+      let pageTitle = basePageTitle;
+      let documentTitle = baseDocumentTitle;
+      if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUOI && selectionContext.idQuoi) {
+        const targetLabel =
+          selectionContext.quoiLabel ||
+          selectionContext.selectionLabel ||
+          `quoi ${selectionContext.idQuoi}`;
+        pageTitle = `${basePageTitle} (ajout à ${targetLabel})`;
+        documentTitle = `${baseDocumentTitle} - ${targetLabel}`;
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_ROLE && selectionContext.idRole) {
+        const targetLabel =
+          selectionContext.roleLabel ||
+          selectionContext.selectionLabel ||
+          `role ${selectionContext.idRole}`;
+        pageTitle = `${basePageTitle} (ajout à ${targetLabel})`;
+        documentTitle = `${baseDocumentTitle} - ${targetLabel}`;
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUI && selectionContext.idQui) {
+        const targetLabel =
+          selectionContext.quiLabel ||
+          selectionContext.selectionLabel ||
+          `qui ${selectionContext.idQui}`;
+        pageTitle = `${basePageTitle} (ajout à ${targetLabel})`;
+        documentTitle = `${baseDocumentTitle} - ${targetLabel}`;
+      }
+      if (pageTitleElement) {
+        pageTitleElement.textContent = pageTitle;
+      }
+      document.title = documentTitle;
+    };
+
+    const parseSelectionContext = () => {
+      const search = window.location.search;
+      if (!search || search.length <= 1) {
+        selectionContext = null;
+        return;
+      }
+      const params = new URLSearchParams(search.substring(1));
+      const mode = params.get('mode');
+      if (mode === THEME_SELECTION_MODE_QUI) {
+        const idQuiParam = params.get('id_qui') || params.get('idQui') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_QUI,
+          idQui: idQuiParam.trim(),
+          quiLabel: params.get('quiNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+          source: params.get('source') || '',
+        };
+      } else if (mode === THEME_SELECTION_MODE_QUOI) {
+        const idQuoiParam = params.get('id_quoi') || params.get('idQuoi') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_QUOI,
+          idQuoi: idQuoiParam.trim(),
+          quoiLabel: params.get('quoiNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+          source: params.get('source') || '',
+        };
+      } else if (mode === THEME_SELECTION_MODE_ROLE) {
+        const idRoleParam = params.get('id_role') || params.get('idRole') || '';
+        selectionContext = {
+          mode: THEME_SELECTION_MODE_ROLE,
+          idRole: idRoleParam.trim(),
+          roleLabel: params.get('roleNom') || '',
+          selectionLabel: params.get('selectionLabel') || '',
+          source: params.get('source') || '',
+        };
+      } else {
+        selectionContext = null;
+      }
+      updateTitles();
+    };
+
+    const updateSelectButtonLabel = () => {
+      if (!selectThemeForQuiButton) {
+        return;
+      }
+      if (!selectionContext || !selectionContext.mode) {
+        selectThemeForQuiButton.style.display = 'none';
+        return;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_QUI && selectionContext.idQui) {
+        const label =
+          selectionContext.quiLabel
+            ? `ajouter ce thème à ${selectionContext.quiLabel}`
+            : 'ajouter ce thème';
+        selectThemeForQuiButton.textContent = label;
+        selectThemeForQuiButton.style.display = '';
+        return;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_QUOI && selectionContext.idQuoi) {
+        const label =
+          selectionContext.quoiLabel
+            ? `ajouter ce thème à ${selectionContext.quoiLabel}`
+            : 'ajouter ce thème';
+        selectThemeForQuiButton.textContent = label;
+        selectThemeForQuiButton.style.display = '';
+        return;
+      }
+      if (selectionContext.mode === THEME_SELECTION_MODE_ROLE && selectionContext.idRole) {
+        const label =
+          selectionContext.roleLabel
+            ? `ajouter ce thème à ${selectionContext.roleLabel}`
+            : 'ajouter ce thème';
+        selectThemeForQuiButton.textContent = label;
+        selectThemeForQuiButton.style.display = '';
+        return;
+      }
+      selectThemeForQuiButton.style.display = 'none';
+    };
+
+    const fetchQuiLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUI || !selectionContext.idQui) {
+        return;
+      }
+      if (selectionContext.quiLabel) {
+        updateSelectButtonLabel();
+        return;
+      }
+      try {
+        const response = await fetch('/quis/' + selectionContext.idQui);
+        if (!response.ok) {
+          updateSelectButtonLabel();
+          return;
+        }
+        const qui = await response.json();
+        const label =
+          (qui.fullname && String(qui.fullname).trim()) ||
+          [qui.prenom, qui.nom].filter((part) => !!part).join(' ').trim();
+        if (label) {
+          selectionContext.quiLabel = label;
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le qui cible', error);
+      } finally {
+        updateSelectButtonLabel();
+      }
+    };
+
+    const fetchQuoiLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUOI || !selectionContext.idQuoi) {
+        return;
+      }
+      if (selectionContext.quoiLabel) {
+        updateSelectButtonLabel();
+        updateTitles();
+        return;
+      }
+      try {
+        const response = await fetch('/quois/' + selectionContext.idQuoi);
+        if (!response.ok) {
+          updateSelectButtonLabel();
+          return;
+        }
+        const quoi = await response.json();
+        const label = quoi.nom ? String(quoi.nom).trim() : '';
+        if (label) {
+          selectionContext.quoiLabel = label;
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le quoi cible', error);
+      } finally {
+        updateSelectButtonLabel();
+        updateTitles();
+      }
+    };
+
+    const fetchRoleLabel = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_ROLE || !selectionContext.idRole) {
+        return;
+      }
+      if (selectionContext.roleLabel) {
+        updateSelectButtonLabel();
+        updateTitles();
+        return;
+      }
+      try {
+        const response = await fetch('/roles/' + selectionContext.idRole);
+        if (!response.ok) {
+          updateSelectButtonLabel();
+          return;
+        }
+        const role = await response.json();
+        const label = role.nom ? String(role.nom).trim() : '';
+        if (label) {
+          selectionContext.roleLabel = label;
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer le role cible', error);
+      } finally {
+        updateSelectButtonLabel();
+        updateTitles();
+      }
+    };
+
+    const findRelThemeWindowForTarget = (paramName, targetValue) => {
+      const target = targetValue ? String(targetValue).trim() : '';
+      if (!target) {
+        return null;
+      }
+      const candidates = [];
+      if (window.opener && !window.opener.closed) {
+        candidates.push(window.opener);
+        if (window.opener.opener && !window.opener.opener.closed) {
+          candidates.push(window.opener.opener);
+        }
+      }
+      for (const candidate of candidates) {
+        try {
+          const href = candidate.location && typeof candidate.location.href === 'string' ? candidate.location.href : '';
+          if (!href || href.indexOf('relThemeListe.html') === -1) {
+            continue;
+          }
+          const search = candidate.location.search || '';
+          const params = new URLSearchParams(search.startsWith('?') ? search.substring(1) : search);
+          const openerValue = params.get(paramName) || '';
+          if (openerValue && openerValue === target) {
+            return candidate;
+          }
+        } catch (error) {
+          // ignore cross-window errors
+        }
+      }
+      return null;
+    };
+
+    const createRelThemeForQui = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUI || !selectionContext.idQui) {
+        alert('Aucun qui cible pour créer la relation.');
+        return;
+      }
+      const themeId = document.getElementById('themeid').value;
+      if (!themeId) {
+        alert('Aucun thème chargé.');
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_theme: themeId, id_qui: selectionContext.idQui, nom: 'nr' }),
+        });
+        if (!response.ok) {
+          alert('Création de la relation impossible.');
+          return;
+        }
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: 'RELTHEME_REFRESH' }, window.location.origin);
+          }
+        } catch (error) {
+          console.warn('Impossible de notifier la fenêtre parente', error);
+        }
+        alert('Thème ajouté au qui.');
+        try {
+          const relThemeWindow = findRelThemeWindowForTarget('id_qui', selectionContext.idQui);
+          if (relThemeWindow) {
+            relThemeWindow.location.reload();
+          }
+        } catch (error) {
+          console.warn('Impossible de rafraîchir la page relThemeListe', error);
+        }
+        window.close();
+      } catch (error) {
+        console.error('Impossible de créer le reltheme pour ce qui', error);
+        alert('Une erreur est survenue lors de la création du lien.');
+      }
+    };
+
+    const createRelThemeForQuoi = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_QUOI || !selectionContext.idQuoi) {
+        alert('Aucun quoi cible pour créer la relation.');
+        return;
+      }
+      const themeId = document.getElementById('themeid').value;
+      if (!themeId) {
+        alert('Aucun thème chargé.');
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_theme: themeId, id_quoi: selectionContext.idQuoi, nom: 'nr' }),
+        });
+        if (!response.ok) {
+          alert('Création de la relation impossible.');
+          return;
+        }
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: 'RELTHEME_REFRESH' }, window.location.origin);
+          }
+        } catch (error) {
+          console.warn('Impossible de notifier la fenêtre parente', error);
+        }
+        alert('Thème ajouté au quoi.');
+        try {
+          const relThemeWindow = findRelThemeWindowForTarget('id_quoi', selectionContext.idQuoi);
+          if (relThemeWindow) {
+            relThemeWindow.location.reload();
+          }
+        } catch (error) {
+          console.warn('Impossible de rafraîchir la page relThemeListe', error);
+        }
+        window.close();
+      } catch (error) {
+        console.error('Impossible de créer le reltheme pour ce quoi', error);
+        alert('Une erreur est survenue lors de la création du lien.');
+      }
+    };
+
+    const createRelThemeForRole = async () => {
+      if (!selectionContext || selectionContext.mode !== THEME_SELECTION_MODE_ROLE || !selectionContext.idRole) {
+        alert('Aucun role cible pour créer la relation.');
+        return;
+      }
+      const themeId = document.getElementById('themeid').value;
+      if (!themeId) {
+        alert('Aucun thème chargé.');
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_theme: themeId, id_role: selectionContext.idRole, nom: 'nr' }),
+        });
+        if (!response.ok) {
+          alert('Création de la relation impossible.');
+          return;
+        }
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: 'RELTHEME_REFRESH' }, window.location.origin);
+          }
+        } catch (error) {
+          console.warn('Impossible de notifier la fenêtre parente', error);
+        }
+        alert('Thème ajouté au role.');
+        try {
+          const relThemeWindow = findRelThemeWindowForTarget('id_role', selectionContext.idRole);
+          if (relThemeWindow) {
+            relThemeWindow.location.reload();
+          }
+        } catch (error) {
+          console.warn('Impossible de rafraîchir la page relThemeListe', error);
+        }
+        window.close();
+      } catch (error) {
+        console.error('Impossible de créer le reltheme pour ce role', error);
+        alert('Une erreur est survenue lors de la création du lien.');
+      }
+    };
+
+    async function refreshTheme(id) {
+      if (!id) {
+        return;
+      }
+      try {
+        const response = await fetch('/themes/' + id);
+        if (!response.ok) {
+          alert('Thème introuvable');
+          return;
+        }
+        const theme = await response.json();
+        document.getElementById('themeid').value = theme.id ?? '';
+        document.getElementById('themenom').value = theme.nom ?? '';
+        document.getElementById('thememodifts').value = theme.modifts ?? '';
+        currentThemeName = theme.nom ?? '';
+        updateTitles();
+        updateThemeRelThemeContainer(theme.id);
+        if (theme.idSuivant) {
+          document.getElementById('btSuivant').href = 'themeDetail.html?' + theme.idSuivant;
+        }
+        if (theme.idPrecedent) {
+          document.getElementById('btPrecedent').href = 'themeDetail.html?' + theme.idPrecedent;
+        }
+        updateRecordMeta(theme.id, theme.modifts);
+        updateSelectButtonLabel();
+      } catch (error) {
+        console.error('Impossible de rafra&#238;chir le thème', error);
+      }
+    }
+
+    async function saveTheme() {
+      const id = document.getElementById('themeid').value;
+      const theme = {
+        nom: document.getElementById('themenom').value
+      };
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? '/themes/' + id : '/themes';
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(theme)
+        });
+        if (!response.ok) {
+          alert('Erreur de sauvegarde');
+          return;
+        }
+        let savedId = id;
+        try {
+          const savedTheme = await response.json();
+          savedId = savedTheme?.id ?? savedId;
+        } catch (error) {
+          console.warn('Réponse de sauvegarde sans JSON', error);
+        }
+        if (savedId && !id) {
+          window.location.replace('themeDetail.html?' + savedId);
+        } else if (savedId) {
+          refreshTheme(savedId);
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'THEME_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fen&#234;tre parente', notificationError);
+          }
+        }
+        alert('Sauvegarde réussie.');
+      } catch (error) {
+        console.error('Impossible de sauvegarder le thème', error);
+        alert('Une erreur est survenue lors de la sauvegarde.');
+      }
+    }
+
+    async function deleteTheme() {
+      const id = document.getElementById('themeid').value;
+      if (!id) {
+        alert('Aucun theme a supprimer.');
+        return;
+      }
+      let relThemeCount = 0;
+      try {
+        const responseCount = await fetch('/themes/' + encodeURIComponent(id) + '/relthemeCount');
+        if (!responseCount.ok) {
+          throw new Error('Impossible de verifier les relthemes lies');
+        }
+        const payload = await responseCount.json();
+        const rawCount =
+          payload && typeof payload.count === 'number'
+            ? payload.count
+            : Number.parseInt(payload && payload.count, 10);
+        relThemeCount = Number.isFinite(rawCount) ? rawCount : 0;
+        if (relThemeCount > 0) {
+          alert(`Suppression impossible: ${relThemeCount} reltheme(s) lies a ce theme.`);
+          return;
+        }
+      } catch (error) {
+        console.error('Verification reltheme impossible', error);
+        alert('Verification des liens impossible. Merci de reessayer.');
+        return;
+      }
+      const confirmed = window.confirm('Confirmer la suppression ?');
+      if (!confirmed) {
+        return;
+      }
+      try {
+        const response = await fetch('/themes/' + id, { method: 'DELETE' });
+        if (response.status === 409) {
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch (err) {
+            payload = null;
+          }
+          let payloadCount = null;
+          if (payload && typeof payload === 'object') {
+            const raw = payload.relThemeCount;
+            payloadCount = Number.isFinite(raw) ? raw : Number.parseInt(raw, 10);
+          }
+          const countLabel = Number.isFinite(payloadCount)
+            ? `${payloadCount} reltheme(s) lies`
+            : 'Relthemes lies';
+          alert(`Suppression impossible: ${countLabel}.`);
+          return;
+        }
+        if (!response.ok) {
+          alert('Erreur de suppression');
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'THEME_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fenetre parente', notificationError);
+          }
+        }
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) {
+            alert("Theme supprime. Vous pouvez fermer l''onglet.");
+          }
+        }, 200);
+      } catch (error) {
+        console.error('Impossible de supprimer le theme', error);
+        alert('Une erreur est survenue lors de la suppression.');
+      }
+    }
+
+    registerButtonFocusTracking();
+    restoreLastFocusedButton();
+
+    document.getElementById('btSave').addEventListener('click', (event) => {
+      event.preventDefault();
+      saveTheme();
+    });
+
+    document.getElementById('btDelete').addEventListener('click', (event) => {
+      event.preventDefault();
+      deleteTheme();
+    });
+
+    if (selectThemeForQuiButton) {
+      selectThemeForQuiButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!selectionContext || !selectionContext.mode) {
+          return;
+        }
+        if (selectionContext.mode === THEME_SELECTION_MODE_QUI) {
+          createRelThemeForQui();
+        } else if (selectionContext.mode === THEME_SELECTION_MODE_QUOI) {
+          createRelThemeForQuoi();
+        } else if (selectionContext.mode === THEME_SELECTION_MODE_ROLE) {
+          createRelThemeForRole();
+        }
+      });
+    }
+
+    window.addEventListener('load', () => {
+      parseSelectionContext();
+      updateSelectButtonLabel();
+      if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUI) {
+        fetchQuiLabel();
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_QUOI) {
+        fetchQuoiLabel();
+      } else if (selectionContext && selectionContext.mode === THEME_SELECTION_MODE_ROLE) {
+        fetchRoleLabel();
+      }
+      const id = getIdFromLocation();
+      if (id) {
+        refreshTheme(id);
+      } else {
+        updateTitles();
+      }
+    });
+  </script>
+</body>
+</html>
+

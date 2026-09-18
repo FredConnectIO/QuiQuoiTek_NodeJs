@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qui Quoi Thèque - Détail RelTheme</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Détail RelTheme</h1>
+  </div>
+
+  <div class="container">
+    <form id="reltheme-form">
+      <div class="form-group">
+        <input id="relthemeid" type="hidden" name="id" />
+        <input id="relthemeidqui" type="hidden" name="id_qui" />
+        <input id="relthemeidtheme" type="hidden" name="id_theme" />
+        <input id="relthemeidquoi" type="hidden" name="id_quoi" />
+        <input id="relthemeidrole" type="hidden" name="id_role" />
+
+        <div class="form-field">
+          <label for="relthemenom">Nom de la relation</label>
+          <input id="relthemenom" type="text" class="form-control" name="nom" placeholder="nom de la relation" />
+        </div>
+
+        <div class="detail-text">
+          <p>
+            <strong>Modifié :</strong>
+            <span id="relthememodifts" class="field-value">n/a</span>
+          </p>
+          <p>
+            <strong>Entité :</strong>
+            <span id="relthemeentite" class="field-value">n/a</span>
+          </p>
+
+          <p>
+            <strong>Thème :</strong>
+            <span id="relthemetheme" class="field-value">n/a</span>
+          </p>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <a id="btPrecedent" href="" class="button">Précédent</a>
+  <a id="btSuivant" href="" class="button">Suivant</a>
+  <a id="btSave" href="#" class="button">Sauver</a>
+  <a id="btDelete" href="#" class="button">Supprimer</a>
+
+    <span id="record_meta" class="record-meta"></span>
+
+  <div class="container" id="reltheme-qui-section" style="display:none;">
+    <h2>Qui associé</h2>
+    <div class="detail-panel reltheme-qui-panel">
+      <div class="reltheme-qui-image-column" id="reltheme-qui-image-list">
+        <div class="reltheme-qui-image-grid" id="reltheme-qui-image-grid"></div>
+      </div>
+      <div class="detail-text">
+        <p><a id="reltheme-qui-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le qui</a></p>
+        <p><strong>Nom Prénom:</strong> <span id="reltheme-qui-nom">n/a</span> <span id="reltheme-qui-prenom">n/a</span></p>
+        <p><strong>Nom complet :</strong> <span id="reltheme-qui-fullname">n/a</span></p>
+        <p><strong>Domaine - Genre - Pays - Syle:</strong> 
+          <span id="reltheme-qui-domaine">n/a</span>
+          - <span id="reltheme-qui-genre">n/a</span> 
+          - <span id="reltheme-qui-pays">n/a</span>
+          - <span id="reltheme-qui-style">n/a</span>
+        </p>
+        <p><strong>Naissance AAAA MM JJ:</strong> 
+          <span id="reltheme-qui-datenaiss-aaaa">n/a</span>
+          <span id="reltheme-qui-datenaiss-mm">n/a</span>
+          <span id="reltheme-qui-datenaiss-jj">n/a</span>
+        </p>
+        <p><strong>Décès AAAA:</strong> <span id="reltheme-qui-datedeces_aaaa">n/a</span></p>
+        <p><strong>Remarque :</strong> <span id="reltheme-qui-remarque">n/a</span></p>
+        <p><strong>Modifié :</strong> <span id="reltheme-qui-modifts">n/a</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="reltheme-quoi-section" style="display:none;">
+    <h2>Quoi associé</h2>
+    <div class="detail-panel reltheme-quoi-panel">
+      <div class="reltheme-quoi-image-column" id="reltheme-quoi-image-list">
+        <div class="reltheme-quoi-image-grid" id="reltheme-quoi-image-grid"></div>
+      </div>
+      <div class="detail-text">
+        <p><a id="reltheme-quoi-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le quoi</a></p>
+        <p><strong>Nom :</strong> <span id="reltheme-quoi-nom">n/a</span></p>
+        <p><strong>Domaine - Genre - Pays - Stock :</strong> 
+          <span id="reltheme-quoi-domaine">n/a</span>
+          - <span id="reltheme-quoi-genre">n/a</span>
+          - <span id="reltheme-quoi-pays">n/a</span>
+          - <span id="reltheme-quoi-stock">n/a</span>
+        </p>
+        <p><strong>Qualif :</strong> <span id="reltheme-quoi-qualif">n/a</span></p>
+        <p><strong>Date AAAA MM JJ :</strong> 
+          <span id="reltheme-quoi-date-aaaa">n/a</span>
+          <span id="reltheme-quoi-date-mm">n/a</span>
+          <span id="reltheme-quoi-date-jj">n/a</span>
+        </p>
+        <p><strong>Remarque :</strong> <span id="reltheme-quoi-remarque">n/a</span></p>
+        <p><strong>Modifié :</strong> <span id="reltheme-quoi-modifts">n/a</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="reltheme-role-section" style="display:none;">
+    <h2>Role associé</h2>
+    <div class="detail-panel reltheme-role-panel">
+      <div class="detail-text">
+        <p><a id="reltheme-role-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le role</a></p>
+        <p><strong>Nom :</strong> <span id="reltheme-role-nom">n/a</span></p>
+        <p><strong>Id Qui :</strong> <span id="reltheme-role-id-qui">n/a</span></p>
+        <p><strong>Id Quoi :</strong> <span id="reltheme-role-id-quoi">n/a</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LAST_FOCUS_STORAGE_KEY = 'relThemeDetail.lastButtonId';
+    const recordMetaElement = document.getElementById('record_meta');
+    const REL_THEME_RELATION_NAV_KEY = 'relThemeRelationNav';
+    const getRequestedId = () => {
+      const query = window.location.search;
+      if (!query || query.length <= 1) {
+        return null;
+      }
+      return query.substring(1);
+    };
+
+    const rememberLastFocusedButton = (element) => {
+      if (!element || !element.id) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(LAST_FOCUS_STORAGE_KEY, element.id);
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const restoreLastFocusedButton = () => {
+      let targetId = null;
+      try {
+        targetId = window.localStorage.getItem(LAST_FOCUS_STORAGE_KEY);
+      } catch (error) {
+        // ignore storage failures
+      }
+      if (!targetId) {
+        return;
+      }
+      const element = document.getElementById(targetId);
+      if (!element || typeof element.focus !== 'function') {
+        return;
+      }
+      try {
+        element.focus({ preventScroll: true });
+      } catch (focusError) {
+        element.focus();
+      }
+    };
+
+    const registerButtonFocusTracking = () => {
+      document.querySelectorAll('.button').forEach((element) => {
+        element.addEventListener('click', () => rememberLastFocusedButton(element));
+      });
+    };
+
+    const updateRecordMeta = (id, modifts) => {
+      if (!recordMetaElement) {
+        return;
+      }
+      const parts = [];
+      const normalizedId = id !== undefined && id !== null ? String(id).trim() : '';
+      if (normalizedId) {
+        parts.push('id: ' + normalizedId);
+      }
+      const normalizedModifts = modifts !== undefined && modifts !== null ? String(modifts).trim() : '';
+      if (normalizedModifts) {
+        parts.push('modifts: ' + normalizedModifts);
+      }
+      recordMetaElement.textContent = parts.join(' | ');
+    };
+
+    const detailPlaceholder = 'n/a';
+    const QUI_IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+    const quiDetailSection = document.getElementById('reltheme-qui-section');
+    const quiImageGrid = document.getElementById('reltheme-qui-image-grid');
+    const quiLink = document.getElementById('reltheme-qui-link');
+    const quiDetailElements = {
+      nom: document.getElementById('reltheme-qui-nom'),
+      prenom: document.getElementById('reltheme-qui-prenom'),
+      fullname: document.getElementById('reltheme-qui-fullname'),
+      domaine: document.getElementById('reltheme-qui-domaine'),
+      genre: document.getElementById('reltheme-qui-genre'),
+      pays: document.getElementById('reltheme-qui-pays'),
+      style: document.getElementById('reltheme-qui-style'),
+      datenaiss_aaaa: document.getElementById('reltheme-qui-datenaiss-aaaa'),
+      datenaiss_mm: document.getElementById('reltheme-qui-datenaiss-mm'),
+      datenaiss_jj: document.getElementById('reltheme-qui-datenaiss-jj'),
+      datedeces_aaaa: document.getElementById('reltheme-qui-datedeces_aaaa'),
+      remarque: document.getElementById('reltheme-qui-remarque'),
+      modifts: document.getElementById('reltheme-qui-modifts'),
+    };
+    let currentQuiDetails = null;
+    const QUOI_IMAGE_VARIANTS = ['001', '002', '003', '004', '005'];
+    const quoiDetailSection = document.getElementById('reltheme-quoi-section');
+    const quoiImageGrid = document.getElementById('reltheme-quoi-image-grid');
+    const quoiLink = document.getElementById('reltheme-quoi-link');
+    const quoiDetailElements = {
+      nom: document.getElementById('reltheme-quoi-nom'),
+      domaine: document.getElementById('reltheme-quoi-domaine'),
+      genre: document.getElementById('reltheme-quoi-genre'),
+      pays: document.getElementById('reltheme-quoi-pays'),
+      stock: document.getElementById('reltheme-quoi-stock'),
+      qualif: document.getElementById('reltheme-quoi-qualif'),
+      date_aaaa: document.getElementById('reltheme-quoi-date-aaaa'),
+      date_mm: document.getElementById('reltheme-quoi-date-mm'),
+      date_jj: document.getElementById('reltheme-quoi-date-jj'),
+      remarque: document.getElementById('reltheme-quoi-remarque'),
+      modifts: document.getElementById('reltheme-quoi-modifts'),
+    };
+    let currentQuoiDetails = null;
+    const roleDetailSection = document.getElementById('reltheme-role-section');
+    const roleLink = document.getElementById('reltheme-role-link');
+    const roleDetailElements = {
+      nom: document.getElementById('reltheme-role-nom'),
+      id_qui: document.getElementById('reltheme-role-id-qui'),
+      id_quoi: document.getElementById('reltheme-role-id-quoi'),
+    };
+    let currentRoleDetails = null;
+
+    const getDisplayValue = (value) => {
+      if (value === null || value === undefined) {
+        return detailPlaceholder;
+      }
+      const text = String(value).trim();
+      return text || detailPlaceholder;
+    };
+
+
+    const resetQuiDetails = () => {
+      currentQuiDetails = null;
+      if (quiImageGrid) {
+        quiImageGrid.innerHTML = '<p>Aucune image.</p>';
+      }
+      Object.values(quiDetailElements).forEach((element) => {
+        if (element) {
+          element.textContent = detailPlaceholder;
+        }
+      });
+    };
+
+    const setQuiDetailField = (key, value) => {
+      const element = quiDetailElements[key];
+      if (!element) {
+        return;
+      }
+      element.textContent = getDisplayValue(value);
+    };
+
+    const formatBirthDate = (year, month, day) => {
+      const parsedYear = Number.parseInt(year, 10);
+      if (!Number.isFinite(parsedYear)) {
+        return '';
+      }
+      const parsedMonth = Number.parseInt(month, 10);
+      const parsedDay = Number.parseInt(day, 10);
+      const parts = [];
+      if (Number.isFinite(parsedDay)) {
+        parts.push(String(parsedDay).padStart(2, '0'));
+      }
+      if (Number.isFinite(parsedMonth)) {
+        parts.push(String(parsedMonth).padStart(2, '0'));
+      }
+      parts.push(String(parsedYear));
+      return parts.join('/');
+    };
+
+    const updateQuiDetailPanel = (qui) => {
+      if (!qui) {
+        resetQuiDetails();
+        return;
+      }
+      Object.entries(quiDetailElements).forEach(([key]) => {
+        setQuiDetailField(key, qui[key]);
+      });
+    };
+
+    const toggleSectionVisibility = (element, shouldShow) => {
+      if (!element) {
+        return;
+      }
+      element.style.display = shouldShow ? '' : 'none';
+    };
+
+    const resetQuoiDetails = () => {
+      currentQuoiDetails = null;
+      if (quoiImageGrid) {
+        quoiImageGrid.innerHTML = '<p>Aucune image.</p>';
+      }
+      Object.values(quoiDetailElements).forEach((element) => {
+        if (element) {
+          element.textContent = detailPlaceholder;
+        }
+      });
+    };
+
+    const setQuoiDetailField = (key, value) => {
+      const element = quoiDetailElements[key];
+      if (!element) {
+        return;
+      }
+      element.textContent = getDisplayValue(value);
+    };
+
+    const resetRoleDetails = () => {
+      currentRoleDetails = null;
+      Object.values(roleDetailElements).forEach((element) => {
+        if (element) {
+          element.textContent = detailPlaceholder;
+        }
+      });
+    };
+
+    const setRoleDetailField = (key, value) => {
+      const element = roleDetailElements[key];
+      if (!element) {
+        return;
+      }
+      element.textContent = getDisplayValue(value);
+    };
+
+    const fetchQuiImageVariantExists = async (quiId, variant) => {
+      if (!quiId) {
+        return false;
+      }
+      try {
+        const response = await fetch(
+          `/quis/imgQui/${encodeURIComponent(quiId)}/variant/${encodeURIComponent(variant)}/exists`
+        );
+        if (!response.ok) {
+          return false;
+        }
+        const payload = await response.json();
+        return Boolean(payload && payload.exists);
+      } catch (error) {
+        console.warn('Impossible de vérifier la présence de la variante image', variant, error);
+        return false;
+      }
+    };
+
+    const buildQuiImageCard = (quiId, variant, altName) => {
+      //const wrapper = document.createElement('div');
+      const wrapper = document.createElement('span');
+      wrapper.className = 'reltheme-qui-image-card';
+      const img = document.createElement('img');
+      img.height = 400;
+      img.alt = altName ? `Image ${variant} de ${altName}` : `Image ${variant}`;
+      img.src = `/quis/imgQui/${encodeURIComponent(quiId)}?variant=${encodeURIComponent(variant)}&v=${Date.now()}`;
+      const caption = document.createElement('div');
+      //caption.textContent = `Variante ${variant}`;
+      //wrapper.append(img, caption);
+      wrapper.append(img);
+      return wrapper;
+    };
+
+    const renderAllQuiImages = async (qui) => {
+      if (!quiImageGrid) {
+        return;
+      }
+      if (!qui || !qui.id) {
+        quiImageGrid.innerHTML = '<p>Aucune image.</p>';
+        return;
+      }
+      const altName = qui.fullname || [qui.prenom, qui.nom].filter(Boolean).join(' ') || qui.id || '';
+      quiImageGrid.innerHTML = '<p>Chargement des images...</p>';
+      try {
+        const existenceResults = await Promise.all(
+          QUI_IMAGE_VARIANTS.map(async (variant) => ({
+            variant,
+            exists: await fetchQuiImageVariantExists(qui.id, variant),
+          }))
+        );
+        const existingVariants = existenceResults.filter((entry) => entry.exists).map((entry) => entry.variant);
+        if (!existingVariants.length) {
+          quiImageGrid.innerHTML = '<p>Aucune image disponible.</p>';
+          return;
+        }
+        const fragment = document.createDocumentFragment();
+        existingVariants.forEach((variant) => {
+          fragment.append(buildQuiImageCard(qui.id, variant, altName));
+        });
+        quiImageGrid.innerHTML = '';
+        quiImageGrid.append(fragment);
+      } catch (error) {
+        console.warn('Impossible de charger les images du qui', error);
+        quiImageGrid.innerHTML = '<p>Images indisponibles.</p>';
+      }
+    };
+
+    const fetchQuoiImageVariantExists = async (quoiId, variant) => {
+      if (!quoiId) {
+        return false;
+      }
+      try {
+        const response = await fetch(
+          `/quois/imgQuoi/${encodeURIComponent(quoiId)}/variant/${encodeURIComponent(variant)}/exists`
+        );
+        if (!response.ok) {
+          return false;
+        }
+        const payload = await response.json();
+        return Boolean(payload && payload.exists);
+      } catch (error) {
+        console.warn('Impossible de vérifier la présence de la variante image', variant, error);
+        return false;
+      }
+    };
+
+    const buildQuoiImageCard = (quoiId, variant, altName) => {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'reltheme-quoi-image-card';
+      const img = document.createElement('img');
+      img.height = 400;
+      img.alt = altName ? `Image ${variant} de ${altName}` : `Image ${variant}`;
+      img.src = `/quois/imgQuoi/${encodeURIComponent(quoiId)}?variant=${encodeURIComponent(variant)}&v=${Date.now()}`;
+      wrapper.append(img);
+      return wrapper;
+    };
+
+    const renderAllQuoiImages = async (quoi) => {
+      if (!quoiImageGrid) {
+        return;
+      }
+      if (!quoi || !quoi.id) {
+        quoiImageGrid.innerHTML = '<p>Aucune image.</p>';
+        return;
+      }
+      const altName = quoi.nom || quoi.id || '';
+      quoiImageGrid.innerHTML = '<p>Chargement des images...</p>';
+      try {
+        const existenceResults = await Promise.all(
+          QUOI_IMAGE_VARIANTS.map(async (variant) => ({
+            variant,
+            exists: await fetchQuoiImageVariantExists(quoi.id, variant),
+          }))
+        );
+        const existingVariants = existenceResults.filter((entry) => entry.exists).map((entry) => entry.variant);
+        if (!existingVariants.length) {
+          quoiImageGrid.innerHTML = '<p>Aucune image disponible.</p>';
+          return;
+        }
+        const fragment = document.createDocumentFragment();
+        existingVariants.forEach((variant) => {
+          fragment.append(buildQuoiImageCard(quoi.id, variant, altName));
+        });
+        quoiImageGrid.innerHTML = '';
+        quoiImageGrid.append(fragment);
+      } catch (error) {
+        console.warn('Impossible de charger les images du quoi', error);
+        quoiImageGrid.innerHTML = '<p>Images indisponibles.</p>';
+      }
+    };
+
+    const fetchQuiDetails = async (idQui) => {
+      if (!idQui) {
+        return null;
+      }
+      try {
+        const response = await fetch('/quis/' + encodeURIComponent(idQui));
+        if (!response.ok) {
+          return null;
+        }
+        return await response.json();
+      } catch (error) {
+        console.warn('Impossible de charger le qui associé', error);
+        return null;
+      }
+    };
+
+    const fetchQuoiDetails = async (idQuoi) => {
+      if (!idQuoi) {
+        return null;
+      }
+      try {
+        const response = await fetch('/quois/' + encodeURIComponent(idQuoi));
+        if (!response.ok) {
+          return null;
+        }
+        return await response.json();
+      } catch (error) {
+        console.warn('Impossible de charger le quoi associé', error);
+        return null;
+      }
+    };
+
+    const fetchRoleDetails = async (idRole) => {
+      if (!idRole) {
+        return null;
+      }
+      try {
+        const response = await fetch('/roles/' + encodeURIComponent(idRole));
+        if (!response.ok) {
+          return null;
+        }
+        return await response.json();
+      } catch (error) {
+        console.warn('Impossible de charger le role associé', error);
+        return null;
+      }
+    };
+
+    const updateAssociatedQui = async (idQui) => {
+      if (!idQui) {
+        resetQuiDetails();
+        toggleSectionVisibility(quiDetailSection, false);
+        if (quiLink) {
+          quiLink.href = '#';
+        }
+        return;
+      }
+      const qui = await fetchQuiDetails(idQui);
+      if (!qui) {
+        resetQuiDetails();
+        toggleSectionVisibility(quiDetailSection, false);
+        if (quiLink) {
+          quiLink.href = '#';
+        }
+        return;
+      }
+      currentQuiDetails = qui;
+      updateQuiDetailPanel(qui);
+      await renderAllQuiImages(qui);
+      if (quiLink) {
+        quiLink.href = `quiDetail.html?${encodeURIComponent(idQui)}`;
+      }
+      toggleSectionVisibility(quiDetailSection, true);
+    };
+
+    const updateAssociatedQuoi = async (idQuoi) => {
+      if (!idQuoi) {
+        resetQuoiDetails();
+        toggleSectionVisibility(quoiDetailSection, false);
+        if (quoiLink) {
+          quoiLink.href = '#';
+        }
+        return;
+      }
+      const quoi = await fetchQuoiDetails(idQuoi);
+      if (!quoi) {
+        resetQuoiDetails();
+        toggleSectionVisibility(quoiDetailSection, false);
+        if (quoiLink) {
+          quoiLink.href = '#';
+        }
+        return;
+      }
+      currentQuoiDetails = quoi;
+      Object.entries(quoiDetailElements).forEach(([key]) => {
+        setQuoiDetailField(key, quoi[key]);
+      });
+      await renderAllQuoiImages(quoi);
+      if (quoiLink) {
+        quoiLink.href = `quoiDetail.html?${encodeURIComponent(idQuoi)}`;
+      }
+      toggleSectionVisibility(quoiDetailSection, true);
+    };
+
+    const updateAssociatedRole = async (idRole) => {
+      if (!idRole) {
+        resetRoleDetails();
+        toggleSectionVisibility(roleDetailSection, false);
+        if (roleLink) {
+          roleLink.href = '#';
+        }
+        return;
+      }
+      const role = await fetchRoleDetails(idRole);
+      if (!role) {
+        resetRoleDetails();
+        toggleSectionVisibility(roleDetailSection, false);
+        if (roleLink) {
+          roleLink.href = '#';
+        }
+        return;
+      }
+      currentRoleDetails = role;
+      Object.entries(roleDetailElements).forEach(([key]) => {
+        setRoleDetailField(key, role[key]);
+      });
+      if (roleLink) {
+        roleLink.href = `roleDetail.html?${encodeURIComponent(idRole)}`;
+      }
+      toggleSectionVisibility(roleDetailSection, true);
+    };
+
+    const navigationLinks = {
+      previous: document.getElementById('btPrecedent'),
+      next: document.getElementById('btSuivant'),
+    };
+
+    const normalizeId = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+      const text = String(value).trim();
+      return text || null;
+    };
+
+    const applyNavigationTarget = (anchor, targetId) => {
+      if (!anchor) {
+        return;
+      }
+      if (targetId) {
+        anchor.dataset.targetId = targetId;
+        anchor.href = `relThemeDetail.html?${encodeURIComponent(targetId)}`;
+        anchor.classList.remove('disabled');
+        anchor.setAttribute('aria-disabled', 'false');
+      } else {
+        delete anchor.dataset.targetId;
+        anchor.href = '#';
+        anchor.classList.add('disabled');
+        anchor.setAttribute('aria-disabled', 'true');
+      }
+    };
+
+    const loadStoredRelationNavigation = (themeId) => {
+      const themeKey = normalizeId(themeId);
+      if (!themeKey) {
+        return null;
+      }
+      try {
+        const raw = window.localStorage.getItem(REL_THEME_RELATION_NAV_KEY);
+        if (!raw) {
+          return null;
+        }
+        const payload = JSON.parse(raw);
+        if (
+          !payload ||
+          normalizeId(payload.themeId) !== themeKey ||
+          !Array.isArray(payload.ids) ||
+          !payload.ids.length
+        ) {
+          return null;
+        }
+        const ids = payload.ids.map((value) => normalizeId(value)).filter(Boolean);
+        return ids.length ? ids : null;
+      } catch (error) {
+        console.warn('Impossible de charger la navigation des relations', error);
+        return null;
+      }
+    };
+
+    const applyStoredNavigation = (relTheme) => {
+      const themeId = relTheme?.id_theme ?? null;
+      const storedIds = loadStoredRelationNavigation(themeId);
+      const currentId = normalizeId(relTheme?.id);
+      if (!storedIds || !currentId) {
+        return false;
+      }
+      const index = storedIds.indexOf(currentId);
+      if (index === -1) {
+        return false;
+      }
+      const previousId = index > 0 ? storedIds[index - 1] : null;
+      const nextId = index < storedIds.length - 1 ? storedIds[index + 1] : null;
+      applyNavigationTarget(navigationLinks.previous, previousId);
+      applyNavigationTarget(navigationLinks.next, nextId);
+      return true;
+    };
+
+    const applyFallbackNavigation = (relTheme) => {
+      applyNavigationTarget(navigationLinks.previous, normalizeId(relTheme?.idPrecedent));
+      applyNavigationTarget(navigationLinks.next, normalizeId(relTheme?.idSuivant));
+    };
+
+    const updateTitle = (relTheme) => {
+      let label = relTheme?.nom
+        ? `RelTheme ${relTheme.nom}`
+        : relTheme?.id
+          ? `RelTheme ${relTheme.id}`
+          : 'Détail RelTheme';
+      if (relTheme?.qui_nomprenom) {
+        label = `${label} - ${relTheme.qui_nomprenom}`;
+      } else if (relTheme?.quoi_nom) {
+        label = `${label} - ${relTheme.quoi_nom}`;
+      } else if (relTheme?.role_nom) {
+        label = `${label} - ${relTheme.role_nom}`;
+      }
+      document.getElementById('pageTitle').textContent = label;
+      document.title = label;
+    };
+
+    async function refreshRelTheme(id) {
+      if (!id) {
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes/' + id);
+        if (!response.ok) {
+          alert('RelTheme introuvable');
+          return;
+        }
+        const relTheme = await response.json();
+        document.getElementById('relthemeid').value = relTheme.id ?? '';
+        document.getElementById('relthemeidqui').value = relTheme.id_qui ?? '';
+        document.getElementById('relthemeidtheme').value = relTheme.id_theme ?? '';
+        document.getElementById('relthemeidquoi').value = relTheme.id_quoi ?? '';
+        document.getElementById('relthemeidrole').value = relTheme.id_role ?? '';
+        document.getElementById('relthemenom').value = relTheme.nom ?? '';
+        document.getElementById('relthememodifts').textContent = relTheme.modifts ?? '';
+        const entiteValue = relTheme.qui_nomprenom || relTheme.quoi_nom || relTheme.role_nom || detailPlaceholder;
+        document.getElementById('relthemeentite').textContent = entiteValue;
+        document.getElementById('relthemetheme').textContent = relTheme.theme_nom ?? '';
+        await updateAssociatedQui(relTheme.id_qui);
+        await updateAssociatedQuoi(relTheme.id_quoi);
+        await updateAssociatedRole(relTheme.id_role);
+        if (!applyStoredNavigation(relTheme)) {
+          applyFallbackNavigation(relTheme);
+        }
+        updateTitle(relTheme);
+        updateRecordMeta(relTheme.id, relTheme.modifts);
+      } catch (error) {
+        console.error('Impossible de rafra&#238;chir le reltheme', error);
+        alert('Une erreur est survenue lors du chargement.');
+      }
+    }
+
+    async function saveRelTheme() {
+      const id = document.getElementById('relthemeid').value;
+      if (!id) {
+        alert('Identifiant manquant');
+        return;
+      }
+      const payload = {
+        id_qui: document.getElementById('relthemeidqui').value,
+        id_theme: document.getElementById('relthemeidtheme').value,
+        id_quoi: document.getElementById('relthemeidquoi').value,
+        id_role: document.getElementById('relthemeidrole').value,
+        nom: document.getElementById('relthemenom').value,
+      };
+      try {
+        const response = await fetch('/relthemes/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          alert('Erreur de sauvegarde');
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'RELTHEME_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fen&#234;tre parente', notificationError);
+          }
+        }
+        alert('Sauvegarde réussie.');
+        refreshRelTheme(id);
+      } catch (error) {
+        console.error('Impossible de sauvegarder le reltheme', error);
+        alert('Une erreur est survenue lors de la sauvegarde.');
+      }
+    }
+
+    async function deleteRelTheme() {
+      const id = document.getElementById('relthemeid').value;
+      if (!id) {
+        alert('Identifiant manquant');
+        return;
+      }
+      try {
+        const response = await fetch('/relthemes/' + id, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          alert('Erreur de suppression');
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'RELTHEME_REFRESH' }, window.location.origin);
+          } catch (notificationError) {
+            console.warn('Impossible de notifier la fen&#234;tre parente', notificationError);
+          }
+        }
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) {
+            alert('RelTheme supprimé. Vous pouvez fermer l\'onglet.');
+          }
+        }, 200);
+      } catch (error) {
+        console.error('Impossible de supprimer le reltheme', error);
+        alert('Une erreur est survenue lors de la suppression.');
+      }
+    }
+
+    registerButtonFocusTracking();
+    restoreLastFocusedButton();
+
+    document.getElementById('btSave').addEventListener('click', (event) => {
+      event.preventDefault();
+      saveRelTheme();
+    });
+
+    document.getElementById('btDelete').addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!window.confirm('Confirmer la suppression ?')) {
+        return;
+      }
+      deleteRelTheme();
+    });
+
+    window.addEventListener('load', () => {
+      const id = getRequestedId();
+      if (!id) {
+        alert('Identifiant manquant dans l\'URL');
+        return;
+      }
+      refreshRelTheme(id);
+    });
+  </script>
+</body>
+</html>

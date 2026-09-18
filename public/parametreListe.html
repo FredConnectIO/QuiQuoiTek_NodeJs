@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Thèque - Paramètres</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>  
+  <h1>Qui Quoi Thèque - Paramètres</h1>
+
+  <div>
+    
+    <a href="#" id="btAjouter" class="button">Ajouter</a>
+    <button type="button" id="btActualiser" class="button">Actualiser</button>
+    <span id="parametre_count" class="list-count" aria-live="polite"></span>
+  </div>
+
+  <div class="filter-group">
+    <label for="filter_nom_parametre">Nom contient:</label>
+    <input id="filter_nom_parametre" type="text" class="filter-input largeur_moyenne" placeholder="ex. nom">
+  </div>
+
+  
+
+  <table id="parametre_table" class="table">
+    <thead>
+      <tr>
+        <th>
+          <button id="btTriNom" class="buttonSmall">Nom</button>
+          <img id="imgSensTriNom" height="25"/>
+        </th>
+        <th>niv1</th>
+      </tr>
+    </thead>
+    <tbody id="parametre_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const createTd = (value) => {
+      const td = document.createElement('td');
+      td.textContent = value ?? '';
+      return td;
+    };
+
+    const createLinkCell = (value, id) => {
+      const td = document.createElement('td');
+      const link = document.createElement('a');
+      link.textContent = value ?? '';
+      link.href = 'parametreDetail.html?' + id;
+      link.target = 'parametreDetail' + id;
+      td.append(link);
+      return td;
+    };
+
+    let currentParams = [];
+    let activeSort = 'nom';
+    let nomSortState = 'asc';
+    const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const filterNomInput = document.getElementById('filter_nom_parametre');
+    let nomFilterValue = '';
+    const SORT_ICONS = {
+      none: 'img/fleche_vide.svg',
+      asc: 'img/fleche_haut.svg',
+      desc: 'img/fleche_bas.svg',
+    };
+    const parametreCountLabel = document.getElementById('parametre_count');
+    const LIST_STORAGE_KEY = 'parametreListe.ids';
+
+    const getFilteredParametres = () => {
+      const needle = (nomFilterValue || '').trim().toLowerCase();
+      if (!needle) {
+        return [...currentParams];
+      }
+      return currentParams.filter((parametre) => {
+        const nom = (parametre.nom || '').toLowerCase();
+        return nom.includes(needle);
+      });
+    };
+
+    const updateParametreCount = (count) => {
+      if (!parametreCountLabel) {
+        return;
+      }
+      parametreCountLabel.textContent = `( ${count} )`;
+    };
+
+    const renderFilteredParametres = () => {
+      renderParametres(getFilteredParametres());
+    };
+
+    const renderParametres = (parametres) => {
+      const tbody = document.getElementById('parametre_table_tbody');
+      tbody.innerHTML = '';
+      parametres.forEach((parametre) => {
+        const tr = document.createElement('tr');
+        tr.append(createLinkCell(parametre.nom || '', parametre.id));
+        tr.append(createTd(parametre.niv1 || ''));
+        tbody.append(tr);
+      });
+      updateParametreCount(parametres.length);
+      try {
+        const ids = parametres
+          .map((parametre) => parametre.id)
+          .filter((id) => id !== undefined && id !== null);
+        window.localStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(ids));
+      } catch (error) {
+        // ignore storage failures
+      }
+    };
+
+    const updateNomSortIndicator = (state) => {
+      nomSortState = state;
+      if (imgSensTriNom) {
+        imgSensTriNom.src = SORT_ICONS[state] || SORT_ICONS.none;
+      }
+    };
+
+    const applyActiveSort = () => {
+      if (activeSort === 'nom') {
+        currentParams.sort((a, b) => {
+          const nomA = (a.nom || '').toLowerCase();
+          const nomB = (b.nom || '').toLowerCase();
+          const comp = nomA.localeCompare(nomB);
+          return nomSortState === 'desc' ? -comp : comp;
+        });
+      }
+    };
+
+    async function fetchParametres() {
+      const response = await fetch('/parametres');
+      if (!response.ok) {
+        alert('Lecture des paramètres impossible');
+        return [];
+      }
+      return response.json();
+    }
+
+    async function refreshParametres() {
+      currentParams = await fetchParametres();
+      applyActiveSort();
+      renderFilteredParametres();
+    }
+
+    function sortByNom() {
+      activeSort = 'nom';
+      const nextState = nomSortState === 'asc' ? 'desc' : 'asc';
+      updateNomSortIndicator(nextState);
+      applyActiveSort();
+      renderFilteredParametres();
+    }
+
+    async function createParametre() {
+      const response = await fetch('/parametres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom: 'Nouveau paramètre' })
+      });
+      if (!response.ok) {
+        alert('Création impossible');
+        return;
+      }
+      try {
+        const parametre = await response.json();
+        if (parametre && parametre.id) {
+          window.location.href = 'parametreDetail.html?' + parametre.id;
+          return;
+        }
+      } catch (error) {
+        console.warn('Réponse inattendue lors de la création du paramètre', error);
+      }
+      refreshParametres();
+    }
+
+    document.getElementById('btAjouter').addEventListener('click', (event) => {
+      event.preventDefault();
+      createParametre();
+    });
+    document.getElementById('btActualiser').addEventListener('click', (event) => {
+      event.preventDefault();
+      refreshParametres();
+    });
+    document.getElementById('btTriNom').addEventListener('click', sortByNom);
+    if (filterNomInput) {
+      nomFilterValue = filterNomInput.value || '';
+      filterNomInput.addEventListener('input', (event) => {
+        const target = event.target;
+        nomFilterValue = target && typeof target.value === 'string' ? target.value : '';
+        renderFilteredParametres();
+      });
+      filterNomInput.focus();
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      if (event.data && event.data.type === 'PARAMETRE_REFRESH') {
+        refreshParametres();
+      }
+    });
+
+    updateNomSortIndicator(nomSortState);
+    refreshParametres();
+  </script>
+</body>
+</html>

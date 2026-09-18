@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>RGB Preview</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+  <style>
+    .rgb-container {
+      max-width: 400px;
+      margin: 2rem auto;
+      text-align: center;
+    }
+    .rgb-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .rgb-inputs input {
+      width: 80px;
+      text-align: center;
+    }
+    .rgb-preview {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto;
+      border: 1px solid #333;
+      background-color: rgb(0, 0, 0);
+    }
+    .rgb-value {
+      margin-top: 0.75rem;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="rgb-container">
+    <h1>Saisie couleur RGB</h1>
+    <div class="rgb-inputs">
+      <label>
+        R
+        <input id="input-r" type="number" min="0" max="255" step="5" value="0">
+      </label>
+      <label>
+        G
+        <input id="input-g" type="number" min="0" max="255" step="5" value="0">
+      </label>
+      <label>
+        B
+        <input id="input-b" type="number" min="0" max="255" step="5" value="0">
+      </label>
+    </div>
+    <div id="preview" class="rgb-preview" aria-label="Aperçu de la couleur sélectionnée"></div>
+    <div id="rgb-value" class="rgb-value">rgb(0, 0, 0)</div>
+    <div id="hex-value" class="rgb-value">#000000</div>
+  </div>
+
+  <script>
+    const clampComponent = (value) => {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isNaN(parsed)) {
+        return 0;
+      }
+      return Math.min(255, Math.max(0, parsed));
+    };
+
+    const rgbToHex = (r, g, b) => {
+      const toHex = (n) => {
+        const hex = n.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+    };
+
+    const inputs = [
+      document.getElementById('input-r'),
+      document.getElementById('input-g'),
+      document.getElementById('input-b')
+    ];
+    const preview = document.getElementById('preview');
+    const rgbValueLabel = document.getElementById('rgb-value');
+    const hexValueLabel = document.getElementById('hex-value');
+
+    const updatePreview = () => {
+      const components = inputs.map((input) => {
+        const clamped = clampComponent(input.value);
+        input.value = clamped;
+        return clamped;
+      });
+      const rgbString = `rgb(${components.join(', ')})`;
+      const hexString = rgbToHex(components[0], components[1], components[2]);
+      preview.style.backgroundColor = rgbString;
+      rgbValueLabel.textContent = rgbString;
+      hexValueLabel.textContent = hexString.toUpperCase();
+    };
+
+    inputs.forEach((input) => {
+      input.addEventListener('input', updatePreview);
+      input.addEventListener('change', updatePreview);
+    });
+
+    updatePreview();
+  </script>
+</body>
+</html>

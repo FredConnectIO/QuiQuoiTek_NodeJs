@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>QuiQuoiTek - Info</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+  <style>
+    .info-container {
+      max-width: 900px;
+    }
+    .info-table {
+      width: 100%;
+      margin-top: 16px;
+    }
+    .sortable-header {
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Info</h1>
+  <div class="info-container">
+    <p id="info_subtitle"></p>
+    <table id="info_table" class="info-table">
+      <thead>
+        <tr>
+          <th id="th_domaine" class="sortable-header">Domaine <img id="img_sort_domaine" height="16" alt=""></th>
+          <th id="th_genre" class="sortable-header">Genre <img id="img_sort_genre" height="16" alt=""></th>
+          <th id="th_pays" class="sortable-header">Pays <img id="img_sort_pays" height="16" alt=""></th>
+          <th id="th_nbre" class="sortable-header">Nbre <img id="img_sort_nbre" height="16" alt=""></th>
+        </tr>
+      </thead>
+      <tbody id="info_table_body"></tbody>
+    </table>
+    <p id="info_empty" hidden>Aucune ligne domaine ; genre ; pays.</p>
+  </div>
+
+  <script>
+    const subtitle = document.getElementById('info_subtitle');
+    const table = document.getElementById('info_table');
+    const tableBody = document.getElementById('info_table_body');
+    const emptyMessage = document.getElementById('info_empty');
+    const thDomaine = document.getElementById('th_domaine');
+    const thGenre = document.getElementById('th_genre');
+    const thPays = document.getElementById('th_pays');
+    const thNbre = document.getElementById('th_nbre');
+    const imgSortDomaine = document.getElementById('img_sort_domaine');
+    const imgSortGenre = document.getElementById('img_sort_genre');
+    const imgSortPays = document.getElementById('img_sort_pays');
+    const imgSortNbre = document.getElementById('img_sort_nbre');
+    let activeSort = 'domaine';
+    let sortDirection = 'asc';
+
+    const normalizeValue = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      return String(value).trim();
+    };
+
+    const SORT_ICONS = {
+      none: 'img/fleche_vide.svg',
+      asc: 'img/fleche_haut.svg',
+      desc: 'img/fleche_bas.svg',
+    };
+
+    const updateSortIndicators = () => {
+      if (imgSortDomaine) {
+        imgSortDomaine.src = activeSort === 'domaine' ? SORT_ICONS[sortDirection] : SORT_ICONS.none;
+      }
+      if (imgSortGenre) {
+        imgSortGenre.src = activeSort === 'genre' ? SORT_ICONS[sortDirection] : SORT_ICONS.none;
+      }
+      if (imgSortPays) {
+        imgSortPays.src = activeSort === 'pays' ? SORT_ICONS[sortDirection] : SORT_ICONS.none;
+      }
+      if (imgSortNbre) {
+        imgSortNbre.src = activeSort === 'nbre' ? SORT_ICONS[sortDirection] : SORT_ICONS.none;
+      }
+    };
+
+    const compareByKeys = (a, b, keys) => {
+      for (const key of keys) {
+        const left = normalizeValue(a?.[key]);
+        const right = normalizeValue(b?.[key]);
+        const leftNumber = Number(left);
+        const rightNumber = Number(right);
+        const isNumeric = !Number.isNaN(leftNumber) && !Number.isNaN(rightNumber);
+        const cmp = isNumeric
+          ? leftNumber - rightNumber
+          : left.localeCompare(right);
+        if (cmp !== 0) {
+          return cmp;
+        }
+      }
+      return 0;
+    };
+
+    const sortRows = (rows, sortKey) => {
+      const orders = {
+        domaine: ['domaine', 'genre', 'pays', 'nbre'],
+        genre: ['genre', 'pays', 'domaine', 'nbre'],
+        pays: ['pays', 'domaine', 'genre', 'nbre'],
+        nbre: ['nbre', 'domaine', 'genre', 'pays'],
+      };
+      const keys = orders[sortKey] || orders.domaine;
+      const factor = sortDirection === 'desc' ? -1 : 1;
+      return [...rows].sort((a, b) => compareByKeys(a, b, keys) * factor);
+    };
+
+    const renderRows = (rows) => {
+      tableBody.innerHTML = '';
+      if (!Array.isArray(rows) || rows.length === 0) {
+        emptyMessage.hidden = false;
+        table.hidden = true;
+        return;
+      }
+      const sortedRows = sortRows(rows, activeSort);
+      emptyMessage.hidden = true;
+      table.hidden = false;
+      sortedRows.forEach((row) => {
+        const tr = document.createElement('tr');
+
+        const tdDomaine = document.createElement('td');
+        tdDomaine.textContent = normalizeValue(row?.domaine);
+        tr.append(tdDomaine);
+
+        const tdGenre = document.createElement('td');
+        tdGenre.textContent = normalizeValue(row?.genre);
+        tr.append(tdGenre);
+
+        const tdPays = document.createElement('td');
+        tdPays.textContent = normalizeValue(row?.pays);
+        tr.append(tdPays);
+
+        const tdNbre = document.createElement('td');
+        tdNbre.textContent = normalizeValue(row?.nbre ?? '');
+        tr.append(tdNbre);
+
+        tableBody.append(tr);
+      });
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const count = params.get('count') || '';
+    subtitle.textContent = count
+      ? `Liste des trios domaine ; genre ; pays des quoi affichés (${count})`
+      : 'Liste des trios domaine ; genre ; pays des quoi affichés';
+
+    let rows = [];
+    try {
+      rows = JSON.parse(sessionStorage.getItem('quoiDomGenrPaysRows') || '[]');
+    } catch (error) {
+      console.warn('Impossible de lire la liste domaine/genre/pays', error);
+      rows = [];
+    }
+
+    if (thDomaine) {
+      thDomaine.addEventListener('click', () => {
+        if (activeSort === 'domaine') {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          activeSort = 'domaine';
+          sortDirection = 'asc';
+        }
+        updateSortIndicators();
+        renderRows(rows);
+      });
+    }
+    if (thGenre) {
+      thGenre.addEventListener('click', () => {
+        if (activeSort === 'genre') {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          activeSort = 'genre';
+          sortDirection = 'asc';
+        }
+        updateSortIndicators();
+        renderRows(rows);
+      });
+    }
+    if (thPays) {
+      thPays.addEventListener('click', () => {
+        if (activeSort === 'pays') {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          activeSort = 'pays';
+          sortDirection = 'asc';
+        }
+        updateSortIndicators();
+        renderRows(rows);
+      });
+    }
+    if (thNbre) {
+      thNbre.addEventListener('click', () => {
+        if (activeSort === 'nbre') {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          activeSort = 'nbre';
+          sortDirection = 'asc';
+        }
+        updateSortIndicators();
+        renderRows(rows);
+      });
+    }
+
+    updateSortIndicators();
+    renderRows(rows);
+  </script>
+</body>
+</html>

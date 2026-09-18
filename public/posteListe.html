@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Qui Quoi Thèque - Postes</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <h1>Qui Quoi Thèque - Postes</h1>
+
+  <div>
+    
+    <a href="#" id="btAjouter" class="button">Ajouter</a>
+    <button type="button" id="btActualiser" class="button">Actualiser</button>
+    <span id="poste_count" class="list-count" aria-live="polite"></span>
+  </div>
+
+  <div class="filter-group">
+    <label for="filter_descr_poste">Description&nbsp;:</label>
+    <input id="filter_descr_poste" type="text" class="filter-input" placeholder="ex. guitare">
+
+    <label for="filter_nom_quielement">Element&nbsp;:</label>
+    <input id="filter_nom_quielement" type="text" class="filter-input" placeholder="ex. Dupont">
+
+    <label for="filter_nom_quiensemble">Ensemble&nbsp;:</label>
+    <input id="filter_nom_quiensemble" type="text" class="filter-input" placeholder="ex. Martin">
+  </div>
+
+  <button id="btTriDescr" class="buttonSmall">Tri par description</button>
+  <button id="btTriId" class="buttonSmall">Tri par identifiant</button>
+
+  <table id="poste_table" class="table">
+    <thead>
+      <tr>
+        <th>id</th>
+        <th>description</th>
+        <th>élément</th>
+        <th>ensemble</th>
+        <th>modifié</th>
+      </tr>
+    </thead>
+    <tbody id="poste_table_tbody">
+    </tbody>
+  </table>
+
+  <script>
+    const filterDescrPoste = document.getElementById('filter_descr_poste');
+    const filterNomElement = document.getElementById('filter_nom_quielement');
+    const filterNomEnsemble = document.getElementById('filter_nom_quiensemble');
+    const resolveOrigin = () => {
+      const origin = window.location.origin;
+      if (!origin || origin === 'null') {
+        return '*';
+      }
+      return origin;
+    };
+    const allowedOrigin = resolveOrigin();
+    const orderSubscribers = new Set();
+    let allPostes = [];
+    let currentPostes = [];
+    let activeSort = null;
+    const posteCountLabel = document.getElementById("poste_count");
+
+    const updatePosteCount = (count) => {
+      if (!posteCountLabel) {
+        return;
+      }
+      posteCountLabel.textContent = `( ${count} )`;
+    };
+
+
+    const normalize = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      return String(value).trim().toLowerCase();
+    };
+    const normalizeId = (value) => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      const text = String(value).trim();
+      if (!text) {
+        return '';
+      }
+      const trimmed = text.replace(/^0+/, '');
+      return trimmed || '0';
+    };
+
+    const buildFullname = (nom, prenom, fallback) => {
+      const cleanNom = nom ? String(nom).trim() : '';
+      const cleanPrenom = prenom ? String(prenom).trim() : '';
+      if (cleanNom && cleanPrenom) {
+        return `${cleanNom}, ${cleanPrenom}`;
+      }
+      if (cleanNom) {
+        return cleanNom;
+      }
+      if (cleanPrenom) {
+        return cleanPrenom;
+      }
+      if (fallback) {
+        return fallback;
+      }
+      return 'nr';
+    };
+    const buildQuiDisplayName = (qui, fallback) => {
+      const nom = qui && qui.nom ? String(qui.nom).trim() : '';
+      const prenom = qui && qui.prenom ? String(qui.prenom).trim() : '';
+      const parts = [nom, prenom].filter((value) => value);
+      if (parts.length) {
+        return parts.join(' ').trim();
+      }
+      return fallback;
+    };
+
+    const createCell = (value) => {
+      const td = document.createElement('td');
+      td.textContent = value ?? '';
+      return td;
+    };
+
+    const createLinkCell = (value, id) => {
+      const td = document.createElement('td');
+      const link = document.createElement('a');
+      link.textContent = value ?? '';
+      link.href = 'posteDetail.html?' + id;
+      link.target = 'posteDetail' + id;
+      td.append(link);
+      return td;
+    };
+    const pageTitleElement = document.querySelector('h1');
+    const btAjouter = document.getElementById('btAjouter');
+    const DEFAULT_PAGE_TITLE = pageTitleElement ? pageTitleElement.textContent : '';
+    const DEFAULT_ADD_LABEL = btAjouter ? btAjouter.textContent : '';
+    const urlParams = new URLSearchParams(window.location.search);
+    const allowedParams = new Set(['id_qui_element', 'id_qui_ensemble']);
+    const unexpectedParams = [];
+    for (const key of urlParams.keys()) {
+      if (!allowedParams.has(key)) {
+        unexpectedParams.push(key);
+      }
+    }
+    if (unexpectedParams.length) {
+      document.body.innerHTML = `
+        <h1>Erreur</h1>
+        <p>Parametre(s) non autorise(s): ${unexpectedParams.join(', ')}</p>
+        <p>Utiliser uniquement id_qui_element, id_qui_ensemble, ou aucun parametre.</p>
+      `;
+      throw new Error(`Invalid query params: ${unexpectedParams.join(', ')}`);
+    }
+    const requestedQuiId_ensemble = urlParams.get('id_qui_ensemble');
+    const requestedQuiId_element = urlParams.get('id_qui_element');
+    const updatePosteContextLabels = (label) => {
+      if (pageTitleElement) {
+        pageTitleElement.textContent = label
+          ? `Liste des postes de l'ensemble ${label}`
+          : DEFAULT_PAGE_TITLE;
+      }
+      if (btAjouter) {
+        btAjouter.textContent = label
+          ? `ajouter un poste à l'ensemble ${label}`
+          : DEFAULT_ADD_LABEL;
+      }
+    };
+    updatePosteContextLabels('');
+    const fetchAndLabelQui = (id) => {
+      fetch(`/quis/${encodeURIComponent(id)}`)
+        .then((response) => (response.ok ? response.json() : null))
+        .then((qui) => {
+          const label = buildQuiDisplayName(qui, `qui ${id}`);
+          updatePosteContextLabels(label);
+        })
+        .catch(() => {
+          updatePosteContextLabels(`qui ${id}`);
+        });
+    };
+    if (requestedQuiId_ensemble) {
+      fetchAndLabelQui(requestedQuiId_ensemble);
+    } else if (requestedQuiId_element) {
+      fetchAndLabelQui(requestedQuiId_element);
+    }
+
+    const renderPostes = (postes) => {
+      const tbody = document.getElementById('poste_table_tbody');
+      tbody.innerHTML = '';
+      postes.forEach((poste) => {
+        const tr = document.createElement('tr');
+        tr.append(createCell(poste.id));
+        tr.append(createLinkCell(poste.descr || '(sans description)', poste.id));
+        const quiLabel = buildFullname(
+          poste.qui_nom,
+          poste.qui_prenom,
+          poste.qui_fullname
+        );
+        const ensembleLabel = buildFullname(
+          poste.quiensemble_nom,
+          poste.quiensemble_prenom,
+          poste.quiensemble_fullname
+        );
+        tr.append(createCell(quiLabel));
+        tr.append(createCell(ensembleLabel));
+        tr.append(createCell(poste.modifts || ''));
+        tbody.append(tr);
+      updatePosteCount(postes.length);
+      });
+    };
+
+    const getCurrentOrderIds = () => currentPostes
+      .map((poste) => (poste && poste.id !== undefined ? String(poste.id).trim() : null))
+      .filter((value, index, array) => value && array.indexOf(value) === index);
+
+    const notifyOrderSubscribers = () => {
+      if (!orderSubscribers.size) {
+        return;
+      }
+      const message = {
+        type: 'POSTE_ORDER_RESPONSE',
+        order: getCurrentOrderIds(),
+      };
+      [...orderSubscribers].forEach((subscriber) => {
+        if (!subscriber || subscriber.closed) {
+          orderSubscribers.delete(subscriber);
+          return;
+        }
+        try {
+          subscriber.postMessage(message, allowedOrigin);
+        } catch (error) {
+          orderSubscribers.delete(subscriber);
+        }
+      });
+    };
+
+    const applyActiveSort = () => {
+      if (activeSort === 'descr') {
+        currentPostes.sort((a, b) => {
+          const descrA = normalize(a.descr);
+          const descrB = normalize(b.descr);
+          return descrA.localeCompare(descrB);
+        });
+      } else if (activeSort === 'id') {
+        currentPostes.sort((a, b) => Number(a.id) - Number(b.id));
+      }
+    };
+
+    const applyFilters = () => {
+      const filterQuiNom = normalize(filterNomElement.value);
+      const filterDescrValue = normalize(filterDescrPoste.value);
+      const filterEnsembleNom = normalize(filterNomEnsemble.value);
+      const requestedQuiId_elementNormalized = normalizeId(requestedQuiId_element);
+      const requestedQuiId_ensembleNormalized = normalizeId(requestedQuiId_ensemble);
+      currentPostes = allPostes.filter((poste) => {
+        const quiNom = normalize(poste.qui_nom);
+        const posteDescr = normalize(poste.descr);
+        const ensembleNom = normalize(poste.quiensemble_nom);
+        const quiId = normalizeId(poste.id_qui_element);
+        const ensembleId = normalizeId(poste.id_qui_ensemble);
+        const matchQuiId = requestedQuiId_ensembleNormalized
+          ? ensembleId === requestedQuiId_ensembleNormalized
+          : (!requestedQuiId_elementNormalized || quiId === requestedQuiId_elementNormalized);
+        const matchQui = !filterQuiNom || quiNom.includes(filterQuiNom);
+        const matchDescr = !filterDescrValue || posteDescr.includes(filterDescrValue);
+        const matchEnsemble = !filterEnsembleNom || ensembleNom.includes(filterEnsembleNom);
+        return matchQuiId && matchQui && matchDescr && matchEnsemble;
+      });
+      applyActiveSort();
+      renderPostes(currentPostes);
+      notifyOrderSubscribers();
+    };
+
+    async function fetchPostes() {
+      const response = await fetch('/postes');
+      if (!response.ok) {
+        alert('Lecture des postes impossible');
+        return [];
+      }
+      return response.json();
+    }
+
+    async function refreshPostes() {
+      allPostes = await fetchPostes();
+      applyFilters();
+    }
+
+    function sortByDescr() {
+      activeSort = 'descr';
+      applyActiveSort();
+      renderPostes(currentPostes);
+      notifyOrderSubscribers();
+    }
+
+    function sortById() {
+      activeSort = 'id';
+      applyActiveSort();
+      renderPostes(currentPostes);
+      notifyOrderSubscribers();
+    }
+
+    async function createPoste() {
+      const response = await fetch('/postes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descr: 'nouveau poste' }),
+      });
+      if (!response.ok) {
+        alert('Création impossible');
+        return;
+      }
+      const poste = await response.json();
+      if (poste && poste.id) {
+        window.location.href = 'posteDetail.html?' + poste.id;
+        return;
+      }
+      refreshPostes();
+    }
+
+    filterNomElement.addEventListener('input', applyFilters);
+    filterDescrPoste.addEventListener('input', applyFilters);
+    filterNomEnsemble.addEventListener('input', applyFilters);
+    document.getElementById('btTriDescr').addEventListener('click', sortByDescr);
+    document.getElementById('btTriId').addEventListener('click', sortById);
+    document.getElementById('btAjouter').addEventListener('click', (event) => {
+      event.preventDefault();
+      createPoste();
+    });
+    document.getElementById('btActualiser').addEventListener('click', (event) => {
+      event.preventDefault();
+      refreshPostes();
+    });
+
+    const handleOrderSubscriptionRequest = (source) => {
+      if (!source || typeof source.postMessage !== 'function') {
+        return;
+      }
+      orderSubscribers.add(source);
+      try {
+        source.postMessage({ type: 'POSTE_ORDER_RESPONSE', order: getCurrentOrderIds() }, allowedOrigin);
+      } catch (error) {
+        orderSubscribers.delete(source);
+      }
+    };
+
+    const handleOrderUnsubscribe = (source) => {
+      if (!source) {
+        return;
+      }
+      orderSubscribers.delete(source);
+    };
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      if (event.data && event.data.type === 'POSTE_REFRESH') {
+        refreshPostes();
+        return;
+      }
+      if (event.data && event.data.type === 'POSTE_ORDER_REQUEST') {
+        handleOrderSubscriptionRequest(event.source);
+        return;
+      }
+      if (event.data && event.data.type === 'POSTE_ORDER_UNSUBSCRIBE') {
+        handleOrderUnsubscribe(event.source);
+      }
+    });
+
+    refreshPostes();
+  </script>
+</body>
+</html>

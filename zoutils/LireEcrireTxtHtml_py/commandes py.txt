@@ -1,0 +1,17 @@
+(monenv) C:\Users\frede\monenv>python3 --version
+
+(monenv) C:\Users\frede\monenv>python -m venv monen
+
+(monenv) C:\Users\frede\monenv>Scripts\activate  # Active l'environneme
+
+(monenv) C:\Users\frede\monenv>py app.py (demarre le serveur)
+
+
+firefox: "localhost:5000"
+qui ouvre C:\Users\frede\monenv\templates\index.html
+
+page statique:
+
+dans "stat.html" dans "C:\Users\frede\monenv\static"
+
+http://localhost:5000/static/stat.html

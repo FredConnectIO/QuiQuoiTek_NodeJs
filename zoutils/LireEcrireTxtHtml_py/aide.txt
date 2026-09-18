@@ -1,0 +1,145 @@
+Oui. Point important : une page HTML seule ne peut pas écrire directement dans `text.txt` sur le serveur. 
+Il faut une petite partie serveur. 
+Comme tu travailles avec Node.js, voici une version très simple avec **HTML + Node.js/Express**.
+
+### 1. `index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Lecture / écriture fichier</title>
+</head>
+
+<body>
+
+    <input type="text" id="texte" size="50">
+
+    <button onclick="enregistrer()">Enregistrer</button>
+    <button onclick="lire()">Lire</button>
+
+    <script>
+
+        async function enregistrer() {
+
+            const texte = document.getElementById("texte").value;
+
+            const response = await fetch("/enregistrer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    texte: texte
+                })
+            });
+
+            if (response.ok) {
+                alert("Fichier enregistré");
+            }
+        }
+
+
+        async function lire() {
+
+            const response = await fetch("/lire");
+
+            if (response.ok) {
+                const texte = await response.text();
+
+                document.getElementById("texte").value = texte;
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+```
+
+### 2. `server.js`
+
+```javascript
+const express = require("express");
+const fs = require("fs");
+
+const app = express();
+
+app.use(express.json());
+app.use(express.static(__dirname));
+
+
+// ENREGISTRER text.txt
+
+app.post("/enregistrer", (req, res) => {
+
+    const texte = req.body.texte;
+
+    fs.writeFile("text.txt", texte, "utf8", (err) => {
+
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Erreur écriture");
+        }
+
+        res.send("OK");
+    });
+
+});
+
+
+// LIRE text.txt
+
+app.get("/lire", (req, res) => {
+
+    fs.readFile("text.txt", "utf8", (err, data) => {
+
+        if (err) {
+
+            // Si le fichier n'existe pas encore
+            if (err.code === "ENOENT") {
+                return res.send("");
+            }
+
+            console.error(err);
+            return res.status(500).send("Erreur lecture");
+        }
+
+        res.send(data);
+    });
+
+});
+
+
+app.listen(3000, () => {
+    console.log("Serveur démarré : http://localhost:3000");
+});
+```
+
+### 3. Structure
+
+```text
+mon-projet/
+│
+├── server.js
+├── index.html
+└── text.txt
+```
+
+Puis installer Express et démarrer :
+
+```bash
+npm install express
+node server.js
+```
+
+Ouvre ensuite :
+
+```text
+http://localhost:3000
+```
+
+Le fonctionnement sera exactement : **Enregistrer** → contenu de l'input écrit dans `text.txt` ; **Lire** → contenu de `text.txt` replacé dans l'input.
+
+Si c'est pour ton projet **QuiQuoiTek_NodeJs**, je peux aussi te donner la version à intégrer directement dans ton serveur Node.js existant, plutôt que de créer un nouveau `server.js`.
