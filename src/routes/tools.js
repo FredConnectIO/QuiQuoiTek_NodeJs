@@ -39,30 +39,41 @@ router.get('/arborescence/:name', async (req, res) => {
   const inputDir = path.normalize(rawInputDir.replace(/\//g, path.sep));
   // choose default extension: html for dir scripts, txt for file list
   const defaultExt = name === 'list-tree-file' ? '.txt' : '.html';
+  const requestedFormat = req.query.format === 'txt' || req.query.format === 'html'
+    ? req.query.format
+    : defaultExt.slice(1);
+  const outputExt = `.${requestedFormat}`;
 
   const providedOutput = typeof req.query.output === 'string' && req.query.output.trim() ? req.query.output.trim() : null;
   let outPath;
   let cleanup = true;
   if (providedOutput) {
-    // sanitize filename and ensure extension
-    let filename = path.basename(providedOutput);
-    if (!path.extname(filename)) {
-      filename += defaultExt;
-    }
+    // sanitize filename and apply the selected format
+    const providedFilename = path.basename(providedOutput);
+    const currentExt = path.extname(providedFilename);
+    const filename = `${currentExt ? providedFilename.slice(0, -currentExt.length) : providedFilename}${outputExt}`;
     // write into C:\PARTAGE by default
     outPath = path.join('C:\\PARTAGE', filename);
     cleanup = false; // keep user-specified output
   } else {
-    const tmpName = `arbo-${Date.now()}-${Math.floor(Math.random() * 100000)}${defaultExt}`;
+    const tmpName = `arbo-${Date.now()}-${Math.floor(Math.random() * 100000)}${outputExt}`;
     outPath = path.join(os.tmpdir(), tmpName);
     cleanup = true;
   }
 
-  const scriptPath = path.resolve(__dirname, '..', '..', 'public', 'js', 'arborescence', `${name}.js`);
+  const scriptDirectory = name === 'list-tree-dir-3niv'
+    ? path.resolve(__dirname, '..', '..', 'zoutils', 'arborescence')
+    : path.resolve(__dirname, '..', '..', 'public', 'js', 'arborescence');
+  const scriptPath = path.join(scriptDirectory, `${name}.js`);
 
   try {
     await new Promise((resolve, reject) => {
-      const child = childProcess.spawn(process.execPath, [scriptPath, inputDir, outPath], { windowsHide: true });
+      const scriptArgs = [scriptPath, inputDir, outPath];
+      if (name === 'list-tree-dir-3niv' && requestedFormat === 'txt') {
+        const withIntermediateLevels = req.query.niveauxIntermediaires !== 'n';
+        scriptArgs.push(withIntermediateLevels ? 'avec-intermediaires' : 'sans-intermediaires');
+      }
+      const child = childProcess.spawn(process.execPath, scriptArgs, { windowsHide: true });
       let stderr = '';
       child.stderr.on('data', (chunk) => { stderr += String(chunk); });
       child.on('error', reject);
@@ -79,7 +90,7 @@ router.get('/arborescence/:name', async (req, res) => {
 
     const content = fs.readFileSync(outPath, 'utf8');
     // set content type based on extension
-    if (defaultExt === '.html') {
+    if (outputExt === '.html') {
       res.set('Content-Type', 'text/html; charset=utf-8');
     } else {
       res.set('Content-Type', 'text/plain; charset=utf-8');

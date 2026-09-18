@@ -2,12 +2,14 @@
 //exemple d'appel (liste de "d:"" et sortie txt ou html) : 
 //  cd C:\PARTAGE\GitHub\bibliothequeDemo\zoutils\arborescence
 //  node list-tree-dir-3niv d: film.txt
+//  node list-tree-dir-3niv d: film.txt avec-intermediaires
+//  node list-tree-dir-3niv d: film.txt sans-intermediaires
 //  node list-tree-dir-3niv d: film.html
 const fs = require('fs').promises;
 const path = require('path');
 
 const args = process.argv.slice(2);
-const [inputDir, outputFile] = args;
+const [inputDir, outputFile, argument3] = args;
 
 function normalizeRel(p) {
   return p.split(path.sep).join('/');
@@ -51,10 +53,12 @@ async function collectTree(rootDir, baseDir = '', level = 1) {
   return results;
 }
 
-function flattenTree(nodes, lines = []) {
+function flattenTree(nodes, lines = [], level = 1, omitIntermediateLevels = false) {
   for (const node of nodes) {
-    lines.push(node.path);
-    flattenTree(node.children, lines);
+    if (!omitIntermediateLevels || level > 2) {
+      lines.push(node.path);
+    }
+    flattenTree(node.children, lines, level + 1, omitIntermediateLevels);
   }
   return lines;
 }
@@ -113,7 +117,7 @@ function buildHtml(tree, title) {
 
 async function main() {
   if (!inputDir || !outputFile) {
-    console.log('Usage: node list-tree.js <repertoire> <fichier-sortie.(txt|html)>');
+    console.log('Usage: node list-tree-dir-3niv.js <repertoire> <fichier-sortie.(txt|html)> [avec-intermediaires|sans-intermediaires]');
     process.exit(1);
   }
 
@@ -129,7 +133,8 @@ async function main() {
     const html = buildHtml(tree, title);
     await fs.writeFile(targetFile, html, 'utf8');
   } else {
-    const lines = flattenTree(tree);
+    const omitIntermediateLevels = ext === '.txt' && argument3 === 'sans-intermediaires';
+    const lines = flattenTree(tree, [], 1, omitIntermediateLevels);
     await fs.writeFile(targetFile, `${lines.join('\n')}\n`, 'utf8');
   }
 
