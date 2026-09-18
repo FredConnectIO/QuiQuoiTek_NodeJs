@@ -151,7 +151,10 @@
 
     function comparisonKey(line) {
       const key = trimLines.checked ? line.trim() : line;
-      return key.toLocaleLowerCase('fr');
+      return key
+        .toLocaleLowerCase('fr')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
     }
 
     function groupLines(lines) {
