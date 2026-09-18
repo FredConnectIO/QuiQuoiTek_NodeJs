@@ -17,7 +17,7 @@
 
   <div class="filter-group">
     <label for="filter_nom_parametre">Nom contient:</label>
-    <input id="filter_nom_parametre" type="text" class="filter-input largeur_moyenne" placeholder="ex. nom">
+    <input id="filter_nom_parametre" type="text" class="filter-input largeur_moyenne" placeholder="ex. nom ou nom@valeur">
   </div>
 
   
@@ -67,14 +67,32 @@
     const parametreCountLabel = document.getElementById('parametre_count');
     const LIST_STORAGE_KEY = 'parametreListe.ids';
 
+    const matchesNomFilter = (nom, filter) => {
+      const normalizedNom = String(nom || '').toLowerCase();
+      const fragments = String(filter || '')
+        .trim()
+        .toLowerCase()
+        .split('@')
+        .filter(Boolean);
+      let searchFrom = 0;
+
+      for (const fragment of fragments) {
+        const position = normalizedNom.indexOf(fragment, searchFrom);
+        if (position === -1) {
+          return false;
+        }
+        searchFrom = position + fragment.length;
+      }
+      return true;
+    };
+
     const getFilteredParametres = () => {
       const needle = (nomFilterValue || '').trim().toLowerCase();
       if (!needle) {
         return [...currentParams];
       }
       return currentParams.filter((parametre) => {
-        const nom = (parametre.nom || '').toLowerCase();
-        return nom.includes(needle);
+        return matchesNomFilter(parametre.nom, needle);
       });
     };
 
