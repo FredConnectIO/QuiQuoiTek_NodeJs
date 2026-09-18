@@ -10,6 +10,8 @@
   <span id="selection_mode_label" class="mode-indicator" aria-live="polite"></span>
   <div>
     <a href="#" id="btAjouterQuoi" class="button">Ajouter</a>
+    <button type="button" id="btInsererFichier" class="button">Ins&eacute;rer fichier</button>
+    <input type="file" id="quoiCsvFile" accept=".csv,text/csv" hidden>
     <button type="button" id="btActualiser" class="button">Actualiser</button>
     <button type="button" id="btDomGenrPays" class="button">DomGenrPays</button>
     <button type="button" id="btYearMinus" class="buttonSmall" aria-label="Diminuer les filtres ann&eacute;es">-</button>
@@ -1024,6 +1026,50 @@
     const addButton = document.getElementById('btAjouterQuoi');
     if (addButton) {
       addButton.addEventListener('click', handleCreateQuoi);
+    }
+    const importButton = document.getElementById('btInsererFichier');
+    const csvFileInput = document.getElementById('quoiCsvFile');
+    if (importButton && csvFileInput) {
+      importButton.addEventListener('click', () => {
+        csvFileInput.value = '';
+        csvFileInput.click();
+      });
+      csvFileInput.addEventListener('change', async () => {
+        const file = csvFileInput.files?.[0];
+        if (!file) {
+          return;
+        }
+        if (!window.confirm(`Importer le fichier ${file.name} ?`)) {
+          return;
+        }
+
+        importButton.disabled = true;
+        const originalLabel = importButton.textContent;
+        importButton.textContent = 'Import en cours...';
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const response = await fetch('/quois/import-csv', {
+            method: 'POST',
+            body: formData,
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            const duplicateInfo = Array.isArray(payload.duplicates) && payload.duplicates.length
+              ? `\nDoublons : ${payload.duplicates.slice(0, 20).join(', ')}`
+              : '';
+            throw new Error(`${payload.error || 'Import CSV impossible.'}${duplicateInfo}`);
+          }
+          await refreshQuois();
+          alert(`${payload.inserted} ligne(s) quoi ajoutée(s).`);
+        } catch (error) {
+          console.error('Impossible d\'importer le fichier CSV', error);
+          alert(error.message || 'Import CSV impossible.');
+        } finally {
+          importButton.disabled = false;
+          importButton.textContent = originalLabel;
+        }
+      });
     }
     const refreshButton = document.getElementById('btActualiser');
     if (refreshButton) {
