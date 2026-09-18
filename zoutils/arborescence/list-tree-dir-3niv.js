@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-//exemple d'appel: 
+//exemple d'appel (liste de "d:"" et sortie txt ou html) : 
 //  cd C:\PARTAGE\GitHub\bibliothequeDemo\zoutils\arborescence
-//  node list-tree-dir-3niv E:\ film.txt
-//  node list-tree-dir-3niv E:\ film.html
+//  node list-tree-dir-3niv d: film.txt
+//  node list-tree-dir-3niv d: film.html
 const fs = require('fs').promises;
 const path = require('path');
 

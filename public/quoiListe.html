@@ -33,7 +33,7 @@
       <option value="">-- tous --</option>
     </select>
     <label for="filter_nom_start">Nom:</label>
-    <input id="filter_nom_start" type="text" class="filter-input largeur_moyenne" placeholder="ex. liv">
+    <input id="filter_nom_start" type="text" class="filter-input largeur_moyenne" placeholder="ex. liv ou @liv">
 
     <label for="filter_stock_start">Stock:</label>
     <input id="filter_stock_start" type="text" class="filter-input largeur_etroite" placeholder="d">
@@ -333,6 +333,34 @@
       return normalizeString(source).startsWith(prefix);
     };
 
+    const matchesNameFilter = (source, filter) => {
+      if (!filter) {
+        return true;
+      }
+
+      const normalizedSource = normalizeString(source);
+      const fragments = filter.split('@');
+      let searchFrom = 0;
+
+      if (fragments[0] && !normalizedSource.startsWith(fragments[0])) {
+        return false;
+      }
+
+      for (let index = 0; index < fragments.length; index += 1) {
+        const fragment = fragments[index];
+        if (!fragment) {
+          continue;
+        }
+        const position = normalizedSource.indexOf(fragment, searchFrom);
+        if (position === -1) {
+          return false;
+        }
+        searchFrom = position + fragment.length;
+      }
+
+      return true;
+    };
+
     const compareTextValues = (a, b) => {
       const textA = normalizeString(a);
       const textB = normalizeString(b);
@@ -568,7 +596,7 @@
       if (filters.pays && quoi.pays !== filters.pays) {
         return false;
       }
-      if (!matchesPrefix(quoi.nom, filters.nomStart)) {
+      if (!matchesNameFilter(quoi.nom, filters.nomStart)) {
         return false;
       }
       if (!matchesPrefix(quoi.stock, filters.stockStart)) {
