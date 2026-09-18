@@ -1,28 +1,28 @@
 git checkout --orphan nouvelle-histoire
 git add -A
 git commit -m "Initial commit"
-git branch -D main
-git branch -m main
+git branch -D master
+git branch -m master
 
-git push -f origin main
+git push -f origin master
 
 -------------------------------------
 git checkout --orphan nouvelle-histoire
-```Crée une nouvelle branche sans aucun historique Git, tout en conservant les fichiers présents dans le dossier.
+```CrÃ©e une nouvelle branche sans aucun historique Git, tout en conservant les fichiers prÃ©sents dans le dossier.
 
 git add -A
 ```Ajoute tous les fichiers au prochain commit, y compris les suppressions et modifications.
 
 git commit -m "Initial commit"
-```Crée le premier commit de la nouvelle histoire, avec le message indiqué.
+```CrÃ©e le premier commit de la nouvelle histoire, avec le message indiquÃ©.
 
-git branch -D main
-```Supprime l’ancienne branche `main`, avec son ancien historique. `-D` force la suppression.
+git branch -D master
+```Supprime lâ€™ancienne branche `master`, avec son ancien historique. `-D` force la suppression.
 
-git branch -m main
-```Renomme la branche actuelle `nouvelle-histoire` en `main`.
+git branch -m master
+```Renomme la branche actuelle `nouvelle-histoire` en `master`.
 
-git push -f origin main
-```Envoie la nouvelle branche `main` vers le dépôt distant `origin`. `-f` force le remplacement de l’historique distant.
-```La dernière commande est nécessaire uniquement si tu veux aussi effacer l’historique sur GitHub ou un autre dépôt distant. 
-```Elle peut affecter les autres personnes qui utilisent ce dépôt.
+git push -f origin master
+```Envoie la nouvelle branche `master` vers le dÃ©pÃ´t distant `origin`. `-f` force le remplacement de lâ€™historique distant.
+```La derniÃ¨re commande est nÃ©cessaire uniquement si tu veux aussi effacer lâ€™historique sur GitHub ou un autre dÃ©pÃ´t distant. 
+```Elle peut affecter les autres personnes qui utilisent ce dÃ©pÃ´t.

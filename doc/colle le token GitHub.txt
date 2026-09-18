@@ -18,6 +18,7 @@ GitHub n’accepte plus les mots de passe pour Git. Utilise un **Personal Access
 
 1. Crée un token sur https://github.com/settings/tokens  
    Accorde-lui au minimum `repo`.
+
 2. Relance :
 
 ```powershell
