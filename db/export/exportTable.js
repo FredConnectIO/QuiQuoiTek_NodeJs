@@ -48,7 +48,7 @@ async function exportTable(tableName, outputFile) {
   const safeTable = sanitizeTableName(tableName);
   await client.connect();
   try {
-    const query = `SELECT * FROM ${safeTable}`;
+    const query = `SELECT * FROM ${safeTable} ORDER BY id ASC`;
     const result = await client.query(query);
     const headers = result.fields.map((field) => field.name);
     const lines = [];
