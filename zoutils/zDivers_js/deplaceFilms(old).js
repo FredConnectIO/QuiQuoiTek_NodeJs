@@ -1,3 +1,5 @@
+//remplacé par deplaceFilms_cmd.bat
+
 // Déplace chaque fichier d'un dossier root dans un sous-répertoire du même nom.
 // Usage : node deplaceFilms.js <root>
 // Exemple : node deplaceFilms.js "D:\Videos\Comédies-Drames"
