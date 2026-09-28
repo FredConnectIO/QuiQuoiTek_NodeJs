@@ -49,6 +49,11 @@
     const structuredInput = document.getElementById('structured');
     const htmlInput = document.getElementById('html');
     const rendered = document.getElementById('rendered');
+    const requestedShift = window.prompt('Décalage alphabétique à appliquer :', '');
+    const parsedShift = requestedShift !== null && requestedShift.trim() !== ''
+      ? Number(requestedShift)
+      : NaN;
+    const shift = Number.isInteger(parsedShift) ? ((parsedShift % 26) + 26) % 26 : 4;
 
     const escapeHtml = (value) =>
       value
@@ -62,11 +67,11 @@
       const code = char.charCodeAt(0);
 
       if (code >= 65 && code <= 90) {
-        return String.fromCharCode(((code - 65 - 4 + 26) % 26) + 65);
+        return String.fromCharCode(((code - 65 - shift + 26) % 26) + 65);
       }
 
       if (code >= 97 && code <= 122) {
-        return String.fromCharCode(((code - 97 - 4 + 26) % 26) + 97);
+        return String.fromCharCode(((code - 97 - shift + 26) % 26) + 97);
       }
 
       return char;
