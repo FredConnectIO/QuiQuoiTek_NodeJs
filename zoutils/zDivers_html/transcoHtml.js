@@ -167,7 +167,6 @@
             }
             case 'p':
               lines.push(node.textContent.trim());
-              lines.push('');
               break;
             case 'ul':
               node.querySelectorAll(':scope > li').forEach((li) => {
