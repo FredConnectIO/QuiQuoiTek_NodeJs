@@ -32,6 +32,11 @@
     };
 
     const encodeText = (text) => text.replace(/[A-Za-z]/g, shiftLetterBack);
+    const decodeText = (text) => text.replace(/[A-Za-z]/g, (char) => {
+      const code = char.charCodeAt(0);
+      const start = code <= 90 ? 65 : 97;
+      return String.fromCharCode(((code - start + shift) % 26) + start);
+    });
 
     const encodeHtmlText = (html) => {
       const template = document.createElement('template');
@@ -61,7 +66,7 @@
     };
 
     const wrapFullHtml = (innerHtml) => {
-      return `<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8" />\n   <title>${encodeText('courrier')}</title>\n  <style>\n   p { margin: 0; line-height: 1.8; font-family: Arial; font-size: 22px; text-indent: 0.5cm; }\n    h1, h2, h3, h4, h5, h6 { margin: 0em 0 0em 0; }\n    ul, ol, blockquote { margin: 0.25em 0; }\n  </style>\n</head>\n<body>\n${innerHtml}\n</body>\n</html>`;
+      return `<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8" />\n   <title>${encodeText('courrier')}</title>\n  <style>\n   p { margin: 0; line-height: 1.8; font-family: Arial; font-size: 22px; text-indent: 0.5cm; }\n    h1, h2, h3, h4, h5, h6 { margin: 0em 0 0em 0; }\n    ul, ol, blockquote { margin: 0.25em 0; }\n  </style>\n</head>\n<body>\n${innerHtml}\n<script src="htmldecode.js"></script>\n</body>\n</html>`;
     };
 
     const structuredToHtml = (input) => {
@@ -136,9 +141,90 @@
       }
     };
 
+
+    const htmlToStructured = (input) => {
+      try {
+        const doc = new DOMParser().parseFromString(input, 'text/html');
+        const lines = [];
+
+        const walk = (node) => {
+          if (!node) return;
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.replace(/\s+/g, ' ').trim();
+            if (text) lines.push(text);
+            return;
+          }
+
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+          switch (node.tagName.toLowerCase()) {
+            case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': {
+              const level = Number(node.tagName[1]);
+              const text = node.textContent.trim();
+              lines.push('#'.repeat(level) + ' ' + text);
+              lines.push('');
+              break;
+            }
+            case 'p':
+              lines.push(node.textContent.trim());
+              lines.push('');
+              break;
+            case 'ul':
+              node.querySelectorAll(':scope > li').forEach((li) => {
+                lines.push('- ' + li.textContent.trim());
+              });
+              lines.push('');
+              break;
+            case 'ol':
+              let num = 1;
+              node.querySelectorAll(':scope > li').forEach((li) => {
+                lines.push(`${num++}. ${li.textContent.trim()}`);
+              });
+              lines.push('');
+              break;
+            case 'blockquote':
+              node.querySelectorAll('p, div, span, br, text').forEach((child) => {}); // Do nothing
+              lines.push('> ' + node.textContent.trim());
+              lines.push('');
+              break;
+            case 'pre':
+              lines.push('```');
+              lines.push(node.textContent.trim());
+              lines.push('```');
+              lines.push('');
+              break;
+            default:
+              Array.from(node.childNodes).forEach(walk);
+              break;
+          }
+        };
+
+        Array.from(doc.body.childNodes).forEach(walk);
+        // Remove trailing blank lines
+        while (lines.length && lines[lines.length - 1] === '') {
+          lines.pop();
+        }
+        return lines.join('\n');
+      } catch (e) {
+        console.error('Erreur htmlToStructured', e);
+        return '';
+      }
+    };
+
+
+
+
+
+
     document.getElementById('btnClear').addEventListener('click', () => {
       structuredInput.value = '';
       htmlInput.value = '';
+      refreshRender();
+    });
+
+    document.getElementById('btnToStruct').addEventListener('click', () => {
+      const structured = htmlToStructured(htmlInput.value);
+      structuredInput.value = decodeText(structured);
       refreshRender();
     });
 
@@ -160,14 +246,13 @@
     refreshRender();
 
 
-	function copyHtmlCode() {
-		if (htmlInput) {
-			htmlInput.select();
-			document.execCommand('copy');
-			alert('Code HTML copié dans le presse-papiers !');
-		} else {
-			alert('Aucun code HTML trouvé à copier.');
-		}
-	}
+    document.getElementById('btnCopyHtml').addEventListener('click', () => {
+      htmlInput.select();
+      if (document.execCommand('copy')) {
+        alert('Code HTML copié dans le presse-papiers !');
+      } else {
+        alert('Impossible de copier le code HTML.');
+      }
+    });
   
 })();
