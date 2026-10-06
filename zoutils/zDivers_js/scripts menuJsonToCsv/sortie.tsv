@@ -1,0 +1,147 @@
+link	menuTitle	itemTitle	method	action	shortcutKey	shortcutAccel	shortcutShift	parameter	executeWithoutValidating	isSeparator	enabled
+12219	Fichier	Ajouter paramètres	AJOU PARAM								
+12219	Fichier	Modifier paramètres	MODIPARAM								
+12219	Fichier	Ligne 4								true	false
+12219	Fichier	Explorateur de données...	bspoke								
+12219	Fichier	Quitter 4D ULNE	QUITTER 4D ULNE		q	true					
+24923	Base	Ajouter commune	AJOUCOM								
+24923	Base	Modifier commune	MODICOM								
+24923	Base	Ligne 43								true	false
+24923	Base	Modifier groupement	MODI GROUPT								
+24923	Base									true	false
+24923	Base	Ajouter producteur	AJOUPROD		A	true					
+24923	Base	Modifier producteurx	MODIPROD		M	true					
+24923	Base	Imprimer des étiquettes...	IMPRIÉTI								
+24923	Base	Imprimer étiquettes calendrier	IMPRIÉTI CALENDRIERS								
+24923	Base	Adresser des circulaires...	IMPRI CIRCULAIR								
+24923	Base	Exporter des producteurs...	EXPORT PRODUCTEURS								
+24923	Base	Changer un n° de producteur...	MODI AUTO NO PROD								
+24923	Base	(-								true	false
+24923	Base	Imprimer l'inventaire...	IMPRINVENTAIRE								
+24923	Base	Attester des parts sociales...	IMPRI PARTS SOC								
+24923	Base	Imprimer bulletin adhésion...	IMPRI BULLETIN ADHESION								
+24923	Base	Imprimer mandat de négo...	IMPRI MANDAT NEGO								
+24923	Base	Imprimer mandat de facturation...	IMPRI MANDAT FACTURATION								
+24923	Base	Imprimer contrat MàD tanks...	IMPRI CONTRAT								
+24923	Base	Exporter fichier document unique...	EXPORT DOCUMENT UNIQUE								
+24923	Base	(-								true	false
+24923	Base	Editer feuille émargement AG	EMARGER AG								
+24923	Base	Editer feuille émargement autre	EMARGER REUNION								
+24923	Base	Lister des producteurs	LISTERPROD		L	true					
+24923	Base	(-								true	false
+24923	Base	MàJ des livraisons de campagne	MAJ LIVRAISONS CAMPAGNE								
+24923	Base	MàJ des livraisons de l'année	MAJ LIVRAISONS ANNEE								
+24923	Base	(-								true	false
+24923	Base	Lister situation CBPE...	LISTER SITUATION CBPE								
+24923	Base	Export situation CBPE...	EXPORT SITUATION CBPE								
+4312	Fichier	Quitter									false
+21612	Compléments	Ajouter compléments	AJOU COMPLEMENTS								
+21612	Compléments	Modifier compléments	MODI COMPLEMENTS		R	true					
+21612	Compléments	Créer compléments automatiquement	AJOUAUTO_COMPLEMENTS								
+21612	Compléments	Lister compléments	LISTER COMPLEMENTS								
+21612	Compléments									true	false
+21612	Compléments	Imprimer justificatifs compléments	IMPRI JUSTIFS COMPLTS PRIX								
+21612	Compléments	Créer le fichier des virements SEPA...	VIREMENTS SEPA COMPLTS PRIX								
+21612	Compléments	Créer fichier Virement SEPA avec fichier .csv	formDialogue					complementVirement			
+21612	Compléments	Ligne 8								true	false
+21612	Compléments	Exporter compléments de prix...	EXPORT COMPLEMENTS								
+24576	Réunions	Ajouter une réunion	AJOU REUNION								
+24576	Réunions	Modifier une réunion	MODI REUNION								
+24576	Réunions	Imprimer les convocations	IMPRI CONVOC								
+24576	Réunions	Imprimer la feuille de présence	IMPRI PRESENCE								
+24576	Réunions	Imprimer une liste de réunions	IMPRI RÉUNIONS								
+24576	Réunions	(-								true	false
+24576	Réunions	Ajouter un invité	AJOU INDEMNITE								
+24576	Réunions	Gérer les indemnités	VISU INDEMNITES								
+24576	Réunions	Imprimer un récapitulatif	IMPRI INDEMNITES								
+24576	Réunions	Imprimer un récapitulatif formations	IMPRI INDEMNITES FORMATIONS								
+24576	Réunions	Imprimer le récapitulatif Attigny	IMPRI INDEMNITES ATTIGNY								
+24576	Réunions	(-								true	false
+24576	Réunions	Imprimer les justificatifs des indemnités	IMPRI JUSTIFS DEPLACT ADMIN								
+24576	Réunions	Imprimer les justificatifs des formations	IMPRI JUSTIFS FORMATIONS ADMIN								
+24576	Réunions	Créer le fichier des virements SEPA	VIREMENTS SEPA ADMIN								
+24576	Réunions	Créer le fichier des virements SEPA formations	VIREMENTS SEPA ADMIN FORMATIONS								
+24576	Réunions	Imprimer les justificatifs des indemnités Attigny	IMPRI JUSTIFS DEPLACT ATTIGNY								
+24576	Réunions	Créer le fichier des virements SEPA Attigny	VIREMENTS SEPA ADMIN ATTIGNY								
+24576	Réunions	(-								true	false
+24576	Réunions	Ajouter un administrateur	AJOU ADMIN								
+24576	Réunions	Modifier un administrateur	MODI ADMIN								
+24576	Réunions	Imprimer une liste	IMPRI CONSEIL								
+24576	Réunions	Imprimer des étiquettes	IMPRIÉTI ADMIN								
+24576	Réunions	Lister administrateurs pour assurance	LISTER ADMINISTRATEURS ASS								
+24576	Réunions	Exporter les administrateurs	EXPORT ADMIN								
+12881	Tanks	Ajouter tank	AJOU TANK								
+12881	Tanks	Modifier tank	MODI TANK		T	true					
+12881	Tanks	Lister des tanks...	LISTER TANKS								
+12881	Tanks	Lister actif tanks	LISTER ACTIF TANKS								
+12881	Tanks	Exporter fichier Excel...	EXPORT TANKS TXT								
+12881	Tanks	Ligne 14								true	false
+12881	Tanks	Ajouter intervention	AJOU INTERVENTION		I	true	true				
+12881	Tanks	Modifier intervention	MODI INTERVENTION								
+12881	Tanks	Lister les interventions	LISTER INTERVENTIONS								
+26035	Livraisons	Ajouter des livraisons	AJOU LIVRAISONS								
+26035	Livraisons	Modifier des livraisons	MODI LIVRAISONS								
+26035	Livraisons	(-								true	false
+26035	Livraisons	Importer des livraisons Lactalis...	IMPORT LITRAGES LACTALIS								
+26035	Livraisons	Importer des livraisons Schreiber...	IMPORT LITRAGES SCHREIBER								
+26035	Livraisons	(-								true	false
+26035	Livraisons	Lister les livraisons...	LISTER LIVRAISONS								
+26035	Livraisons	Statistiques...	STATS LITRAGES								
+26035	Livraisons	Exporter livraisons...	EXPORT LIVRAISONS								
+26035	Livraisons	Ligne 12								true	false
+26035	Livraisons	Exporter livraisons BBC en 4 catégories	EXPORT LAIT U 4 CLASSES BBC								
+26035	Livraisons	Exporter livraisons BBC en 2 catégories	EXPORT LAIT U 2 CLASSES BBC								
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemUndo		undo	Z	true					
+33000	:xliff:CommonMenuEdit	(-								true	
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemCut		cut	X	true					
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemCopy		copy	C	true					
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemPaste		paste	V	true					
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemClear		clear							
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemSelectAll		selectAll	A	true					
+33000	:xliff:CommonMenuEdit	(-								true	
+33000	:xliff:CommonMenuEdit	:xliff:CommonMenuItemShowClipboard		showClipboard							
+32001	Citernes	Ajouter une citerne	AJOU CITERNE								
+32001	Citernes	Modifier une citerne	MODI CITERNE								
+32001	Citernes	Saisir MG/MP des citernes	SAISIE BASCULE								
+32001	Citernes	Ligne 3								true	
+32001	Citernes	Editer le bilan matière	BILAN MATIERE								
+32001	Citernes	Exporter la matière utile	EXPORT MATIERE UTILE								
+32001	Citernes	Ligne 2								true	false
+32001	Citernes	Ajouter un chauffeur	AJOU CHAUFFEUR								
+32001	Citernes	Modifier un chauffeur	MODI CHAUFFEUR								
+32000	Tournées	Saisir les tournées	SAISIE TOURNEE								
+32000	Tournées	Ajouter un enlèvement	AJOU ENLEVEMENT								
+32000	Tournées	Modifier une tournée	MODI TOURNEE								
+32000	Tournées	Vérifier une tournée	VERIFIER TOURNEE								
+32000	Tournées	Ligne 16								true	false
+32000	Tournées	Editer les tournées du mois	IMPRI TOURNEES								
+32000	Tournées	Afficher des statistiques	STATS TOURNEES								
+32000	Tournées	Ligne 13								true	false
+32000	Tournées	Exporter vers Excel	EXPORT LIVRAISONS EXCEL								
+32002	Paies	Ajouter une paie	PAIE AJOU PAIE								
+32002	Paies	Modifier des paies	PAIE MODI PAIE								
+32002	Paies	Ligne 7								true	false
+32002	Paies	Importer des analyses Lactalis	IMPORT ANALYSES LACTALIS								
+32002	Paies	Importer des analyses Schreiber	IMPORT ANALYSES SCHREIBER								
+32002	Paies	Ligne 6								true	false
+32002	Paies	1-Clôturer paie et MàJ paramètres	PAIE DUPLIQUER PARAMETRES								
+32002	Paies	2-Importer des analyses Infolabo	PAIE IMPORT ANALYSES INFOLABO								
+32002	Paies	3-Calculer les ventes de lait	PAIE CALCUL VENTE DE LAIT								
+32002	Paies	4-Calculer des régularisations	PAIE CALCUL REGUL								
+32002	Paies	5-Calculer les prélèvements	PAIE CALCUL PRELEVEMENTS								
+32002	Paies	6-Importer les prélèvements sup.	PAIE IMPORT PRELEVEMENTS SUP								
+32002	Paies	6bis-Importer des prélèvements ULNE	PAIE IMPORT PRELEVEMENTS ULNE						true		
+32002	Paies	Imprimer le journal paie	PAIE IMPRI JOURNAL PAIE								
+32002	Paies	Imprimer les récap. comptables	PAIE IMPRI RECAP COMPTA								
+32002	Paies	Imprimer le récap. CRIEL	PAIE IMPRI RECAP ACTION CELLULE								
+32002	Paies	Imprimer les factures producteurs	PAIE IMPRI FACTURES								
+32002	Paies	Lister des statistiques qualité	PAIE LISTER MOYENNES MENSUELLES								
+32002	Paies	Calculer des statistiques qualité	PAIE STATS MOYENNES MENSUELLES								
+32002	Paies	8-Créer le fichier des virements SEPA	PAIE VIREMENTS SEPA								
+32002	Paies	Ligne 23								true	false
+32002	Paies	Modifier paramètres paies	PAIE MODI PARAMETRES								
+32002	Paies	Ligne 26								true	
+32002	Paies	Modifier l’IBAN de producteurs	MODI COMPTE BANCAIRE								
+32002	Paies	Exporter les IBAN des producteurs	PAIE EXPORT IBAN PRODUCTEURS						true		
+32002	Paies	Ligne 25								true	false
+32002	Paies	Simuler	PAIE SIMULATION								

@@ -1,0 +1,701 @@
+	"menus": [
+		{
+			"link": 12219,
+			"title": "Fichier",
+			"items": [
+				{
+					"title": "Ajouter paramètres",
+					"method": "AJOU PARAM"
+				},
+				{
+					"title": "Modifier paramètres",
+					"method": "MODIPARAM"
+				},
+				{
+					"title": "Ligne 4",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Explorateur de données...",
+					"method": "bspoke"
+				},
+				{
+					"title": "Quitter 4D ULNE",
+					"method": "QUITTER 4D ULNE",
+					"shortcutAccel": true,
+					"shortcutKey": "q"
+				}
+			]
+		},
+		{
+			"link": 24923,
+			"title": "Base",
+			"items": [
+				{
+					"title": "Ajouter commune",
+					"method": "AJOUCOM"
+				},
+				{
+					"title": "Modifier commune",
+					"method": "MODICOM"
+				},
+				{
+					"title": "Ligne 43",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Modifier groupement",
+					"method": "MODI GROUPT"
+				},
+				{
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Ajouter producteur",
+					"method": "AJOUPROD",
+					"shortcutAccel": true,
+					"shortcutKey": "A"
+				},
+				{
+					"title": "Modifier producteurx",
+					"method": "MODIPROD",
+					"shortcutAccel": true,
+					"shortcutKey": "M"
+				},
+				{
+					"title": "Imprimer des étiquettes...",
+					"method": "IMPRIÉTI"
+				},
+				{
+					"title": "Imprimer étiquettes calendrier",
+					"method": "IMPRIÉTI CALENDRIERS"
+				},
+				{
+					"title": "Adresser des circulaires...",
+					"method": "IMPRI CIRCULAIR"
+				},
+				{
+					"title": "Exporter des producteurs...",
+					"method": "EXPORT PRODUCTEURS"
+				},
+				{
+					"title": "Changer un n° de producteur...",
+					"method": "MODI AUTO NO PROD"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Imprimer l'inventaire...",
+					"method": "IMPRINVENTAIRE"
+				},
+				{
+					"title": "Attester des parts sociales...",
+					"method": "IMPRI PARTS SOC"
+				},
+				{
+					"title": "Imprimer bulletin adhésion...",
+					"method": "IMPRI BULLETIN ADHESION"
+				},
+				{
+					"title": "Imprimer mandat de négo...",
+					"method": "IMPRI MANDAT NEGO"
+				},
+				{
+					"title": "Imprimer mandat de facturation...",
+					"method": "IMPRI MANDAT FACTURATION"
+				},
+				{
+					"title": "Imprimer contrat MàD tanks...",
+					"method": "IMPRI CONTRAT"
+				},
+				{
+					"title": "Exporter fichier document unique...",
+					"method": "EXPORT DOCUMENT UNIQUE"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Editer feuille émargement AG",
+					"method": "EMARGER AG"
+				},
+				{
+					"title": "Editer feuille émargement autre",
+					"method": "EMARGER REUNION"
+				},
+				{
+					"title": "Lister des producteurs",
+					"method": "LISTERPROD",
+					"shortcutAccel": true,
+					"shortcutKey": "L"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "MàJ des livraisons de campagne",
+					"method": "MAJ LIVRAISONS CAMPAGNE"
+				},
+				{
+					"title": "MàJ des livraisons de l'année",
+					"method": "MAJ LIVRAISONS ANNEE"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Lister situation CBPE...",
+					"method": "LISTER SITUATION CBPE"
+				},
+				{
+					"title": "Export situation CBPE...",
+					"method": "EXPORT SITUATION CBPE"
+				}
+			]
+		},
+		{
+			"link": 4312,
+			"title": "Fichier",
+			"items": [
+				{
+					"title": "Quitter",
+					"enabled": false
+				}
+			]
+		},
+		{
+			"link": 21612,
+			"title": "Compléments",
+			"items": [
+				{
+					"title": "Ajouter compléments",
+					"method": "AJOU COMPLEMENTS"
+				},
+				{
+					"title": "Modifier compléments",
+					"method": "MODI COMPLEMENTS",
+					"shortcutAccel": true,
+					"shortcutKey": "R"
+				},
+				{
+					"title": "Créer compléments automatiquement",
+					"method": "AJOUAUTO_COMPLEMENTS"
+				},
+				{
+					"title": "Lister compléments",
+					"method": "LISTER COMPLEMENTS"
+				},
+				{
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Imprimer justificatifs compléments",
+					"method": "IMPRI JUSTIFS COMPLTS PRIX"
+				},
+				{
+					"title": "Créer le fichier des virements SEPA...",
+					"method": "VIREMENTS SEPA COMPLTS PRIX"
+				},
+				{
+					"title": "Créer fichier Virement SEPA avec fichier .csv ",
+					"method": "formDialogue",
+					"parameter": "complementVirement"
+				},
+				{
+					"title": "Ligne 8",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Exporter compléments de prix...",
+					"method": "EXPORT COMPLEMENTS"
+				}
+			]
+		},
+		{
+			"link": 24576,
+			"title": "Réunions",
+			"items": [
+				{
+					"title": "Ajouter une réunion",
+					"method": "AJOU REUNION"
+				},
+				{
+					"title": "Modifier une réunion",
+					"method": "MODI REUNION"
+				},
+				{
+					"title": "Imprimer les convocations",
+					"method": "IMPRI CONVOC"
+				},
+				{
+					"title": "Imprimer la feuille de présence",
+					"method": "IMPRI PRESENCE"
+				},
+				{
+					"title": "Imprimer une liste de réunions",
+					"method": "IMPRI RÉUNIONS"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Ajouter un invité",
+					"method": "AJOU INDEMNITE"
+				},
+				{
+					"title": "Gérer les indemnités",
+					"method": "VISU INDEMNITES"
+				},
+				{
+					"title": "Imprimer un récapitulatif",
+					"method": "IMPRI INDEMNITES"
+				},
+				{
+					"title": "Imprimer un récapitulatif formations",
+					"method": "IMPRI INDEMNITES FORMATIONS"
+				},
+				{
+					"title": "Imprimer le récapitulatif Attigny",
+					"method": "IMPRI INDEMNITES ATTIGNY"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Imprimer les justificatifs des indemnités",
+					"method": "IMPRI JUSTIFS DEPLACT ADMIN"
+				},
+				{
+					"title": "Imprimer les justificatifs des formations",
+					"method": "IMPRI JUSTIFS FORMATIONS ADMIN"
+				},
+				{
+					"title": "Créer le fichier des virements SEPA",
+					"method": "VIREMENTS SEPA ADMIN"
+				},
+				{
+					"title": "Créer le fichier des virements SEPA formations",
+					"method": "VIREMENTS SEPA ADMIN FORMATIONS"
+				},
+				{
+					"title": "Imprimer les justificatifs des indemnités Attigny",
+					"method": "IMPRI JUSTIFS DEPLACT ATTIGNY"
+				},
+				{
+					"title": "Créer le fichier des virements SEPA Attigny",
+					"method": "VIREMENTS SEPA ADMIN ATTIGNY"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Ajouter un administrateur",
+					"method": "AJOU ADMIN"
+				},
+				{
+					"title": "Modifier un administrateur",
+					"method": "MODI ADMIN"
+				},
+				{
+					"title": "Imprimer une liste",
+					"method": "IMPRI CONSEIL"
+				},
+				{
+					"title": "Imprimer des étiquettes",
+					"method": "IMPRIÉTI ADMIN"
+				},
+				{
+					"title": "Lister administrateurs pour assurance",
+					"method": "LISTER ADMINISTRATEURS ASS"
+				},
+				{
+					"title": "Exporter les administrateurs",
+					"method": "EXPORT ADMIN"
+				}
+			]
+		},
+		{
+			"link": 12881,
+			"title": "Tanks",
+			"items": [
+				{
+					"title": "Ajouter tank",
+					"method": "AJOU TANK"
+				},
+				{
+					"title": "Modifier tank",
+					"method": "MODI TANK",
+					"shortcutAccel": true,
+					"shortcutKey": "T"
+				},
+				{
+					"title": "Lister des tanks...",
+					"method": "LISTER TANKS"
+				},
+				{
+					"title": "Lister actif tanks",
+					"method": "LISTER ACTIF TANKS"
+				},
+				{
+					"title": "Exporter fichier Excel...",
+					"method": "EXPORT TANKS TXT"
+				},
+				{
+					"title": "Ligne 14",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Ajouter intervention",
+					"method": "AJOU INTERVENTION",
+					"shortcutShift": true,
+					"shortcutAccel": true,
+					"shortcutKey": "I"
+				},
+				{
+					"title": "Modifier intervention",
+					"method": "MODI INTERVENTION"
+				},
+				{
+					"title": "Lister les interventions",
+					"method": "LISTER INTERVENTIONS"
+				}
+			]
+		},
+		{
+			"link": 26035,
+			"title": "Livraisons",
+			"items": [
+				{
+					"title": "Ajouter des livraisons",
+					"method": "AJOU LIVRAISONS"
+				},
+				{
+					"title": "Modifier des livraisons",
+					"method": "MODI LIVRAISONS"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Importer des livraisons Lactalis...",
+					"method": "IMPORT LITRAGES LACTALIS"
+				},
+				{
+					"title": "Importer des livraisons Schreiber...",
+					"method": "IMPORT LITRAGES SCHREIBER"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Lister les livraisons...",
+					"method": "LISTER LIVRAISONS"
+				},
+				{
+					"title": "Statistiques...",
+					"method": "STATS LITRAGES"
+				},
+				{
+					"title": "Exporter livraisons...",
+					"method": "EXPORT LIVRAISONS"
+				},
+				{
+					"title": "Ligne 12",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Exporter livraisons BBC en 4 catégories",
+					"method": "EXPORT LAIT U 4 CLASSES BBC"
+				},
+				{
+					"title": "Exporter livraisons BBC en 2 catégories",
+					"method": "EXPORT LAIT U 2 CLASSES BBC"
+				}
+			]
+		},
+		{
+			"link": 33000,
+			"title": ":xliff:CommonMenuEdit",
+			"items": [
+				{
+					"title": ":xliff:CommonMenuItemUndo",
+					"shortcutAccel": true,
+					"shortcutKey": "Z",
+					"action": "undo"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true
+				},
+				{
+					"title": ":xliff:CommonMenuItemCut",
+					"shortcutAccel": true,
+					"shortcutKey": "X",
+					"action": "cut"
+				},
+				{
+					"title": ":xliff:CommonMenuItemCopy",
+					"shortcutAccel": true,
+					"shortcutKey": "C",
+					"action": "copy"
+				},
+				{
+					"title": ":xliff:CommonMenuItemPaste",
+					"shortcutAccel": true,
+					"shortcutKey": "V",
+					"action": "paste"
+				},
+				{
+					"title": ":xliff:CommonMenuItemClear",
+					"action": "clear"
+				},
+				{
+					"title": ":xliff:CommonMenuItemSelectAll",
+					"shortcutAccel": true,
+					"shortcutKey": "A",
+					"action": "selectAll"
+				},
+				{
+					"title": "(-",
+					"isSeparator": true
+				},
+				{
+					"title": ":xliff:CommonMenuItemShowClipboard",
+					"action": "showClipboard"
+				}
+			]
+		},
+		{
+			"link": 32001,
+			"title": "Citernes",
+			"items": [
+				{
+					"title": "Ajouter une citerne",
+					"method": "AJOU CITERNE"
+				},
+				{
+					"title": "Modifier une citerne",
+					"method": "MODI CITERNE"
+				},
+				{
+					"title": "Saisir MG/MP des citernes",
+					"method": "SAISIE BASCULE"
+				},
+				{
+					"title": "Ligne 3",
+					"isSeparator": true
+				},
+				{
+					"title": "Editer le bilan matière",
+					"method": "BILAN MATIERE"
+				},
+				{
+					"title": "Exporter la matière utile",
+					"method": "EXPORT MATIERE UTILE"
+				},
+				{
+					"title": "Ligne 2",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Ajouter un chauffeur",
+					"method": "AJOU CHAUFFEUR"
+				},
+				{
+					"title": "Modifier un chauffeur",
+					"method": "MODI CHAUFFEUR"
+				}
+			]
+		},
+		{
+			"link": 32000,
+			"title": "Tournées",
+			"items": [
+				{
+					"title": "Saisir les tournées",
+					"method": "SAISIE TOURNEE"
+				},
+				{
+					"title": "Ajouter un enlèvement",
+					"method": "AJOU ENLEVEMENT"
+				},
+				{
+					"title": "Modifier une tournée",
+					"method": "MODI TOURNEE"
+				},
+				{
+					"title": "Vérifier une tournée",
+					"method": "VERIFIER TOURNEE"
+				},
+				{
+					"title": "Ligne 16",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Editer les tournées du mois",
+					"method": "IMPRI TOURNEES"
+				},
+				{
+					"title": "Afficher des statistiques",
+					"method": "STATS TOURNEES"
+				},
+				{
+					"title": "Ligne 13",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Exporter vers Excel",
+					"method": "EXPORT LIVRAISONS EXCEL"
+				}
+			]
+		},
+		{
+			"link": 32002,
+			"title": "Paies",
+			"items": [
+				{
+					"title": "Ajouter une paie",
+					"method": "PAIE AJOU PAIE"
+				},
+				{
+					"title": "Modifier des paies",
+					"method": "PAIE MODI PAIE"
+				},
+				{
+					"title": "Ligne 7",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Importer des analyses Lactalis",
+					"method": "IMPORT ANALYSES LACTALIS"
+				},
+				{
+					"title": "Importer des analyses Schreiber",
+					"method": "IMPORT ANALYSES SCHREIBER"
+				},
+				{
+					"title": "Ligne 6",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "1-Clôturer paie et MàJ paramètres",
+					"method": "PAIE DUPLIQUER PARAMETRES"
+				},
+				{
+					"title": "2-Importer des analyses Infolabo",
+					"method": "PAIE IMPORT ANALYSES INFOLABO"
+				},
+				{
+					"title": "3-Calculer les ventes de lait",
+					"method": "PAIE CALCUL VENTE DE LAIT"
+				},
+				{
+					"title": "4-Calculer des régularisations",
+					"method": "PAIE CALCUL REGUL"
+				},
+				{
+					"title": "5-Calculer les prélèvements",
+					"method": "PAIE CALCUL PRELEVEMENTS"
+				},
+				{
+					"title": "6-Importer les prélèvements sup.",
+					"method": "PAIE IMPORT PRELEVEMENTS SUP"
+				},
+				{
+					"title": "6bis-Importer des prélèvements ULNE",
+					"method": "PAIE IMPORT PRELEVEMENTS ULNE",
+					"executeWithoutValidating": true
+				},
+				{
+					"title": "Imprimer le journal paie",
+					"method": "PAIE IMPRI JOURNAL PAIE"
+				},
+				{
+					"title": "Imprimer les récap. comptables",
+					"method": "PAIE IMPRI RECAP COMPTA"
+				},
+				{
+					"title": "Imprimer le récap. CRIEL",
+					"method": "PAIE IMPRI RECAP ACTION CELLULE"
+				},
+				{
+					"title": "Imprimer les factures producteurs",
+					"method": "PAIE IMPRI FACTURES"
+				},
+				{
+					"title": "Lister des statistiques qualité",
+					"method": "PAIE LISTER MOYENNES MENSUELLES"
+				},
+				{
+					"title": "Calculer des statistiques qualité",
+					"method": "PAIE STATS MOYENNES MENSUELLES"
+				},
+				{
+					"title": "8-Créer le fichier des virements SEPA",
+					"method": "PAIE VIREMENTS SEPA"
+				},
+				{
+					"title": "Ligne 23",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Modifier paramètres paies",
+					"method": "PAIE MODI PARAMETRES"
+				},
+				{
+					"title": "Ligne 26",
+					"isSeparator": true
+				},
+				{
+					"title": "Modifier l’IBAN de producteurs",
+					"method": "MODI COMPTE BANCAIRE"
+				},
+				{
+					"title": "Exporter les IBAN des producteurs",
+					"method": "PAIE EXPORT IBAN PRODUCTEURS",
+					"executeWithoutValidating": true
+				},
+				{
+					"title": "Ligne 25",
+					"isSeparator": true,
+					"enabled": false
+				},
+				{
+					"title": "Simuler",
+					"method": "PAIE SIMULATION"
+				}
+			]
+		}
+	]
