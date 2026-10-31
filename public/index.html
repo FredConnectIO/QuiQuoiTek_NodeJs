@@ -8,9 +8,9 @@
 <body>
   <h1>Qui Quoi Th&egrave;que</h1>
   <div>
-    <a href="quiListe.html" class="button" target="quiListe">Qui</a>
-    <a href="quoiListe.html" class="button" target="quoiListe">Quoi</a>
-    <a href="roleListe.html" class="button" target="roleListe">Role</a>
+    <a href="quiListe.html" class="button" target="quiListe" data-shortcut="i" aria-keyshortcuts="i" title="Raccourci : I">Qu(i)</a>
+    <a href="quoiListe.html" class="button" target="quoiListe" data-shortcut="o" aria-keyshortcuts="o" title="Raccourci : O">Qu(o)i</a>
+    <a href="roleListe.html" class="button" target="roleListe" data-shortcut="r" aria-keyshortcuts="r" title="Raccourci : R">(R)ole</a>
     <a href="roleListeQuiDeEnsemble.html" class="button" target="roleListeQuiDeEnsemble">Role qui d'ensemble</a>
     <a href="posteListe.html" class="button" target="posteListe">Poste</a>
     <a href="themeListe.html" class="button" target="themeListe">Theme</a>
@@ -25,6 +25,25 @@
   </div>
 
   <script>
+    document.addEventListener('keydown', (event) => {
+      if (event.defaultPrevented || event.repeat || event.isComposing || event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof Element && (target.closest('input, textarea, select') || target.isContentEditable)) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (!['i', 'o', 'r'].includes(key)) {
+        return;
+      }
+      const link = document.querySelector(`a[data-shortcut="${key}"]`);
+      if (link) {
+        event.preventDefault();
+        link.click();
+      }
+    });
+
     (function () {
       const durationInput = document.getElementById('slide-duration');
       const DURATION_STORAGE_KEY = 'diaporamaSlideDuration';
