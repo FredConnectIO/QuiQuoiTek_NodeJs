@@ -1180,7 +1180,11 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (!event.ctrlKey) {
+            if (event.defaultPrevented || event.repeat || event.isComposing || event.altKey || event.metaKey) {
+                return;
+            }
+            const target = event.target;
+            if (target instanceof Element && (target.closest('input, textarea, select') || target.isContentEditable)) {
                 return;
             }
             const pressedKey = event.key ? event.key.toLowerCase() : '';

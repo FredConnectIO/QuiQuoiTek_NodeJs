@@ -26,7 +26,15 @@
 
   <script>
     document.addEventListener('keydown', (event) => {
-      if (event.defaultPrevented || event.repeat || event.isComposing || event.ctrlKey || event.altKey || event.metaKey) {
+
+	//ignore le raccourci si 
+	//- `event.defaultPrevented` : un autre traitement a déjà pris en charge l’événement avec `preventDefault()`.
+	//- `event.repeat` : la touche reste enfoncée et le clavier répète l’événement.
+	//- `event.isComposing` : une composition de caractères est en cours, par exemple avec un clavier de saisie asiatique.
+	//- `event.altKey` : la touche **Alt** est enfoncée.
+	//- `event.metaKey` : la touche **Windows** ou **Commande ⌘** est enfoncée.
+
+      if (event.defaultPrevented || event.repeat || event.isComposing || event.altKey || event.metaKey) {
         return;
       }
       const target = event.target;
