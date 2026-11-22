@@ -5,7 +5,7 @@ dim lg2 As Long
 dim lg3 As Long
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Sub ExtractAllImagesFromPresentation()
+Sub ExtractAllImagesFromPresentation()sFileNameLeft
     Dim oDoc As Object
     oDoc = ThisComponent
 
@@ -266,12 +266,17 @@ Failed:
 End Function
 
 
+'''''import''''''''''''''''''''''''''''''''''''''''''''''''
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Sub ImportPicturesWithTitleFromDirectory()
+ImportPicturesFromDirectory(true)
+End Sub
 
-
-Sub ImportPicturesFromDirectory()
+Sub ImportPicturesFromDirectory(Optional vAddTextBox As Variant)
     Const sDirectory As String = "c:\a\"
+
+    Dim bAddTextBox As Boolean
+    If Not IsMissing(vAddTextBox) Then bAddTextBox = CBool(vAddTextBox)
     
     Dim oDoc As Object
     oDoc = ThisComponent
@@ -332,14 +337,14 @@ Sub ImportPicturesFromDirectory()
     i = 0
     Do While i <= UBound(vFiles)
         If i < UBound(vFiles) Then
-            If ImportPicturePairIfFits(oDoc, sDirectory & vFiles(i), sDirectory & vFiles(i + 1)) Then
+            If ImportPicturePairIfFits(oDoc, sDirectory, vFiles(i), vFiles(i + 1), bAddTextBox) Then
                 nImported = nImported + 2
                 i = i + 2
                 GoTo ContinueLoop
             End If
         End If
 
-        ImportSinglePicture oDoc, sDirectory & vFiles(i)
+        ImportSinglePicture oDoc, sDirectory, vFiles(i), bAddTextBox
         nImported = nImported + 1
         i = i + 1
 ContinueLoop:
@@ -360,8 +365,13 @@ ContinueLoop:
     SetPropertyIfAvailable oPresentation, "Pause", 0
 End Sub
 
-Private Function ImportPicturePairIfFits(oDoc As Object, sFilePathLeft As String, sFilePathRight As String) As Boolean
+Private Function ImportPicturePairIfFits(oDoc As Object, sDirectory As String, sFileNameLeft As String, sFileNameRight As String, bAddTextBox As Boolean) As Boolean
     Const nGap As Long = 200
+
+    Dim sFilePathLeft As String
+    Dim sFilePathRight As String
+    sFilePathLeft = sDirectory & sFileNameLeft
+    sFilePathRight = sDirectory & sFileNameRight
 
     Dim oDrawPages As Object
     oDrawPages = oDoc.getDrawPages()
@@ -390,9 +400,19 @@ Private Function ImportPicturePairIfFits(oDoc As Object, sFilePathLeft As String
         Exit Function
     End If
 
+    ' une seule image est trop grande pour la diapo, on ne peut pas les mettre côte à côte
     If nH1 <= 0 Or nH2 <= 0 Then
         oDrawPages.remove(oPage)
         ImportPicturePairIfFits = False
+        Exit Function
+    End If
+
+    ' une seule image si texte ajouté
+    If bAddTextBox Then
+        ' AddImportTextBox oDoc, oPage, RemoveFileExtension(sFileNameLeft) & " / " & RemoveFileExtension(sFileNameRight)
+        oDrawPages.remove(oPage)
+        ImportPicturePairIfFits = False
+        AddImportTextBox oDoc, oPage, RemoveFileExtension(sFileNameLeft) 
         Exit Function
     End If
 
@@ -448,6 +468,35 @@ Private Function ImportPicturePairIfFits(oDoc As Object, sFilePathLeft As String
     ImportPicturePairIfFits = True
 End Function
 
+Private Sub AddImportTextBox(oDoc As Object, oPage As Object, sTitle As String)
+    Dim oText As Object
+    oText = oDoc.createInstance("com.sun.star.drawing.TextShape")
+    oPage.add(oText)
+
+    Dim aSize As New com.sun.star.awt.Size
+    aSize.Width = 13000
+    aSize.Height = 1000
+
+    Dim aPosition As New com.sun.star.awt.Point
+    aPosition.X = oPage.Width - aSize.Width
+    aPosition.Y = 0
+
+    oText.TextAutoGrowWidth = False
+    oText.TextAutoGrowHeight = False
+    oText.setPosition(aPosition)
+    oText.setSize(aSize)
+    oText.String = sTitle
+    oText.TextHorizontalAdjust = com.sun.star.drawing.TextHorizontalAdjust.RIGHT
+    oText.ParaAdjust = com.sun.star.style.ParagraphAdjust.RIGHT
+    oText.CharFontName = "Liberation Sans"
+    oText.CharHeight = 20
+    oText.CharWeight = com.sun.star.awt.FontWeight.BOLD
+    oText.CharColor = RGB(0, 255, 0)
+    oText.FillStyle = com.sun.star.drawing.FillStyle.SOLID
+    oText.FillColor = RGB(255, 0, 0)
+    oText.FillTransparence = 50
+End Sub
+
 Private Function TryGetImageSize100thMM(sFilePath As String, ByRef nWidth As Long, ByRef nHeight As Long) As Boolean
     On Error GoTo Failed
 
@@ -472,7 +521,6 @@ Failed:
     nWidth = 0
     nHeight = 0
     TryGetImageSize100thMM = False
-    Err.Clear
     On Error GoTo 0
 End Function
 
@@ -884,7 +932,7 @@ Private Sub FitSizeInside(ByRef nWidth As Long, ByRef nHeight As Long, nMaxW As 
     End If
 End Sub
 
-Private Sub ImportSinglePicture(oDoc As Object, sFilePath As String)
+Private Sub ImportSinglePicture(oDoc As Object, sDirectory As String, sFileName As String, bAddTextBox As Boolean)
     Dim oDrawPages As Object
     oDrawPages = oDoc.getDrawPages()
 
@@ -901,7 +949,7 @@ Private Sub ImportSinglePicture(oDoc As Object, sFilePath As String)
     oShape = oDoc.createInstance("com.sun.star.drawing.GraphicObjectShape")
 
     Dim sURL As String
-    sURL = ConvertToURL(sFilePath)
+    sURL = ConvertToURL(sDirectory & sFileName)
     oShape.GraphicURL = sURL
     
     Dim oGraphicProvider As Object
@@ -1006,6 +1054,7 @@ Private Sub ImportSinglePicture(oDoc As Object, sFilePath As String)
     oShape.setSize(aTargetSize)
 
     oPage.add(oShape)
+    If bAddTextBox Then AddImportTextBox oDoc, oPage, RemoveFileExtension(sFileName)
 End Sub
 
 Private Sub SetAllSlidesBackgroundToBlack()
@@ -1095,7 +1144,7 @@ Sub ouvrirTout()
 
     Dim saisie As String
 	Dim  param As String
-	sDirectory = "D:\zzz\xTestlof1\dia"
+	sDirectory = "C:\"
 	Dim oPicker As Object
 	oPicker = createUnoService("com.sun.star.ui.dialogs.FolderPicker")
 	oPicker.setDisplayDirectory(ConvertToURL(sDirectory))
