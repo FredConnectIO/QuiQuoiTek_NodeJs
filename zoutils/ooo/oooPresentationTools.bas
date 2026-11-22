@@ -704,6 +704,7 @@ Sub ImportVignettesWithTextFromDirectory()
 End Sub
 
 Private Function AddVignetteAndTextToSlot(oDoc As Object, oPage As Object, sFilePath As String, sFileName As String, nSlotIndex As Long, nSlotHeight As Long, nPageW As Long, nPageH As Long, nImageRightX As Long, nTextX As Long, nTextWidth As Long, nTextFontSize As Double, nSlotPadding As Long) As Boolean
+    Const nTextOffsetY As Long = 1000   ' 1 cm
     On Error GoTo Failed
 
     Dim nImgW As Long
@@ -765,20 +766,20 @@ Private Function AddVignetteAndTextToSlot(oDoc As Object, oPage As Object, sFile
 
     Dim aTxtPos As New com.sun.star.awt.Point
     aTxtPos.X = nTextX
-    aTxtPos.Y = nTextY
+    aTxtPos.Y = nTextY + nTextOffsetY
     oText.setPosition(aTxtPos)
 
     Dim aTxtSize As New com.sun.star.awt.Size
     aTxtSize.Width = nRealTextWidth
     aTxtSize.Height = nTextH
     oText.setSize(aTxtSize)
+    oPage.add(oText)
 
     oText.String = RemoveFileExtension(sFileName)
     On Error Resume Next
     oText.CharHeight = nTextFontSize
     On Error GoTo Failed
 
-    oPage.add(oText)
     AddVignetteAndTextToSlot = True
     Exit Function
 
