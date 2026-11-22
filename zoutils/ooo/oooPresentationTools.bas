@@ -632,7 +632,7 @@ End Function
 
 Sub ImportVignettesWithTextFromDirectory()
     Const sDirectory As String = "C:\a\resized\"
-    Const nSlotsPerSlide As Long = 4
+    Const nSlotsPerSlide As Long = 5
     Const nImageRightX As Long = 4500   ' 4.5 cm
     Const nTextX As Long = 4800         ' 4.8 cm
     Const nTextWidth As Long = 23200    ' 23.2 cm
