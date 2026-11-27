@@ -39,10 +39,10 @@ Sub ExtractAllImagesFromPresentation()
 
     Dim sSummary As String
     Dim nMessageIcon As Integer
-    sSummary = nImagesExported & " image(s) et " & nTextsExported & " fichier(s) texte export?s vers " & sTargetDir & "."
+    sSummary = nImagesExported & " image(s) et " & nTextsExported & " fichier(s) texte exportés vers " & sTargetDir & "."
     nMessageIcon = 64
     If nTextFailures > 0 Then
-        sSummary = sSummary & Chr(13) & nTextFailures & " zone(s) de texte n'ont pas pu ?tre export?es."
+        sSummary = sSummary & Chr(13) & nTextFailures & " zone(s) de texte n'ont pas pu être exportées."
         nMessageIcon = 48
     End If
     MsgBox sSummary, nMessageIcon, "Extraction d'images et de textes"
@@ -114,6 +114,9 @@ Private Function ExportSingleText(sText As String, sTargetDir As String, nSlideN
     Exit Function
 
 HandleError:
+    Resume Cleanup
+
+Cleanup:
     On Error Resume Next
     If Not oOutput Is Nothing Then oOutput.closeOutput()
 End Function
