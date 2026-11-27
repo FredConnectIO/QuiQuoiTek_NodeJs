@@ -1,7 +1,45 @@
 /* eslint-disable no-console */
+/**
+ * Redimensionne en lot les images d'un dossier.
+ * Après correction de l'orientation EXIF, chaque image tient dans les
+ * dimensions maximales demandées. Les proportions sont conservées et
+ * les petites images gardent leur taille.
+ *
+ * Depuis la racine du projet, avec Node.js et la dépendance sharp installés
+ *   node zoutils/js/resizeImages.js [--src <dossier>] [--out <dossier>] [--width <px>] [--height <px>] [--overwrite] [--ssrep]
+ *
+ * Valeurs par défaut
+ *   --src        C:\a
+ *   --out        C:\a\resized (sous-dossier resized de la source choisie)
+ *   --width      1200 px de largeur maximale
+ *   --height     800 px de hauteur maximale
+ *   --overwrite  Désactivé. Les fichiers de sortie existants sont ignorés.
+ *   --ssrep      Désactivé. Seules les images à la racine de la source sont traitées.
+ *
+ * Avec --ssrep, le script parcourt aussi les sous-dossiers,
+ * en excluant le dossier de sortie. Les noms et l'arborescence sont conservés.
+ * Utiliser --help ou -h pour afficher l'aide.
+ *
+ * Exemple pour limiter les images de C:\a à 200 × 120 px
+ *   node zoutils/js/resizeImages.js --width 200 --height 120
+ * Ajouter --ssrep pour appliquer ces dimensions aux sous-dossiers.
+ *
+ * Le script sélectionne les extensions .jpg, .jpeg, .png, .gif, .bmp,
+ * .tif, .tiff et .webp. Il affiche le nombre d'images traitées, ignorées
+ * ou en erreur.
+ */
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const sharp = require("sharp");
+
+const DEFAULT_OPTIONS = {
+  src: "C:\\a",
+  out: null,
+  height: 800,
+  width: 1200,
+  overwrite: false,
+  recursive: false,
+};
 
 const IMAGE_EXTENSIONS = new Set([
   ".jpg",
@@ -15,13 +53,7 @@ const IMAGE_EXTENSIONS = new Set([
 ]);
 
 function parseArgs(argv) {
-  const options = {
-    src: "C:\\a",
-    out: null,
-    height: 800,
-    width: 1200,
-    overwrite: false,
-  };
+  const options = { ...DEFAULT_OPTIONS };
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -39,6 +71,8 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === "--overwrite") {
       options.overwrite = true;
+    } else if (arg === "--ssrep") {
+      options.recursive = true;
     } else if (arg === "--help" || arg === "-h") {
       options.help = true;
     }
@@ -47,16 +81,16 @@ function parseArgs(argv) {
   return options;
 }
 
-async function walkFiles(dir) {
+async function walkFiles(dir, recursive, outDir) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await walkFiles(fullPath)));
-    } else if (entry.isFile()) {
+    if (entry.isFile()) {
       files.push(fullPath);
+    } else if (recursive && entry.isDirectory() && path.relative(outDir, fullPath) !== "") {
+      files.push(...(await walkFiles(fullPath, recursive, outDir)));
     }
   }
 
@@ -73,16 +107,18 @@ async function fileExists(filePath) {
 }
 
 function showHelp() {
-  console.log("Resize images to max box (default: 200x120) with preserved ratio.");
+  console.log("Redimensionne les images en conservant leurs proportions.");
   console.log("");
-  console.log("Usage:");
-  console.log("  node zoutils/resizeImages120.js [--src <dir>] [--out <dir>] [--height <px>] [--width <px>] [--overwrite]");
+  console.log("Utilisation");
+  console.log("  node zoutils/js/resizeImages.js [--src <dossier>] [--out <dossier>] [--width <px>] [--height <px>] [--overwrite] [--ssrep]");
   console.log("");
-  console.log("Defaults:");
-  console.log("  --src C:\\a");
-  console.log("  --out <src>\\resized");
-  console.log("  --width 200");
-  console.log("  --height 120");
+  console.log("Valeurs par défaut");
+  console.log(`  --src ${DEFAULT_OPTIONS.src}`);
+  console.log(`  --out ${path.join(DEFAULT_OPTIONS.src, "resized")} (sous-dossier resized de la source choisie)`);
+  console.log(`  --width ${DEFAULT_OPTIONS.width} px de largeur maximale`);
+  console.log(`  --height ${DEFAULT_OPTIONS.height} px de hauteur maximale`);
+  console.log("  --overwrite Désactivé. Les fichiers de sortie existants sont ignorés.");
+  console.log("  --ssrep Désactivé. Active le parcours des sous-dossiers, sauf celui de sortie.");
 }
 
 async function main() {
@@ -112,7 +148,7 @@ async function main() {
 
   await fs.mkdir(outDir, { recursive: true });
 
-  const allFiles = await walkFiles(srcDir);
+  const allFiles = await walkFiles(srcDir, options.recursive, outDir);
   const inputImages = allFiles.filter((filePath) =>
     IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
   );
@@ -123,12 +159,6 @@ async function main() {
 
   for (const inputPath of inputImages) {
     const relativePath = path.relative(srcDir, inputPath);
-
-    // Avoid processing already generated outputs if out dir is inside src dir.
-    if (!options.overwrite && relativePath.startsWith("resized\\")) {
-      skipped += 1;
-      continue;
-    }
 
     const outputPath = path.join(outDir, relativePath);
     await fs.mkdir(path.dirname(outputPath), { recursive: true });

@@ -1,4 +1,26 @@
 /* eslint-disable no-console */
+/**
+ * Recadre en lot les images placées directement dans C:\a.
+ *
+ * Depuis la racine du projet, avec Node.js et la dépendance sharp installés
+ *   node zoutils/js/truncImages.js <gauche> <droite> <haut> <bas>
+ *
+ * Chaque valeur indique le nombre entier de pixels à retirer du bord
+ * correspondant, après application de l'orientation EXIF. Utiliser 0
+ * pour conserver un bord. Le recadrage doit laisser au moins un pixel
+ * en largeur et en hauteur.
+ *
+ * Exemple
+ *   node zoutils/js/truncImages.js 10 20 30 40
+ * Retire 10 pixels à gauche, 20 à droite, 30 en haut et 40 en bas.
+ * Utiliser --help ou -h pour afficher l'aide.
+ *
+ * Extensions reconnues .jpg, .jpeg, .png, .webp, .gif, .tif, .tiff et .avif.
+ * Les résultats sont enregistrés dans C:\a\trunc sous les noms d'origine.
+ * Les originaux sont conservés et les fichiers de sortie existants sont
+ * remplacés. Si une image échoue, le script poursuit avec les suivantes
+ * et renvoie un code de sortie 1 à la fin du traitement.
+ */
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const sharp = require('sharp');

@@ -5,17 +5,17 @@ dim lg2 As Long
 dim lg3 As Long
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Sub ExtractAllImagesFromPresentation()sFileNameLeft
+Sub ExtractAllImagesFromPresentation()
     Dim oDoc As Object
     oDoc = ThisComponent
 
     If oDoc Is Nothing Then
-        MsgBox "Aucun document n'est ouvert.", 48, "Extraction d'images"
+        MsgBox "Aucun document n'est ouvert.", 48, "Extraction d'images et de textes"
         Exit Sub
     End If
 
     If Not oDoc.supportsService("com.sun.star.presentation.PresentationDocument") Then
-        MsgBox "Le document actif n'est pas une présentation Impress.", 48, "Extraction d'images"
+        MsgBox "Le document actif n'est pas une présentation Impress.", 48, "Extraction d'images et de textes"
         Exit Sub
     End If
 
@@ -23,57 +23,100 @@ Sub ExtractAllImagesFromPresentation()sFileNameLeft
     sTargetDir = "C:\a"
 
     If Len(Trim$(sTargetDir)) = 0 Then
-        MsgBox "Impossible de déterminer le dossier de sortie.", 16, "Extraction d'images"
+        MsgBox "Impossible de déterminer le dossier de sortie.", 16, "Extraction d'images et de textes"
         Exit Sub
     End If
 
     If Not EnsureFolderExists(sTargetDir) Then
-        MsgBox "Impossible de créer le dossier: " & sTargetDir, 16, "Extraction d'images"
+        MsgBox "Impossible de créer le dossier: " & sTargetDir, 16, "Extraction d'images et de textes"
         Exit Sub
     End If
 
-    Dim nExported As Long
-    nExported = ExportImagesFromSlides(oDoc, sTargetDir)
+    Dim nImagesExported As Long
+    Dim nTextsExported As Long
+    Dim nTextFailures As Long
+    ExportSlideContents oDoc, sTargetDir, nImagesExported, nTextsExported, nTextFailures
 
-    If nExported = 0 Then
-        MsgBox "Aucune image trouvée.", 48, "Extraction d'images"
-    Else
-        MsgBox nExported & " image(s) exportée(s) vers:" & Chr(13) & sTargetDir, 64, "Extraction d'images"
+    Dim sSummary As String
+    Dim nMessageIcon As Integer
+    sSummary = nImagesExported & " image(s) et " & nTextsExported & " fichier(s) texte export?s vers " & sTargetDir & "."
+    nMessageIcon = 64
+    If nTextFailures > 0 Then
+        sSummary = sSummary & Chr(13) & nTextFailures & " zone(s) de texte n'ont pas pu ?tre export?es."
+        nMessageIcon = 48
     End If
+    MsgBox sSummary, nMessageIcon, "Extraction d'images et de textes"
 End Sub
 
-Private Function ExportImagesFromSlides(oDoc As Object, sTargetDir As String) As Long
+Private Sub ExportSlideContents(oDoc As Object, sTargetDir As String, ByRef nImagesExported As Long, ByRef nTextsExported As Long, ByRef nTextFailures As Long)
     Dim oDrawPages As Object
     oDrawPages = oDoc.getDrawPages()
 
     Dim nSlideIndex As Long
-    Dim nExported As Long
-
+    Dim nTextNumber As Long
     For nSlideIndex = 0 To oDrawPages.getCount() - 1
-        ExportImagesFromShapeContainer oDrawPages.getByIndex(nSlideIndex), sTargetDir, nSlideIndex + 1, nExported
+        nTextNumber = 0
+        ExportShapeContents oDrawPages.getByIndex(nSlideIndex), sTargetDir, nSlideIndex + 1, nTextNumber, nImagesExported, nTextsExported, nTextFailures
     Next nSlideIndex
+End Sub
 
-    ExportImagesFromSlides = nExported
-End Function
-
-Private Sub ExportImagesFromShapeContainer(oContainer As Object, sTargetDir As String, nSlideNumber As Long, ByRef nExported As Long)
+Private Sub ExportShapeContents(oContainer As Object, sTargetDir As String, nSlideNumber As Long, ByRef nTextNumber As Long, ByRef nImagesExported As Long, ByRef nTextsExported As Long, ByRef nTextFailures As Long)
     If Not HasUnoInterfaces(oContainer, "com.sun.star.drawing.XShapes") Then
         Exit Sub
     End If
 
     Dim n As Long
     Dim oShape As Object
+    Dim sText As String
 
     For n = 0 To oContainer.getCount() - 1
         oShape = oContainer.getByIndex(n)
-
         If oShape.supportsService("com.sun.star.drawing.GroupShape") Then
-            ExportImagesFromShapeContainer oShape, sTargetDir, nSlideNumber, nExported
-        ElseIf oShape.supportsService("com.sun.star.drawing.GraphicObjectShape") Then
-            ExportSingleGraphic oShape, sTargetDir, nSlideNumber, nExported
+            ExportShapeContents oShape, sTargetDir, nSlideNumber, nTextNumber, nImagesExported, nTextsExported, nTextFailures
+        Else
+            If oShape.supportsService("com.sun.star.drawing.GraphicObjectShape") Then
+                ExportSingleGraphic oShape, sTargetDir, nSlideNumber, nImagesExported
+            End If
+
+            If HasUnoInterfaces(oShape, "com.sun.star.text.XText") Then
+                sText = oShape.getString()
+                If Len(sText) > 0 Or oShape.supportsService("com.sun.star.drawing.TextShape") Then
+                    nTextNumber = nTextNumber + 1
+                    If ExportSingleText(sText, sTargetDir, nSlideNumber, nTextNumber) Then
+                        nTextsExported = nTextsExported + 1
+                    Else
+                        nTextFailures = nTextFailures + 1
+                    End If
+                End If
+            End If
         End If
     Next n
 End Sub
+
+Private Function ExportSingleText(sText As String, sTargetDir As String, nSlideNumber As Long, nTextNumber As Long) As Boolean
+    On Error GoTo HandleError
+
+    Dim sFileName As String
+    sFileName = "slide_" & Format$(nSlideNumber, "000") & "_text_" & Format$(nTextNumber, "0000") & ".txt"
+
+    Dim oFileAccess As Object
+    Dim oOutput As Object
+    Dim oTextOutput As Object
+    oFileAccess = createUnoService("com.sun.star.ucb.SimpleFileAccess")
+    oTextOutput = createUnoService("com.sun.star.io.TextOutputStream")
+    oTextOutput.setEncoding("UTF-8")
+    oOutput = oFileAccess.openFileWrite(ConvertToURL(JoinPath(sTargetDir, sFileName)))
+    oOutput.truncate()
+    oTextOutput.setOutputStream(oOutput)
+    oTextOutput.writeString(sText)
+    oTextOutput.closeOutput()
+    ExportSingleText = True
+    Exit Function
+
+HandleError:
+    On Error Resume Next
+    If Not oOutput Is Nothing Then oOutput.closeOutput()
+End Function
 
 Private Sub ExportSingleGraphic(oShape As Object, sTargetDir As String, nSlideNumber As Long, ByRef nExported As Long)
     On Error GoTo HandleError
