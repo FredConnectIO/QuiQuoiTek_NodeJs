@@ -8,3 +8,5 @@
 /db/export/csv**
 /.vs
 package-lock.json
+/db/add/csv
+/db/add/csv(trt)
