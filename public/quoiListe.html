@@ -62,6 +62,8 @@
         <th>
           <button id="btTriNom" class="buttonSmall">Nom</button>
           <img id="imgSensTriNom" height="18"/>
+          <button id="btTriId" type="button" class="buttonSmall" title="Trier par ID">id</button>
+          <img id="imgSensTriId" height="18" alt=""/>
         </th>
         <th>
           <button id="btTriDomaineGenrePaysNom" class="buttonSmall">Domaine</button>
@@ -201,6 +203,7 @@
     };
 
     const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const imgSensTriId = document.getElementById('imgSensTriId');
     const imgSensTriDomaineGenrePaysNom = document.getElementById('imgSensTriDomaineGenrePaysNom');
     const imgSensTriGenre = document.getElementById('imgSensTriGenre');
     const imgSensTriPays = document.getElementById('imgSensTriPays');
@@ -429,6 +432,7 @@
       desc: 'img/fleche_bas.svg',
     };
     let nomSortState = 'none';
+    let idSortState = 'none';
     let domaineGenrePaysNomSortState = 'none';
     let genreSortState = 'none';
     let paysSortState = 'none';
@@ -495,6 +499,11 @@
 
 
 
+
+    const updateIdSortIndicator = (state) => {
+      idSortState = state;
+      imgSensTriId.src = SORT_ICONS[state];
+    };
 
     const resetNomSortIndicator = () => updateNomSortIndicator('none');
     const resetDomaineGenrePaysNomIndicator = () => updateDomaineGenrePaysNomIndicator('none');
@@ -717,7 +726,27 @@
       renderQuois(filteredQuois);
     };
 
+    const applySortById = (order) => {
+      filteredQuois.sort((a, b) => order === 'desc' ? b.id - a.id : a.id - b.id);
+      renderQuois(filteredQuois);
+    };
+
+    const sortById = () => {
+      lastSort = 'id';
+      resetNomSortIndicator();
+      resetDomaineGenrePaysNomIndicator();
+      resetGenreIndicator();
+      resetPaysIndicator();
+      resetStockIndicator();
+      resetQualifIndicator();
+      resetDateAnneeIndicator();
+      resetDateDernVisuIndicator();
+      updateIdSortIndicator(idSortState === 'desc' ? 'asc' : 'desc');
+      applySortById(idSortState);
+    };
+
     const sortByNom = () => {
+      updateIdSortIndicator('none');
       lastSort = 'nom';
       resetDomaineGenrePaysNomIndicator();
       resetGenreIndicator();
@@ -754,6 +783,7 @@
     };
 
     const sortByDomaineGenrePaysNom = () => {
+      updateIdSortIndicator('none');
       lastSort = 'domaineGenrePaysNom';
       resetNomSortIndicator();
       resetGenreIndicator();
@@ -811,6 +841,7 @@
     };
 
     const sortByGenre = () => {
+      updateIdSortIndicator('none');
       lastSort = 'genre';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -825,6 +856,7 @@
     };
 
     const sortByPays = () => {
+      updateIdSortIndicator('none');
       lastSort = 'pays';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -839,6 +871,7 @@
     };
 
     const sortByStock = () => {
+      updateIdSortIndicator('none');
       lastSort = 'stock';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -853,6 +886,7 @@
     };
 
     const sortByQualif = () => {
+      updateIdSortIndicator('none');
       lastSort = 'qualif';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -867,6 +901,7 @@
     };
 
     const sortByDateAnnee = () => {
+      updateIdSortIndicator('none');
       lastSort = 'annee';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -881,6 +916,7 @@
     };
 
     const sortByDateDernVisu = () => {
+      updateIdSortIndicator('none');
       lastSort = 'dernvisu';
       resetNomSortIndicator();
       resetDomaineGenrePaysNomIndicator();
@@ -895,7 +931,9 @@
     };
 
     const applyCurrentSort = () => {
-      if (lastSort === 'date') {
+      if (lastSort === 'id') {
+        applySortById(idSortState);
+      } else if (lastSort === 'date') {
         applySortByDateDernVisu(resolveOrder(dateDernVisuSortState));
       } else if (lastSort === 'domaineGenrePaysNom') {
         applySortByDomaineGenrePaysNom(resolveOrder(domaineGenrePaysNomSortState));
@@ -1110,6 +1148,7 @@
     });
     document.getElementById('pays_filter').addEventListener('change', applyFilters);
     document.getElementById('btTriNom').addEventListener('click', sortByNom);
+    document.getElementById('btTriId').addEventListener('click', sortById);
     document.getElementById('btTriDateDernVisu').addEventListener('click', sortByDateDernVisu);
     document.getElementById('btTriDomaineGenrePaysNom').addEventListener('click', sortByDomaineGenrePaysNom);
     document.getElementById('btTriDateAnnee').addEventListener('click', sortByDateAnnee);
@@ -1193,6 +1232,7 @@
       }
     });
 
+    updateIdSortIndicator('none');
     resetNomSortIndicator();
     resetDomaineGenrePaysNomIndicator();
     resetDateAnneeIndicator();

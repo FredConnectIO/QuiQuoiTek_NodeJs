@@ -75,6 +75,8 @@
         <th>
             <button id="btTriNom" class="buttonSmall">Tri par nom</button>
             <img id="imgSensTriNom" height="25"/>
+            <button id="btTriId" type="button" class="buttonSmall" title="Trier par ID">id</button>
+            <img id="imgSensTriId" height="25" alt=""/>
         </th>
         <th>
           <button id="btTriPrenom" class="buttonSmall">Tri par pr&eacute;nom</button>
@@ -108,6 +110,7 @@
     const selectionModeLabel = document.getElementById('selection_mode_label');
     const imgSensTriDomaine = document.getElementById('imgSensTriDomaine');
     const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const imgSensTriId = document.getElementById('imgSensTriId');
     const imgSensTriPrenom = document.getElementById('imgSensTriPrenom');
     const imgSensTriGenre = document.getElementById('imgSensTriGenre');
     const imgSensTriDatenaiss = document.getElementById('imgSensTriDatenaiss');
@@ -129,6 +132,7 @@
       desc: 'img/fleche_bas.svg',
     };
     let nomSortState = 'none';
+    let idSortState = 'none';
     let prenomSortState = 'none';
     let datenaissSortState = 'none';
     let domaineSortState = 'none';
@@ -192,6 +196,12 @@
       updateOrderSelectIfNeeded(state);
     };
 
+    const updateIdSortIndicator = (state) => {
+      idSortState = state;
+      imgSensTriId.src = SORT_ICONS[state];
+      updateOrderSelectIfNeeded(state);
+    };
+
     const resetNomSortIndicator = () => updateNomSortIndicator('none');
     const resetPrenomSortIndicator = () => updatePrenomSortIndicator('none');
     const resetDatenaissSortIndicator = () => updateDatenaissSortIndicator('none');
@@ -200,6 +210,10 @@
     const resetPaysSortIndicator = () => updatePaysSortIndicator('none');
 
     const applyActiveSort = () => {
+      if (idSortState !== 'none') {
+        currentQuis.sort((a, b) => idSortState === 'desc' ? b.id - a.id : a.id - b.id);
+        return;
+      }
       if (nomSortState !== 'none') {
         currentQuis.sort((a, b) => {
           const comp = safeCompare(a.nom, b.nom);
@@ -595,7 +609,20 @@
       renderQuis(currentQuis);
     }
 
+    function sortById() {
+      resetNomSortIndicator();
+      resetPrenomSortIndicator();
+      resetDatenaissSortIndicator();
+      resetDomaineSortIndicator();
+      resetGenreSortIndicator();
+      resetPaysSortIndicator();
+      updateIdSortIndicator(idSortState === 'desc' ? 'asc' : 'desc');
+      applyActiveSort();
+      renderQuis(currentQuis);
+    }
+
     function sortByNom() {
+      updateIdSortIndicator('none');
       resetDomaineSortIndicator();
       resetPrenomSortIndicator();
       resetDatenaissSortIndicator();
@@ -611,6 +638,7 @@
     }
 
     function sortByPrenom() {
+      updateIdSortIndicator('none');
       resetNomSortIndicator();
       resetDomaineSortIndicator();
       resetDatenaissSortIndicator();
@@ -627,6 +655,7 @@
     }
 
     function sortByDatenaiss() {
+      updateIdSortIndicator('none');
       resetNomSortIndicator();
       resetPrenomSortIndicator();
       resetDomaineSortIndicator();
@@ -664,6 +693,7 @@
     }
 
     function sortByDomaine() {
+      updateIdSortIndicator('none');
       resetNomSortIndicator();
       resetPrenomSortIndicator();
       resetDatenaissSortIndicator();
@@ -679,6 +709,7 @@
     }
 
     function sortByGenre() {
+      updateIdSortIndicator('none');
       resetNomSortIndicator();
       resetPrenomSortIndicator();
       resetDatenaissSortIndicator();
@@ -698,6 +729,7 @@
     }
 
     function sortByPays() {
+      updateIdSortIndicator('none');
       resetNomSortIndicator();
       resetPrenomSortIndicator();
       resetDatenaissSortIndicator();
@@ -742,6 +774,7 @@
     document.getElementById('btYearMinus').addEventListener('click', () => adjustYearFilters(-1));
     document.getElementById('btTriDomaine').addEventListener('click', sortByDomaine);
     document.getElementById('btTriNom').addEventListener('click', sortByNom);
+    document.getElementById('btTriId').addEventListener('click', sortById);
     document.getElementById('btTriPrenom').addEventListener('click', sortByPrenom);
     document.getElementById('btTriGenre').addEventListener('click', sortByGenre);
     document.getElementById('btTriDatenaiss').addEventListener('click', sortByDatenaiss);
@@ -827,6 +860,7 @@
     };
 
     initializeSelectionMode();
+    updateIdSortIndicator('none');
     resetNomSortIndicator();
     resetPrenomSortIndicator();
     resetDatenaissSortIndicator();

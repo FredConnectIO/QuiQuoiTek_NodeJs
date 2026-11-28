@@ -75,6 +75,8 @@
         <th>
           <button id="btTriNom" class="buttonSmall">Nom role</button>
           <img id="imgSensTriNom" height="25" />
+          <button id="btTriId" type="button" class="buttonSmall" title="Trier par ID">id</button>
+          <img id="imgSensTriId" height="25" alt="" />
         </th>
         <th>
           <button id="btTriAnneeQuoi" class="buttonSmall">Ann&eacute;e quoi</button>
@@ -156,6 +158,7 @@
     const imgSensTriNomQuoi = document.getElementById('imgSensTriNomQuoi');
     const imgSensTriDomainequoi = document.getElementById('imgSensTriDomainequoi');
     const imgSensTriNom = document.getElementById('imgSensTriNom');
+    const imgSensTriId = document.getElementById('imgSensTriId');
     const imgSensTriAnneeQuoi = document.getElementById('imgSensTriAnneeQuoi');
     const imgSensTriAgeQui = document.getElementById('imgSensTriAgeQui');
     const SORT_ICONS = {
@@ -167,6 +170,7 @@
     let sortStateNomQuoi = 'none';
     let sortStateDomainequoi = 'none';
     let sortStateNomRole = 'none';
+    let idSortState = 'none';
     let sortStateAnneeQuoi = 'none';
     let sortStateAgeQui = 'none';
     let forcedQuoiDetails = null;
@@ -427,6 +431,10 @@
         imgSensTriAgeQui.src = SORT_ICONS[state] || SORT_ICONS.none;
       }
     };
+    const updateIdSortIndicator = (state) => {
+      idSortState = state;
+      imgSensTriId.src = SORT_ICONS[state];
+    };
     const resetNomQuiSortIndicator = () => updateNomQuiSortIndicator('none');
     const resetNomQuoiSortIndicator = () => updateNomQuoiSortIndicator('none');
     const resetDomainequoiSortIndicator = () => updateDomainequoiSortIndicator('none');
@@ -434,6 +442,7 @@
     const resetAnneeQuoiSortIndicator = () => updateAnneeQuoiSortIndicator('none');
     const resetAgeQuiSortIndicator = () => updateAgeQuiSortIndicator('none');
     const resetAllSortIndicators = () => {
+      updateIdSortIndicator('none');
       resetNomQuiSortIndicator();
       resetNomQuoiSortIndicator();
       resetDomainequoiSortIndicator();
@@ -780,6 +789,9 @@
     };
 
     const resetOtherSortIndicators = (active) => {
+      if (active !== 'id') {
+        updateIdSortIndicator('none');
+      }
       if (active !== 'nomQui') {
         resetNomQuiSortIndicator();
       }
@@ -801,6 +813,10 @@
     };
 
     const applyActiveSort = () => {
+      if (idSortState !== 'none') {
+        sortCurrentRoles((role) => role.id, idSortState, { type: 'number' });
+        return;
+      }
       if (sortStateNomQui !== 'none') {
         sortCurrentRoles((role) => role.qui_nomprenom, sortStateNomQui);
         return;
@@ -869,6 +885,14 @@
         return;
       }
       applyActiveSort();
+    };
+
+    const sortById = () => {
+      resetOtherSortIndicators('id');
+      initialSortApplied = true;
+      updateIdSortIndicator(idSortState === 'desc' ? 'asc' : 'desc');
+      applyActiveSort();
+      renderRoles(currentRoles);
     };
 
     const sortByNomQui = () => {
@@ -1001,6 +1025,7 @@
       });
     }
     document.getElementById('btTriNom').addEventListener('click', sortByNomRole);
+    document.getElementById('btTriId').addEventListener('click', sortById);
     document.getElementById('btTriNomQui').addEventListener('click', sortByNomQui);
     document.getElementById('btTriNomQuoi').addEventListener('click', sortByNomQuoi);
     document.getElementById('btTriDomainequoi').addEventListener('click', sortByDomainequoi);
